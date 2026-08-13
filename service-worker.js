@@ -1,12 +1,18 @@
 "use strict";
 
 /* =========================================
-   MARA OS PWA SERVICE WORKER
+   MARA OS SERVICE WORKER
 ========================================= */
 
-const CACHE_NAME = "mara-os-v4";
+const CACHE_NAME = "mara-os-v7";
 
-const FILES_TO_CACHE = [
+
+/* =========================================
+   FILE UTAMA MARA
+========================================= */
+
+const APP_FILES = [
+
     "./",
     "./index.html",
     "./style.css",
@@ -19,35 +25,41 @@ const FILES_TO_CACHE = [
     "./ux/lock-screen.html",
     "./ux/home-screen.html",
     "./ux/control-center.html"
+
 ];
 
 
 /* =========================================
-   INSTALL SERVICE WORKER
+   INSTALL
 ========================================= */
 
 self.addEventListener(
     "install",
-    event => {
+    function (event) {
+
+        console.log(
+            "MARA OS: Service Worker sedang install..."
+        );
 
         event.waitUntil(
 
             caches.open(CACHE_NAME)
-                .then(cache => {
-
-                    console.log(
-                        "MARA: membuat cache..."
-                    );
+                .then(function (cache) {
 
                     return cache.addAll(
-                        FILES_TO_CACHE
+                        APP_FILES
                     );
 
                 })
 
         );
 
+        /*
+         * Jangan menunggu Service Worker lama
+         */
+
         self.skipWaiting();
+
     }
 );
 
@@ -58,27 +70,40 @@ self.addEventListener(
 
 self.addEventListener(
     "activate",
-    event => {
+    function (event) {
+
+        console.log(
+            "MARA OS: Service Worker aktif."
+        );
 
         event.waitUntil(
 
             caches.keys()
-                .then(cacheNames => {
+                .then(function (cacheNames) {
 
                     return Promise.all(
 
-                        cacheNames
-                            .filter(
-                                name =>
-                                    name !==
+                        cacheNames.map(
+                            function (cacheName) {
+
+                                if (
+                                    cacheName !==
                                     CACHE_NAME
-                            )
-                            .map(
-                                name =>
-                                    caches.delete(
-                                        name
-                                    )
-                            )
+                                ) {
+
+                                    console.log(
+                                        "MARA OS: hapus cache lama:",
+                                        cacheName
+                                    );
+
+                                    return caches.delete(
+                                        cacheName
+                                    );
+
+                                }
+
+                            }
+                        )
 
                     );
 
@@ -86,7 +111,13 @@ self.addEventListener(
 
         );
 
+        /*
+         * Service Worker langsung
+         * mengontrol halaman
+         */
+
         self.clients.claim();
+
     }
 );
 
@@ -97,61 +128,33 @@ self.addEventListener(
 
 self.addEventListener(
     "fetch",
-    event => {
+    function (event) {
 
         if (
             event.request.method !==
             "GET"
         ) {
+
             return;
+
         }
 
 
         event.respondWith(
 
-            caches.match(
+            fetch(
                 event.request
             )
-            .then(cachedResponse => {
+            .then(function (networkResponse) {
 
                 /*
-                 * CACHE TERLEBIH DAHULU
+                 * Response berhasil
                  */
 
-                if (cachedResponse) {
-
-                    return cachedResponse;
-
-                }
-
-
-                /*
-                 * JIKA BELUM ADA CACHE
-                 */
-
-                return fetch(
-                    event.request
-                )
-                .then(networkResponse => {
-
-                    /*
-                     * Response tidak valid
-                     */
-
-                    if (
-                        !networkResponse ||
-                        networkResponse.status !== 200 ||
-                        networkResponse.type !== "basic"
-                    ) {
-
-                        return networkResponse;
-
-                    }
-
-
-                    /*
-                     * Simpan ke cache
-                     */
+                if (
+                    networkResponse &&
+                    networkResponse.status === 200
+                ) {
 
                     const responseClone =
                         networkResponse.clone();
@@ -160,7 +163,7 @@ self.addEventListener(
                     caches.open(
                         CACHE_NAME
                     )
-                    .then(cache => {
+                    .then(function (cache) {
 
                         cache.put(
                             event.request,
@@ -169,8 +172,57 @@ self.addEventListener(
 
                     });
 
+                }
 
-                    return networkResponse;
+
+                return networkResponse;
+
+            })
+            .catch(function () {
+
+                /*
+                 * Internet tidak tersedia
+                 */
+
+                return caches.match(
+                    event.request
+                )
+                .then(function (cachedResponse) {
+
+                    if (cachedResponse) {
+
+                        return cachedResponse;
+
+                    }
+
+
+                    /*
+                     * Jika membuka halaman
+                     * saat offline
+                     */
+
+                    if (
+                        event.request.mode ===
+                        "navigate"
+                    ) {
+
+                        return caches.match(
+                            "./index.html"
+                        );
+
+                    }
+
+
+                    return new Response(
+                        "MARA OS Offline",
+                        {
+                            status: 503,
+                            headers: {
+                                "Content-Type":
+                                    "text/plain"
+                            }
+                        }
+                    );
 
                 });
 
@@ -183,15 +235,16 @@ self.addEventListener(
 
 
 /* =========================================
-   MESSAGE DARI HALAMAN
+   MESSAGE
 ========================================= */
 
 self.addEventListener(
     "message",
-    event => {
+    function (event) {
 
         if (
-            event.data ===
+            event.data &&
+            event.data.type ===
             "MARA_SKIP_WAITING"
         ) {
 
