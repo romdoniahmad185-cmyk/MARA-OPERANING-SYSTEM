@@ -1,5 +1,3 @@
-"use strict";
-
 /* =========================================
    MARA OS SERVICE WORKER
 ========================================= */
@@ -22,10 +20,7 @@ const APP_FILES = [
     "./mara-icon-192.png",
     "./mara-icon-512.png",
 
-    "./ux/lock-screen.html",
-    "./ux/home-screen.html",
-    "./ux/control-center.html"
-
+    
 ];
 
 
