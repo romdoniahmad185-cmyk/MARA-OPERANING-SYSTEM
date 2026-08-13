@@ -1,4 +1,5 @@
 {
+  "id": "/mara-os-app",
   "name": "MARA OS",
   "short_name": "MARA",
   "description": "MARA OS Interface",
@@ -20,13 +21,13 @@
       "src": "./mara-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./mara-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
