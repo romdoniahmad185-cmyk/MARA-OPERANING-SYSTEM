@@ -1,21 +1,15 @@
 {
-  "id": "/mara-os-app",
+  "id": "mara-os-app",
   "name": "MARA OS",
   "short_name": "MARA",
   "description": "MARA OS Interface",
-
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
-
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "portrait",
-
   "background_color": "#000000",
   "theme_color": "#000000",
-
   "lang": "id",
-  "dir": "ltr",
-
   "icons": [
     {
       "src": "./mara-icon-192.png",
