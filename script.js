@@ -1,3 +1,4 @@
+"us strict"
 /* =========================
    JAM
 ========================= */
@@ -80,7 +81,7 @@ if ("getBattery" in navigator) {
     batteryLevel.style.width = "0%";
 }
 
-"use strict";
+
 
 const maraHeader =
     document.querySelector(".mara-header");
@@ -195,43 +196,6 @@ controlCenterOverlay.addEventListener(
     },
     { passive: true }
 );
-
-/* =========================================
-   MARA OS SERVICE WORKER
-========================================= */
-
-if ("serviceWorker" in navigator) {
-
-    window.addEventListener(
-        "load",
-        function () {
-
-            navigator.serviceWorker
-                .register(
-                    "./service-worker.js"
-                )
-                .then(
-                    function (registration) {
-
-                        console.log(
-                            "MARA OS Service Worker aktif:",
-                            registration.scope
-                        );
-
-                    }
-                )
-                .catch(
-                    function (error) {
-
-                        console.error(
-                            "MARA OS Service Worker gagal:",
-                            error
-                        );
-
-                    }
-                );
-
-        }
-    );
-
-}
+navigator.serviceWorker.register(
+    "./service-worker.js"
+);
