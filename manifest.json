@@ -3,8 +3,8 @@
   "short_name": "MARA",
   "description": "MARA OS Interface",
 
-  "start_url": "https://romdoniahmad185-cmyk.github.io/MARA-OPERANING-SYSTEM/",
-  "scope": "https://romdoniahmad185-cmyk.github.io/MARA-OPERANING-SYSTEM/",
+  "start_url": "./",
+  "scope": "./",
 
   "display": "standalone",
   "orientation": "portrait",
@@ -17,13 +17,13 @@
 
   "icons": [
     {
-      "src": "https://romdoniahmad185-cmyk.github.io/MARA-OPERANING-SYSTEM/mara-icon-192.png",
+      "src": "./mara-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://romdoniahmad185-cmyk.github.io/MARA-OPERANING-SYSTEM/mara-icon-512.png",
+      "src": "./mara-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
