@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="theme-color"
+    content="#07111f">
+
+<title>MARA Control Center</title>
+
+
+<style>
+
+/* =====================================================
+   MARA OS — CONTROL CENTER
+===================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #020711;
+
+    color: #fff;
+
+    user-select: none;
+
+}
+
+
+.mara-control {
+
+    position: fixed;
+
+    inset: 0;
+
+    overflow-y: auto;
+
+    background:
+        linear-gradient(
+            145deg,
+            #132b47,
+            #07111f 45%,
+            #020711
+        );
+
+    scrollbar-width: none;
+
+}
+
+.mara-control::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =====================================================
+   BACKGROUND
+===================================================== */
+
+.control-background {
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+
+        radial-gradient(
+            circle at 20% 5%,
+            rgba(59,130,246,.30),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 85% 70%,
+            rgba(14,165,233,.14),
+            transparent 35%
+        );
+
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.control-header {
+
+    position: relative;
+
+    z-index: 5;
+
+    padding:
+        18px 18px 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+}
+
+
+.header-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+}
+
+
+.back-button {
+
+    width: 42px;
+    height: 42px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    color: #fff;
+
+    font-size: 19px;
+
+}
+
+
+.header-title h1 {
+
+    font-size: 23px;
+
+    font-weight: 600;
+
+}
+
+
+.header-title p {
+
+    margin-top: 3px;
+
+    font-size: 10px;
+
+    opacity: .43;
+
+}
+
+
+.edit-button {
+
+    padding:
+        8px 11px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    color: #60a5fa;
+
+    font-size: 9px;
+
+}
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
+
+.control-content {
+
+    position: relative;
+
+    z-index: 5;
+
+    padding:
+        3px 18px 35px;
+
+}
+
+
+/* =====================================================
+   CONNECTION CARD
+===================================================== */
+
+.connection-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding:
+        15px;
+
+    border-radius: 19px;
+
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid
+        rgba(255,255,255,.09);
+
+}
+
+
+.connection-icon {
+
+    width: 46px;
+    height: 46px;
+
+    border-radius: 14px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(37,99,235,.18);
+
+    color: #60a5fa;
+
+    font-size: 21px;
+
+}
+
+
+.connection-info {
+
+    flex: 1;
+
+}
+
+
+.connection-name {
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+
+.connection-status {
+
+    margin-top: 4px;
+
+    font-size: 9px;
+
+    opacity: .42;
+
+}
+
+
+.connection-button {
+
+    border: none;
+
+    padding:
+        8px 10px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    color: #fff;
+
+    font-size: 9px;
+
+}
+
+
+/* =====================================================
+   QUICK GRID
+===================================================== */
+
+.quick-section {
+
+    margin-top: 17px;
+
+}
+
+
+.section-title {
+
+    margin:
+        0 5px 8px;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .7px;
+
+    opacity: .42;
+
+}
+
+
+.quick-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 8px;
+
+}
+
+
+.quick-button {
+
+    min-height: 75px;
+
+    padding:
+        10px 5px;
+
+    border: none;
+
+    border-radius: 17px;
+
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    color: #fff;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+}
+
+
+.quick-button.active {
+
+    background:
+        #2563eb;
+
+    border-color:
+        rgba(255,255,255,.14);
+
+}
+
+
+.quick-icon {
+
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.09);
+
+    font-size: 15px;
+
+}
+
+
+.quick-button.active
+.quick-icon {
+
+    background:
+        rgba(255,255,255,.15);
+
+}
+
+
+.quick-name {
+
+    font-size: 8px;
+
+    opacity: .62;
+
+}
+
+
+.quick-button.active
+.quick-name {
+
+    opacity: .9;
+
+}
+
+
+/* =====================================================
+   SLIDER CARD
+===================================================== */
+
+.slider-card {
+
+    margin-top: 17px;
+
+    padding:
+        16px;
+
+    border-radius: 19px;
+
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+}
+
+
+.slider-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+}
+
+
+.slider-name {
+
+    font-size: 11px;
+
+    opacity: .62;
+
+}
+
+
+.slider-value {
+
+    font-size: 11px;
+
+    color: #60a5fa;
+
+}
+
+
+input[type="range"] {
+
+    width: 100%;
+
+    margin-top: 14px;
+
+    accent-color:
+        #3b82f6;
+
+}
+
+
+/* =====================================================
+   TWO COLUMN
+===================================================== */
+
+.dual-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 9px;
+
+    margin-top: 9px;
+
+}
+
+
+.control-card {
+
+    padding:
+        14px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+}
+
+
+.control-card-top {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+}
+
+
+.control-card-title {
+
+    font-size: 10px;
+
+    opacity: .55;
+
+}
+
+
+.control-card-icon {
+
+    font-size: 17px;
+
+    opacity: .65;
+
+}
+
+
+.control-card-value {
+
+    margin-top: 10px;
+
+    font-size: 16px;
+
+}
+
+
+/* =====================================================
+   SWITCH
+===================================================== */
+
+.switch {
+
+    position: relative;
+
+    width: 39px;
+    height: 22px;
+
+}
+
+
+.switch input {
+
+    display: none;
+
+}
+
+
+.switch-track {
+
+    position: absolute;
+
+    inset: 0;
+
+    border-radius: 20px;
+
+    background:
+        rgba(255,255,255,.12);
+
+}
+
+
+.switch-track::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 16px;
+    height: 16px;
+
+    left: 3px;
+    top: 3px;
+
+    border-radius: 50%;
+
+    background: #fff;
+
+    transition: .2s;
+
+}
+
+
+.switch input:checked
++ .switch-track {
+
+    background:
+        #2563eb;
+
+}
+
+
+.switch input:checked
++ .switch-track::after {
+
+    transform:
+        translateX(17px);
+
+}
+
+
+/* =====================================================
+   SYSTEM OPTIONS
+===================================================== */
+
+.system-options {
+
+    margin-top: 17px;
+
+    overflow: hidden;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,.075);
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+}
+
+
+.system-option {
+
+    width: 100%;
+
+    min-height: 56px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding:
+        10px 13px;
+
+    border: none;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.055);
+
+    background: transparent;
+
+    color: #fff;
+
+    text-align: left;
+
+}
+
+
+.system-option:last-child {
+
+    border-bottom: none;
+
+}
+
+
+.system-option:active {
+
+    background:
+        rgba(255,255,255,.07);
+
+}
+
+
+.option-icon {
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 15px;
+
+}
+
+
+.option-info {
+
+    flex: 1;
+
+}
+
+
+.option-title {
+
+    font-size: 10px;
+
+}
+
+
+.option-description {
+
+    margin-top: 3px;
+
+    font-size: 8px;
+
+    opacity: .38;
+
+}
+
+
+.option-arrow {
+
+    font-size: 13px;
+
+    opacity: .3;
+
+}
+
+
+/* =====================================================
+   DESKTOP
+===================================================== */
+
+@media (min-width: 600px) {
+
+    .mara-control {
+
+        max-width:
+            720px;
+
+        margin:
+            0 auto;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<main class="mara-control">
+
+
+<div
+    class="control-background">
+</div>
+
+
+<!-- =================================================
+     HEADER
+================================================== -->
+
+<header
+    class="control-header">
+
+
+    <div
+        class="header-left">
+
+
+        <button
+            class="back-button"
+            onclick="goBack()">
+
+            ←
+
+        </button>
+
+
+        <div
+            class="header-title">
+
+
+            <h1>
+                Control Center
+            </h1>
+
+
+            <p>
+                Kendali cepat MARA OS
+            </p>
+
+
+        </div>
+
+
+    </div>
+
+
+    <button
+        class="edit-button"
+        onclick="editControls()">
+
+        Edit
+
+    </button>
+
+
+</header>
+
+
+<section
+    class="control-content">
+
+
+<!-- =================================================
+     CONNECTION
+================================================== -->
+
+<div
+    class="connection-card">
+
+
+    <div
+        class="connection-icon">
+
+        ◉
+
+    </div>
+
+
+    <div
+        class="connection-info">
+
+
+        <div
+            class="connection-name">
+
+            Wi-Fi MARA
+
+        </div>
+
+
+        <div
+            id="connection-status"
+            class="connection-status">
+
+            Terhubung ke jaringan
+
+        </div>
+
+
+    </div>
+
+
+    <button
+        class="connection-button"
+        onclick="openWifi()">
+
+        Detail
+
+    </button>
+
+
+</div>
+
+
+<!-- =================================================
+     QUICK SETTINGS
+================================================== -->
+
+<section
+    class="quick-section">
+
+
+    <div
+        class="section-title">
+
+        Kontrol cepat
+
+    </div>
+
+
+    <div
+        class="quick-grid">
+
+
+        <button
+            class="quick-button active"
+            data-control="wifi"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ◉
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Wi-Fi
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button active"
+            data-control="bluetooth"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ᛒ
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Bluetooth
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button"
+            data-control="airplane"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ✈
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Pesawat
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button"
+            data-control="rotation"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ↻
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Rotasi
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button active"
+            data-control="sound"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ♪
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Suara
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button"
+            data-control="flashlight"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ◇
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Senter
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button"
+            data-control="hotspot"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ⋮
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Hotspot
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="quick-button"
+            data-control="dnd"
+            onclick="toggleQuick(this)">
+
+
+            <div
+                class="quick-icon">
+
+                ◐
+
+            </div>
+
+
+            <div
+                class="quick-name">
+
+                Jangan Ganggu
+
+            </div>
+
+
+        </button>
+
+
+    </div>
+
+
+</section>
+
+
+<!-- =================================================
+     BRIGHTNESS
+================================================== -->
+
+<div
+    class="slider-card">
+
+
+    <div
+        class="slider-header">
+
+
+        <div
+            class="slider-name">
+
+            Kecerahan
+
+        </div>
+
+
+        <div
+            id="brightness-value"
+            class="slider-value">
+
+            75%
+
+        </div>
+
+
+    </div>
+
+
+    <input
+        id="brightness"
+        type="range"
+        min="0"
+        max="100"
+        value="75">
+
+
+</div>
+
+
+<!-- =================================================
+     VOLUME
+================================================== -->
+
+<div
+    class="slider-card">
+
+
+    <div
+        class="slider-header">
+
+
+        <div
+            class="slider-name">
+
+            Volume
+
+        </div>
+
+
+        <div
+            id="volume-value"
+            class="slider-value">
+
+            60%
+
+        </div>
+
+
+    </div>
+
+
+    <input
+        id="volume"
+        type="range"
+        min="0"
+        max="100"
+        value="60">
+
+
+</div>
+
+
+<!-- =================================================
+     DUAL OPTIONS
+================================================== -->
+
+<div
+    class="dual-grid">
+
+
+    <div
+        class="control-card">
+
+
+        <div
+            class="control-card-top">
+
+
+            <div
+                class="control-card-title">
+
+                Data Seluler
+
+            </div>
+
+
+            <div
+                class="control-card-icon">
+
+                ≋
+
+            </div>
+
+
+        </div>
+
+
+        <div
+            class="control-card-value">
+
+            Aktif
+
+        </div>
+
+
+        <label
+            class="switch">
+
+
+            <input
+                type="checkbox"
+                checked>
+
+
+            <span
+                class="switch-track">
+            </span>
+
+
+        </label>
+
+
+    </div>
+
+
+    <div
+        class="control-card">
+
+
+        <div
+            class="control-card-top">
+
+
+            <div
+                class="control-card-title">
+
+                Lokasi
+
+            </div>
+
+
+            <div
+                class="control-card-icon">
+
+                ⌖
+
+            </div>
+
+
+        </div>
+
+
+        <div
+            class="control-card-value">
+
+            Aktif
+
+        </div>
+
+
+        <label
+            class="switch">
+
+
+            <input
+                type="checkbox"
+                checked>
+
+
+            <span
+                class="switch-track">
+            </span>
+
+
+        </label>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- =================================================
+     SYSTEM OPTIONS
+================================================== -->
+
+<section
+    class="quick-section">
+
+
+    <div
+        class="section-title">
+
+        Sistem
+
+    </div>
+
+
+    <div
+        class="system-options">
+
+
+        <button
+            class="system-option"
+            onclick="openSettings()">
+
+
+            <div
+                class="option-icon">
+
+                ⚙
+
+            </div>
+
+
+            <div
+                class="option-info">
+
+
+                <div
+                    class="option-title">
+
+                    Pengaturan
+
+                </div>
+
+
+                <div
+                    class="option-description">
+
+                    Konfigurasi lengkap perangkat
+
+                </div>
+
+
+            </div>
+
+
+            <div
+                class="option-arrow">
+
+                ›
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="system-option"
+            onclick="openBattery()">
+
+
+            <div
+                class="option-icon">
+
+                ▣
+
+            </div>
+
+
+            <div
+                class="option-info">
+
+
+                <div
+                    class="option-title">
+
+                    Baterai
+
+                </div>
+
+
+                <div
+                    class="option-description">
+
+                    82% • Penggunaan normal
+
+                </div>
+
+
+            </div>
+
+
+            <div
+                class="option-arrow">
+
+                ›
+
+            </div>
+
+
+        </button>
+
+
+        <button
+            class="system-option"
+            onclick="openSecurity()">
+
+
+            <div
+                class="option-icon">
+
+                ✓
+
+            </div>
+
+
+            <div
+                class="option-info">
+
+
+                <div
+                    class="option-title">
+
+                    Keamanan
+
+                </div>
+
+
+                <div
+                    class="option-description">
+
+                    Perangkat terlindungi
+
+                </div>
+
+
+            </div>
+
+
+            <div
+                class="option-arrow">
+
+                ›
+
+            </div>
+
+
+        </button>
+
+
+    </div>
+
+
+</section>
+
+
+</section>
+
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   MARA CONTROL CENTER JS
+===================================================== */
+
+
+/* =====================================================
+   BACK
+===================================================== */
+
+function goBack() {
+
+    history.back();
+
+}
+
+
+/* =====================================================
+   QUICK TOGGLE
+===================================================== */
+
+function toggleQuick(
+    button
+) {
+
+    button.classList.toggle(
+        "active"
+    );
+
+
+    const control =
+        button.dataset.control;
+
+
+    const active =
+        button.classList.contains(
+            "active"
+        );
+
+
+    console.log(
+        control,
+        active
+    );
+
+
+    if (
+        control === "wifi"
+    ) {
+
+        document
+            .getElementById(
+                "connection-status"
+            )
+            .textContent =
+                active
+                    ? "Terhubung ke jaringan"
+                    : "Wi-Fi dimatikan";
+
+    }
+
+}
+
+
+/* =====================================================
+   BRIGHTNESS
+===================================================== */
+
+const brightness =
+    document.getElementById(
+        "brightness"
+    );
+
+const brightnessValue =
+    document.getElementById(
+        "brightness-value"
+    );
+
+
+brightness.addEventListener(
+    "input",
+    function() {
+
+        brightnessValue.textContent =
+            this.value +
+            "%";
+
+    }
+);
+
+
+/* =====================================================
+   VOLUME
+===================================================== */
+
+const volume =
+    document.getElementById(
+        "volume"
+    );
+
+const volumeValue =
+    document.getElementById(
+        "volume-value"
+    );
+
+
+volume.addEventListener(
+    "input",
+    function() {
+
+        volumeValue.textContent =
+            this.value +
+            "%";
+
+    }
+);
+
+
+/* =====================================================
+   WIFI
+===================================================== */
+
+function openWifi() {
+
+    alert(
+        "Pengaturan Wi-Fi MARA"
+    );
+
+}
+
+
+/* =====================================================
+   EDIT
+===================================================== */
+
+function editControls() {
+
+    alert(
+        "Mode pengaturan Control Center akan tersedia di versi berikutnya."
+    );
+
+}
+
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+function openSettings() {
+
+    alert(
+        "Membuka MARA Settings"
+    );
+
+}
+
+
+/* =====================================================
+   BATTERY
+===================================================== */
+
+function openBattery() {
+
+    alert(
+        "Baterai: 82%"
+    );
+
+}
+
+
+/* =====================================================
+   SECURITY
+===================================================== */
+
+function openSecurity() {
+
+    alert(
+        "MARA Security\n\nPerangkat terlindungi."
+    );
+
+}
+
+
+/* =====================================================
+   PREVENT CONTEXT MENU
+===================================================== */
+
+document.addEventListener(
+    "contextmenu",
+    function(event) {
+
+        event.preventDefault();
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
