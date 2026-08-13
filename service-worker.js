@@ -1,17 +1,16 @@
 "use strict";
 
 /* =========================================
-   MARA OS SERVICE WORKER
+   MARA OS PWA SERVICE WORKER
 ========================================= */
 
-const CACHE_NAME = "mara-os-v1";
+const CACHE_NAME = "mara-os-v4";
 
 const FILES_TO_CACHE = [
     "./",
     "./index.html",
     "./style.css",
     "./script.js",
-
     "./manifest.json",
 
     "./mara-icon-192.png",
@@ -24,17 +23,21 @@ const FILES_TO_CACHE = [
 
 
 /* =========================================
-   INSTALL
+   INSTALL SERVICE WORKER
 ========================================= */
 
 self.addEventListener(
     "install",
-    function (event) {
+    event => {
 
         event.waitUntil(
 
             caches.open(CACHE_NAME)
-                .then(function (cache) {
+                .then(cache => {
+
+                    console.log(
+                        "MARA: membuat cache..."
+                    );
 
                     return cache.addAll(
                         FILES_TO_CACHE
@@ -55,31 +58,27 @@ self.addEventListener(
 
 self.addEventListener(
     "activate",
-    function (event) {
+    event => {
 
         event.waitUntil(
 
             caches.keys()
-                .then(function (cacheNames) {
+                .then(cacheNames => {
 
                     return Promise.all(
 
                         cacheNames
-                            .filter(function (name) {
-
-                                return (
+                            .filter(
+                                name =>
                                     name !==
                                     CACHE_NAME
-                                );
-
-                            })
-                            .map(function (name) {
-
-                                return caches.delete(
-                                    name
-                                );
-
-                            })
+                            )
+                            .map(
+                                name =>
+                                    caches.delete(
+                                        name
+                                    )
+                            )
 
                     );
 
@@ -98,7 +97,7 @@ self.addEventListener(
 
 self.addEventListener(
     "fetch",
-    function (event) {
+    event => {
 
         if (
             event.request.method !==
@@ -113,53 +112,92 @@ self.addEventListener(
             caches.match(
                 event.request
             )
-            .then(function (cached) {
+            .then(cachedResponse => {
 
-                if (cached) {
+                /*
+                 * CACHE TERLEBIH DAHULU
+                 */
 
-                    return cached;
+                if (cachedResponse) {
+
+                    return cachedResponse;
+
                 }
 
+
+                /*
+                 * JIKA BELUM ADA CACHE
+                 */
 
                 return fetch(
                     event.request
                 )
-                .then(function (response) {
+                .then(networkResponse => {
+
+                    /*
+                     * Response tidak valid
+                     */
 
                     if (
-                        !response ||
-                        response.status !== 200 ||
-                        response.type !== "basic"
+                        !networkResponse ||
+                        networkResponse.status !== 200 ||
+                        networkResponse.type !== "basic"
                     ) {
 
-                        return response;
+                        return networkResponse;
+
                     }
 
 
-                    const copy =
-                        response.clone();
+                    /*
+                     * Simpan ke cache
+                     */
+
+                    const responseClone =
+                        networkResponse.clone();
 
 
                     caches.open(
                         CACHE_NAME
                     )
-                    .then(function (cache) {
+                    .then(cache => {
 
                         cache.put(
                             event.request,
-                            copy
+                            responseClone
                         );
 
                     });
 
 
-                    return response;
+                    return networkResponse;
 
                 });
 
             })
 
         );
+
+    }
+);
+
+
+/* =========================================
+   MESSAGE DARI HALAMAN
+========================================= */
+
+self.addEventListener(
+    "message",
+    event => {
+
+        if (
+            event.data ===
+            "MARA_SKIP_WAITING"
+        ) {
+
+            self.skipWaiting();
+
+        }
 
     }
 );
