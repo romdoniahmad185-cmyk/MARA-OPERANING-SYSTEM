@@ -1,25 +1,10 @@
-const CACHE_NAME = 'mara-os-v2';
+const CACHE_NAME = 'mara-os-v1';
 
-// Masukkan semua path file termasuk yang ada di dalam sub-folder ux/
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './script.js',
-  './manifest.json',
-  './mara-icon-192.png',
-  './mara-icon-512.png',
-  // File di dalam folder ux/
-  './ux/control-center.html',
-  './ux/home-screen.html',
-  './ux/lock-screen.html'
-];
-
+// Cukup cache halaman utama dulu untuk pengujian
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // addAll akan gagal total jika ada salah satu path file yang salah/404
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.add('./index.html');
     })
   );
   self.skipWaiting();
@@ -40,8 +25,8 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
 });
