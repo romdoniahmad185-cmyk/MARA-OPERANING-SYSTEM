@@ -195,3 +195,194 @@ controlCenterOverlay.addEventListener(
     },
     { passive: true }
 );
+
+"use strict";
+
+
+/* =========================================
+   SERVICE WORKER
+========================================= */
+
+if (
+    "serviceWorker" in navigator
+) {
+
+    window.addEventListener(
+        "load",
+        function () {
+
+            navigator.serviceWorker
+                .register(
+                    "./service-worker.js"
+                )
+                .then(
+                    function (registration) {
+
+                        console.log(
+                            "MARA Service Worker aktif:",
+                            registration.scope
+                        );
+
+                    }
+                )
+                .catch(
+                    function (error) {
+
+                        console.error(
+                            "MARA Service Worker gagal:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   PWA INSTALL
+========================================= */
+
+let deferredPrompt = null;
+
+
+/* =========================================
+   BROWSER SIAP INSTALL
+========================================= */
+
+window.addEventListener(
+    "beforeinstallprompt",
+    function (event) {
+
+        /*
+         * Jangan tampilkan otomatis
+         */
+
+        event.preventDefault();
+
+
+        /*
+         * Simpan prompt
+         */
+
+        deferredPrompt = event;
+
+
+        console.log(
+            "MARA OS siap di-install"
+        );
+
+
+        /*
+         * Beri tahu halaman
+         */
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "mara-install-ready"
+            )
+        );
+
+    }
+);
+
+
+/* =========================================
+   INSTALL MARA OS
+========================================= */
+
+function installMaraOS() {
+
+    /*
+     * Prompt belum tersedia
+     */
+
+    if (!deferredPrompt) {
+
+        console.log(
+            "Prompt instalasi belum tersedia."
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Tampilkan dialog install
+     */
+
+    deferredPrompt.prompt();
+
+
+    /*
+     * Tunggu pilihan pengguna
+     */
+
+    deferredPrompt.userChoice
+        .then(
+            function (choiceResult) {
+
+                console.log(
+                    "MARA install:",
+                    choiceResult.outcome
+                );
+
+
+                /*
+                 * Prompt hanya boleh
+                 * digunakan sekali
+                 */
+
+                deferredPrompt = null;
+
+            }
+        );
+
+}
+
+
+/* =========================================
+   MARA BERHASIL DI-INSTALL
+========================================= */
+
+window.addEventListener(
+    "appinstalled",
+    function () {
+
+        console.log(
+            "MARA OS berhasil di-install."
+        );
+
+
+        deferredPrompt = null;
+
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "mara-installed"
+            )
+        );
+
+    }
+);
+
+
+/* =========================================
+   CEK APAKAH SUDAH PWA
+========================================= */
+
+function isMaraInstalled() {
+
+    return (
+        window.matchMedia(
+            "(display-mode: standalone)"
+        ).matches ||
+
+        window.navigator.standalone === true
+    );
+
+}
