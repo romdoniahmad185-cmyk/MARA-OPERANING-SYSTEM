@@ -195,3 +195,6 @@ controlCenterOverlay.addEventListener(
     },
     { passive: true }
 );
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./service-worker.js");
+}
