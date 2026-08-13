@@ -1,32 +1,71 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0,
-                   maximum-scale=1.0, user-scalable=no">
-<link
-    rel="manifest"
-    href="./manifest.json"
->
-    <title>MARA Status Bar</title>
 
-    <link rel="stylesheet" href="style.css">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,
+                   initial-scale=1.0,
+                   maximum-scale=1.0,
+                   user-scalable=no"
+    >
+
+    <!-- PWA -->
+    <link
+        rel="manifest"
+        href="./manifest.json"
+    >
+
+    <meta
+        name="theme-color"
+        content="#000000"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <title>MARA OS</title>
+
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
+
 </head>
+
 
 <body>
 
+
+<!-- =================================
+     MARA LOCK SCREEN
+================================= -->
+
 <iframe
     class="mara-iframe"
-    src="ux/lock-screen.html"
+    src="./ux/lock-screen.html"
     frameborder="0">
 </iframe>
 
+
+<!-- =================================
+     MARA HEADER
+================================= -->
+
 <div class="mara-header">
 
-    <div class="clock" id="clock">
+    <div
+        class="clock"
+        id="clock"
+    >
         00:00
     </div>
+
 
     <div class="battery">
 
@@ -35,59 +74,41 @@
         </span>
 
         <div class="battery-icon">
+
             <div
                 class="battery-level"
                 id="battery-level">
             </div>
+
         </div>
 
     </div>
 
 </div>
-  <div id="controlCenterOverlay">
+
+
+<!-- =================================
+     CONTROL CENTER OVERLAY
+================================= -->
+
+<div id="controlCenterOverlay">
 
     <iframe
         id="controlCenterFrame"
-        src="ux/control-center.html"
+        src="./ux/control-center.html"
         frameborder="0">
     </iframe>
 
 </div>
-  <!-- CONTROL CENTER OVERLAY -->
-  <script src="script.js"></script>
-<script>
 
-if ("serviceWorker" in navigator) {
 
-    window.addEventListener(
-        "load",
-        function () {
+<!-- =================================
+     MARA JAVASCRIPT
+================================= -->
 
-            navigator.serviceWorker.register(
-                "./service-worker.js"
-            )
-            .then(function (registration) {
+<script src="./script.js"></script>
 
-                console.log(
-                    "MARA Service Worker aktif:",
-                    registration.scope
-                );
 
-            })
-            .catch(function (error) {
-
-                console.error(
-                    "MARA Service Worker gagal:",
-                    error
-                );
-
-            });
-
-        }
-    );
-
-}
-
-</script>
 </body>
+
 </html>
