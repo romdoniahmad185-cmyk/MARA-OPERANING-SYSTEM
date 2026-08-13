@@ -1,201 +1,480 @@
-"us strict"
-/* =========================
+"use strict";
+
+/* =========================================
+   MARA OS - SCRIPT
+========================================= */
+
+
+/* =========================================
    JAM
-========================= */
+========================================= */
 
 function updateClock() {
 
     const clock =
         document.getElementById("clock");
 
-    const now = new Date();
+    if (!clock) {
+        return;
+    }
+
+    const now =
+        new Date();
 
     const hours =
-        String(now.getHours()).padStart(2, "0");
+        String(
+            now.getHours()
+        ).padStart(2, "0");
 
     const minutes =
-        String(now.getMinutes()).padStart(2, "0");
+        String(
+            now.getMinutes()
+        ).padStart(2, "0");
 
     clock.textContent =
         `${hours}:${minutes}`;
 }
 
+
 updateClock();
 
-setInterval(updateClock, 1000);
+
+setInterval(
+    updateClock,
+    1000
+);
 
 
-/* =========================
-   BATTERY
-========================= */
+/* =========================================
+   BATTERY ELEMENT
+========================================= */
 
 const batteryPercent =
-    document.getElementById("battery-percent");
+    document.getElementById(
+        "battery-percent"
+    );
 
 const batteryLevel =
-    document.getElementById("battery-level");
+    document.getElementById(
+        "battery-level"
+    );
 
 
-function updateBattery(battery) {
+/* =========================================
+   UPDATE BATTERY
+========================================= */
+
+function updateBattery(
+    battery
+) {
+
+    if (
+        !batteryPercent ||
+        !batteryLevel
+    ) {
+
+        return;
+    }
+
 
     const percent =
-        Math.round(battery.level * 100);
+        Math.round(
+            battery.level * 100
+        );
+
 
     batteryPercent.textContent =
         `${percent}%`;
+
 
     batteryLevel.style.width =
         `${percent}%`;
 }
 
 
-/* =========================
+/* =========================================
    BATTERY API
-========================= */
+========================================= */
 
-if ("getBattery" in navigator) {
+if (
+    "getBattery" in navigator
+) {
 
     navigator.getBattery()
-        .then(function (battery) {
 
-            updateBattery(battery);
+        .then(
+            function (battery) {
 
-            battery.addEventListener(
-                "levelchange",
-                function () {
-                    updateBattery(battery);
+                updateBattery(
+                    battery
+                );
+
+
+                battery.addEventListener(
+                    "levelchange",
+                    function () {
+
+                        updateBattery(
+                            battery
+                        );
+
+                    }
+                );
+
+            }
+        )
+
+        .catch(
+            function () {
+
+                if (batteryPercent) {
+
+                    batteryPercent.textContent =
+                        "--%";
+
                 }
-            );
 
-        })
-        .catch(function () {
 
-            batteryPercent.textContent = "--%";
-            batteryLevel.style.width = "0%";
+                if (batteryLevel) {
 
-        });
+                    batteryLevel.style.width =
+                        "0%";
+
+                }
+
+            }
+        );
 
 } else {
 
-    batteryPercent.textContent = "--%";
-    batteryLevel.style.width = "0%";
+    if (batteryPercent) {
+
+        batteryPercent.textContent =
+            "--%";
+
+    }
+
+
+    if (batteryLevel) {
+
+        batteryLevel.style.width =
+            "0%";
+
+    }
+
 }
 
 
+/* =========================================
+   ELEMENT MARA
+========================================= */
 
 const maraHeader =
-    document.querySelector(".mara-header");
+    document.querySelector(
+        ".mara-header"
+    );
+
 
 const controlCenterOverlay =
-    document.querySelector("#controlCenterOverlay");
+    document.querySelector(
+        "#controlCenterOverlay"
+    );
+
+
+/* =========================================
+   GESTURE HEADER
+========================================= */
 
 let startY = 0;
+
 let currentY = 0;
 
+let headerDragging = false;
 
-/* =====================================
+
+/* =========================================
    MARA HEADER
    SWIPE DOWN → OPEN
-===================================== */
+========================================= */
 
-maraHeader.addEventListener(
-    "touchstart",
-    function (event) {
+if (maraHeader) {
 
-        startY =
-            event.touches[0].clientY;
+    maraHeader.addEventListener(
+        "touchstart",
+        function (event) {
 
-        currentY = startY;
-    },
-    { passive: true }
-);
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
 
-
-maraHeader.addEventListener(
-    "touchmove",
-    function (event) {
-
-        currentY =
-            event.touches[0].clientY;
-    },
-    { passive: true }
-);
+                return;
+            }
 
 
-maraHeader.addEventListener(
-    "touchend",
-    function () {
+            startY =
+                event.touches[0].clientY;
 
-        const distance =
-            currentY - startY;
 
-        if (distance > 60) {
+            currentY =
+                startY;
 
-            controlCenterOverlay.classList.add(
-                "active"
-            );
+
+            headerDragging =
+                true;
+
+        },
+        {
+            passive: true
         }
-
-        startY = 0;
-        currentY = 0;
-    },
-    { passive: true }
-);
+    );
 
 
-/* =====================================
-   CONTROL CENTER OVERLAY
-   SWIPE UP → CLOSE
-===================================== */
+    maraHeader.addEventListener(
+        "touchmove",
+        function (event) {
+
+            if (!headerDragging) {
+                return;
+            }
+
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+
+                return;
+            }
+
+
+            currentY =
+                event.touches[0].clientY;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    maraHeader.addEventListener(
+        "touchend",
+        function () {
+
+            if (!headerDragging) {
+                return;
+            }
+
+
+            const distance =
+                currentY - startY;
+
+
+            /*
+             * SWIPE KE BAWAH
+             * → BUKA CONTROL CENTER
+             */
+
+            if (
+                distance >= 60 &&
+                controlCenterOverlay
+            ) {
+
+                controlCenterOverlay.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            startY = 0;
+
+            currentY = 0;
+
+            headerDragging = false;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    maraHeader.addEventListener(
+        "touchcancel",
+        function () {
+
+            startY = 0;
+
+            currentY = 0;
+
+            headerDragging = false;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+}
+
+
+/* =========================================
+   CONTROL CENTER GESTURE
+========================================= */
 
 let closeStartY = 0;
+
 let closeCurrentY = 0;
 
-
-controlCenterOverlay.addEventListener(
-    "touchstart",
-    function (event) {
-
-        closeStartY =
-            event.touches[0].clientY;
-
-        closeCurrentY =
-            closeStartY;
-    },
-    { passive: true }
-);
+let overlayDragging = false;
 
 
-controlCenterOverlay.addEventListener(
-    "touchmove",
-    function (event) {
+/* =========================================
+   CONTROL CENTER
+   SWIPE UP → CLOSE
+========================================= */
 
-        closeCurrentY =
-            event.touches[0].clientY;
-    },
-    { passive: true }
-);
+if (controlCenterOverlay) {
+
+    controlCenterOverlay.addEventListener(
+        "touchstart",
+        function (event) {
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+
+                return;
+            }
 
 
-controlCenterOverlay.addEventListener(
-    "touchend",
-    function () {
+            closeStartY =
+                event.touches[0].clientY;
 
-        const distance =
-            closeCurrentY - closeStartY;
 
-        if (distance < -60) {
+            closeCurrentY =
+                closeStartY;
 
-            controlCenterOverlay.classList.remove(
-                "active"
-            );
+
+            overlayDragging =
+                true;
+
+        },
+        {
+            passive: true
         }
+    );
 
-        closeStartY = 0;
-        closeCurrentY = 0;
-    },
-    { passive: true }
-);
-navigator.serviceWorker.register(
-    "./service-worker.js"
-);
+
+    controlCenterOverlay.addEventListener(
+        "touchmove",
+        function (event) {
+
+            if (!overlayDragging) {
+                return;
+            }
+
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+
+                return;
+            }
+
+
+            closeCurrentY =
+                event.touches[0].clientY;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    controlCenterOverlay.addEventListener(
+        "touchend",
+        function () {
+
+            if (!overlayDragging) {
+                return;
+            }
+
+
+            const distance =
+                closeCurrentY -
+                closeStartY;
+
+
+            /*
+             * SWIPE KE ATAS
+             * → TUTUP CONTROL CENTER
+             */
+
+            if (
+                distance <= -60
+            ) {
+
+                controlCenterOverlay.classList.remove(
+                    "active"
+                );
+
+            }
+
+
+            closeStartY = 0;
+
+            closeCurrentY = 0;
+
+            overlayDragging = false;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    controlCenterOverlay.addEventListener(
+        "touchcancel",
+        function () {
+
+            closeStartY = 0;
+
+            closeCurrentY = 0;
+
+            overlayDragging = false;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+}
+
+
+/* =========================================
+   SERVICE WORKER
+========================================= */
+
+if (
+    "serviceWorker" in navigator
+) {
+
+    window.addEventListener(
+        "load",
+        function () {
+
+            navigator.serviceWorker
+                .register(
+                    "./service-worker.js"
+                )
+
+                .then(
+                    function (
