@@ -195,6 +195,13 @@ controlCenterOverlay.addEventListener(
     },
     { passive: true }
 );
+const manifest =
+    document.createElement("link");
+
+manifest.rel = "manifest";
+manifest.href = "./manifest.json";
+
+document.head.appendChild(manifest);
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./service-worker.js");
 }
