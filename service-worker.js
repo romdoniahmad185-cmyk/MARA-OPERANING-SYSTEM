@@ -1,74 +1,47 @@
-/* =========================================
-   MARA OS SERVICE WORKER
-========================================= */
+const CACHE_NAME = 'mara-os-v2';
 
-const CACHE_NAME = "mara-os-v7";
-
-
-/* =========================================
-   FILE UTAMA MARA
-========================================= */
-
-const APP_FILES = [
-
-    "./",
-    "./index.html",
-    "./style.css",
-    "./script.js",
-    "./manifest.json",
-
-    "./mara-icon-192.png",
-    "./mara-icon-512.png",
-
-    
+// Masukkan semua path file termasuk yang ada di dalam sub-folder ux/
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './style.css',
+  './script.js',
+  './manifest.json',
+  './mara-icon-192.png',
+  './mara-icon-512.png',
+  // File di dalam folder ux/
+  './ux/control-center.html',
+  './ux/home-screen.html',
+  './ux/lock-screen.html'
 ];
 
-
-/* =========================================
-   INSTALL
-========================================= */
-
-self.addEventListener(
-    "install",
-    function (event) {
-
-        console.log(
-            "MARA OS: Service Worker sedang install..."
-        );
-
-        event.waitUntil(
-
-            caches.open(CACHE_NAME)
-                .then(function (cache) {
-
-                    return cache.addAll(
-                        APP_FILES
-                    );
-
-                })
-
-        );
-
-        /*
-         * Jangan menunggu Service Worker lama
-         */
-
-        self.skipWaiting();
-
-    }
-);
-
-
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => {
+      // addAll akan gagal total jika ada salah satu path file yang salah/404
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) return caches.delete(key);
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
+    })
   );
 });
