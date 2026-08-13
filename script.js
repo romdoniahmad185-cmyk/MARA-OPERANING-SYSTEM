@@ -1,5 +1,4 @@
 "use strict";
-
 /* =========================
    JAM
 ========================= */
@@ -81,6 +80,122 @@ if ("getBattery" in navigator) {
     batteryPercent.textContent = "--%";
     batteryLevel.style.width = "0%";
 }
+
+
+
+const maraHeader =
+    document.querySelector(".mara-header");
+
+const controlCenterOverlay =
+    document.querySelector("#controlCenterOverlay");
+
+let startY = 0;
+let currentY = 0;
+
+
+/* =====================================
+   MARA HEADER
+   SWIPE DOWN → OPEN
+===================================== */
+
+maraHeader.addEventListener(
+    "touchstart",
+    function (event) {
+
+        startY =
+            event.touches[0].clientY;
+
+        currentY = startY;
+    },
+    { passive: true }
+);
+
+
+maraHeader.addEventListener(
+    "touchmove",
+    function (event) {
+
+        currentY =
+            event.touches[0].clientY;
+    },
+    { passive: true }
+);
+
+
+maraHeader.addEventListener(
+    "touchend",
+    function () {
+
+        const distance =
+            currentY - startY;
+
+        if (distance > 60) {
+
+            controlCenterOverlay.classList.add(
+                "active"
+            );
+        }
+
+        startY = 0;
+        currentY = 0;
+    },
+    { passive: true }
+);
+
+
+/* =====================================
+   CONTROL CENTER OVERLAY
+   SWIPE UP → CLOSE
+===================================== */
+
+let closeStartY = 0;
+let closeCurrentY = 0;
+
+
+controlCenterOverlay.addEventListener(
+    "touchstart",
+    function (event) {
+
+        closeStartY =
+            event.touches[0].clientY;
+
+        closeCurrentY =
+            closeStartY;
+    },
+    { passive: true }
+);
+
+
+controlCenterOverlay.addEventListener(
+    "touchmove",
+    function (event) {
+
+        closeCurrentY =
+            event.touches[0].clientY;
+    },
+    { passive: true }
+);
+
+
+controlCenterOverlay.addEventListener(
+    "touchend",
+    function () {
+
+        const distance =
+            closeCurrentY - closeStartY;
+
+        if (distance < -60) {
+
+            controlCenterOverlay.classList.remove(
+                "active"
+            );
+        }
+
+        closeStartY = 0;
+        closeCurrentY = 0;
+    },
+    { passive: true }
+);
 /* =========================================
    MARA OS SERVICE WORKER
 ========================================= */
