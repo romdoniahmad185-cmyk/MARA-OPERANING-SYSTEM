@@ -2,23 +2,39 @@
 
 /* =====================================================
    MARA OS — SERVICE WORKER
-   PWA SINGLE APP
+   PWA SINGLE-APP VERSION
+===================================================== */
+
+
+/* =====================================================
+   CACHE VERSION
 ===================================================== */
 
 const CACHE_NAME = "mara-os-v2";
 
-/*
-    Semua file utama MARA OS
-*/
+
+/* =====================================================
+   FILE YANG AKAN DISIMPAN OFFLINE
+===================================================== */
+
 const APP_SHELL = [
+
     "./",
+
     "./index.html",
+
     "./style.css",
+
     "./script.js",
+
     "./manifest.json",
 
     "./mara-icon-192.png",
-    "./mara-icon-512.png"
+
+    "./mara-icon-512.png",
+
+    "./wallpaper1.png"
+
 ];
 
 
@@ -26,226 +42,257 @@ const APP_SHELL = [
    INSTALL
 ===================================================== */
 
-self.addEventListener("install", event => {
+self.addEventListener(
+    "install",
+    event => {
 
-    console.log("MARA OS: Service Worker installing...");
+        console.log(
+            "MARA OS Service Worker: INSTALL"
+        );
 
-    event.waitUntil(
+        event.waitUntil(
 
-        caches.open(CACHE_NAME)
-            .then(cache => {
+            caches
+                .open(CACHE_NAME)
+                .then(cache => {
 
-                return cache.addAll(APP_SHELL);
+                    return cache.addAll(
+                        APP_SHELL
+                    );
 
-            })
+                })
 
-            .then(() => {
+        );
 
-                console.log(
-                    "MARA OS: App Shell berhasil dicache."
-                );
+        /*
+         * Langsung aktif tanpa menunggu
+         * tab lama ditutup.
+         */
 
-                return self.skipWaiting();
+        self.skipWaiting();
 
-            })
-
-    );
-
-});
+    }
+);
 
 
 /* =====================================================
    ACTIVATE
 ===================================================== */
 
-self.addEventListener("activate", event => {
+self.addEventListener(
+    "activate",
+    event => {
 
-    console.log("MARA OS: Service Worker activating...");
+        console.log(
+            "MARA OS Service Worker: ACTIVATE"
+        );
 
-    event.waitUntil(
+        event.waitUntil(
 
-        caches.keys()
-            .then(cacheNames => {
+            caches
+                .keys()
+                .then(cacheNames => {
 
-                return Promise.all(
+                    return Promise.all(
 
-                    cacheNames
-                        .filter(name => {
+                        cacheNames
+                            .filter(
+                                cacheName =>
+                                    cacheName !==
+                                    CACHE_NAME
+                            )
+                            .map(
+                                cacheName =>
+                                    caches.delete(
+                                        cacheName
+                                    )
+                            )
 
-                            return (
-                                name.startsWith("mara-os-") &&
-                                name !== CACHE_NAME
-                            );
+                    );
 
-                        })
+                })
 
-                        .map(name => {
+        );
 
-                            console.log(
-                                "MARA OS: Menghapus cache lama:",
-                                name
-                            );
+        /*
+         * Mengambil kontrol seluruh halaman
+         * MARA OS tanpa menunggu reload berikutnya.
+         */
 
-                            return caches.delete(name);
+        self.clients.claim();
 
-                        })
-
-                );
-
-            })
-
-            .then(() => {
-
-                console.log(
-                    "MARA OS: Cache lama dibersihkan."
-                );
-
-                return self.clients.claim();
-
-            })
-
-    );
-
-});
+    }
+);
 
 
 /* =====================================================
    FETCH
 ===================================================== */
 
-self.addEventListener("fetch", event => {
+self.addEventListener(
+    "fetch",
+    event => {
 
-    /*
-        Hanya menangani request GET.
-    */
+        /*
+         * Hanya menangani GET.
+         */
 
-    if (event.request.method !== "GET") {
-        return;
-    }
+        if (
+            event.request.method !== "GET"
+        ) {
 
+            return;
 
-    /*
-        Jangan mengganggu request eksternal.
-        Contohnya API, YouTube, CDN, dll.
-    */
-
-    const requestURL =
-        new URL(event.request.url);
+        }
 
 
-    if (
-        requestURL.origin !==
-        self.location.origin
-    ) {
+        event.respondWith(
 
-        return;
+            caches
+                .match(event.request)
+                .then(cachedResponse => {
 
-    }
+                    /*
+                     * Jika ada di cache,
+                     * gunakan versi offline.
+                     */
 
+                    if (
+                        cachedResponse
+                    ) {
 
-    /*
-        CACHE FIRST
+                        return cachedResponse;
 
-        1. Cari file di cache.
-        2. Kalau ada → gunakan cache.
-        3. Kalau tidak ada → ambil dari internet.
-        4. Simpan hasilnya ke cache.
-    */
-
-    event.respondWith(
-
-        caches.match(event.request)
-            .then(cachedResponse => {
-
-                if (cachedResponse) {
-
-                    return cachedResponse;
-
-                }
+                    }
 
 
-                return fetch(event.request)
+                    /*
+                     * Jika belum ada di cache,
+                     * ambil dari internet.
+                     */
 
+                    return fetch(
+                        event.request
+                    )
                     .then(networkResponse => {
 
                         /*
-                            Jangan cache response
-                            yang tidak valid.
-                        */
+                         * Simpan response baru
+                         * jika valid.
+                         */
 
                         if (
-                            !networkResponse ||
-                            networkResponse.status !== 200 ||
-                            networkResponse.type !== "basic"
+                            networkResponse &&
+                            networkResponse.status === 200 &&
+                            networkResponse.type !==
+                                "opaque"
                         ) {
 
-                            return networkResponse;
+                            const responseClone =
+                                networkResponse.clone();
+
+                            caches
+                                .open(CACHE_NAME)
+                                .then(cache => {
+
+                                    cache.put(
+                                        event.request,
+                                        responseClone
+                                    );
+
+                                });
 
                         }
 
 
-                        /*
-                            Clone response karena
-                            response hanya bisa digunakan
-                            sekali.
-                        */
-
-                        const responseClone =
-                            networkResponse.clone();
-
-
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-
-                                cache.put(
-                                    event.request,
-                                    responseClone
-                                );
-
-                            });
-
-
                         return networkResponse;
+
+                    })
+                    .catch(() => {
+
+                        /*
+                         * Jika offline dan halaman
+                         * tidak ditemukan, kembali
+                         * ke index.html.
+                         */
+
+                        return caches.match(
+                            "./index.html"
+                        );
 
                     });
 
-            })
+                })
 
-    );
+        );
 
-});
+    }
+);
 
 
 /* =====================================================
    MESSAGE
 ===================================================== */
 
-self.addEventListener("message", event => {
+self.addEventListener(
+    "message",
+    event => {
 
-    if (
-        event.data &&
-        event.data.type === "SKIP_WAITING"
-    ) {
+        if (
+            event.data &&
+            event.data.type ===
+                "SKIP_WAITING"
+        ) {
 
-        self.skipWaiting();
+            self.skipWaiting();
+
+        }
 
     }
-
-});
+);
 
 
 /* =====================================================
-   BACKGROUND ERROR PROTECTION
+   UPDATE CACHE
 ===================================================== */
 
 self.addEventListener(
-    "error",
+    "message",
     event => {
 
-        console.error(
-            "MARA OS Service Worker Error:",
-            event.error
-        );
+        if (
+            event.data &&
+            event.data.type ===
+                "CLEAR_CACHE"
+        ) {
+
+            event.waitUntil(
+
+                caches
+                    .keys()
+                    .then(cacheNames => {
+
+                        return Promise.all(
+
+                            cacheNames.map(
+                                cacheName =>
+                                    caches.delete(
+                                        cacheName
+                                    )
+                            )
+
+                        );
+
+                    })
+
+            );
+
+        }
 
     }
+);
+
+
+console.log(
+    "MARA OS Service Worker v2 aktif"
 );
