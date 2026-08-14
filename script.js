@@ -1396,3 +1396,336 @@ $$(
     element => {
 
         element.addEventListener(
+            "touchstart",
+            () => {
+
+                element.classList.add(
+                    "pressed"
+                );
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        element.addEventListener(
+            "touchend",
+            () => {
+
+                element.classList.remove(
+                    "pressed"
+                );
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        element.addEventListener(
+            "touchcancel",
+            () => {
+
+                element.classList.remove(
+                    "pressed"
+                );
+
+            },
+            {
+                passive: true
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   28. PREVENT CONTEXT MENU
+===================================================== */
+
+document.addEventListener(
+    "contextmenu",
+    event => {
+
+        event.preventDefault();
+
+    }
+);
+
+
+/* =====================================================
+   29. SERVICE WORKER
+===================================================== */
+
+async function registerServiceWorker() {
+
+    if (
+        !("serviceWorker" in navigator)
+    ) {
+
+        console.warn(
+            "Browser tidak mendukung Service Worker."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const registration =
+            await navigator.serviceWorker.register(
+                "./service-worker.js",
+                {
+                    scope: "./"
+                }
+            );
+
+
+        console.log(
+            "MARA OS Service Worker aktif:",
+            registration.scope
+        );
+
+
+        registration.addEventListener(
+            "updatefound",
+            () => {
+
+                const worker =
+                    registration.installing;
+
+
+                if (!worker) {
+                    return;
+                }
+
+
+                worker.addEventListener(
+                    "statechange",
+                    () => {
+
+                        console.log(
+                            "MARA SW state:",
+                            worker.state
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "MARA OS Service Worker gagal:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   30. PWA INSTALL
+===================================================== */
+
+let deferredInstallPrompt =
+    null;
+
+
+window.addEventListener(
+    "beforeinstallprompt",
+    event => {
+
+        event.preventDefault();
+
+        deferredInstallPrompt =
+            event;
+
+
+        console.log(
+            "MARA OS siap di-install sebagai PWA."
+        );
+
+
+        const installButton =
+            $("#install-app");
+
+
+        if (installButton) {
+
+            installButton.style.display =
+                "flex";
+
+        }
+
+    }
+);
+
+
+async function installMARA() {
+
+    if (
+        !deferredInstallPrompt
+    ) {
+
+        alert(
+            "MARA OS belum tersedia untuk di-install."
+        );
+
+        return;
+
+    }
+
+
+    deferredInstallPrompt.prompt();
+
+
+    const result =
+        await deferredInstallPrompt
+            .userChoice;
+
+
+    console.log(
+        "PWA install:",
+        result.outcome
+    );
+
+
+    deferredInstallPrompt =
+        null;
+
+}
+
+
+/* =====================================================
+   31. PWA INSTALLED
+===================================================== */
+
+window.addEventListener(
+    "appinstalled",
+    () => {
+
+        console.log(
+            "MARA OS berhasil dipasang sebagai aplikasi."
+        );
+
+
+        deferredInstallPrompt =
+            null;
+
+    }
+);
+
+
+/* =====================================================
+   32. INITIALIZATION
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        console.log(
+            "================================"
+        );
+
+        console.log(
+            "MARA OS INITIALIZED"
+        );
+
+        console.log(
+            "Version: 1.0"
+        );
+
+        console.log(
+            "================================"
+        );
+
+
+        /*
+         * Jangan langsung memaksa
+         * pindah halaman.
+         *
+         * Index.html menjadi
+         * pusat seluruh aplikasi.
+         */
+
+
+        registerServiceWorker();
+
+    }
+);
+
+
+/* =====================================================
+   33. GLOBAL FUNCTIONS
+===================================================== */
+
+window.showScreen =
+    showScreen;
+
+window.openUnlockPanel =
+    openUnlockPanel;
+
+window.closeUnlockPanel =
+    closeUnlockPanel;
+
+window.openApp =
+    openApp;
+
+window.openDrawer =
+    openDrawer;
+
+window.closeDrawer =
+    closeDrawer;
+
+window.openControlCenter =
+    openControlCenter;
+
+window.closeControlCenter =
+    closeControlCenter;
+
+window.toggleQuick =
+    toggleQuick;
+
+window.goBack =
+    goBack;
+
+window.openCamera =
+    openCamera;
+
+window.openPhone =
+    openPhone;
+
+window.openWifi =
+    openWifi;
+
+window.openSettings =
+    openSettings;
+
+window.openBattery =
+    openBattery;
+
+window.openSecurity =
+    openSecurity;
+
+window.editControls =
+    editControls;
+
+window.installMARA =
+    installMARA;
+
+
+/* =====================================================
+   MARA OS MASTER SCRIPT — END
+===================================================== */
