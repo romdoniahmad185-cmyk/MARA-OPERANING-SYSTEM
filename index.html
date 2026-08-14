@@ -3,77 +3,1639 @@
 
 <head>
 
-    <!-- =========================================
-         BASIC
-    ========================================== -->
-
     <meta charset="UTF-8">
 
     <meta
         name="viewport"
-        content="
-            width=device-width,
-            initial-scale=1.0,
-            maximum-scale=1.0,
-            user-scalable=no,
-            viewport-fit=cover
-        "
-    >
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <meta
         name="theme-color"
-        content="#000000"
-    >
-
-    <meta
-        name="background-color"
-        content="#000000"
-    >
-
-    <!-- =========================================
-         PWA
-    ========================================== -->
-
-    <link
-        rel="manifest"
-        href="./manifest.json"
-    >
+        content="#07111f">
 
     <meta
         name="mobile-web-app-capable"
-        content="yes"
-    >
+        content="yes">
 
     <meta
         name="apple-mobile-web-app-capable"
-        content="yes"
-    >
+        content="yes">
 
     <meta
         name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
-    >
+        content="black-translucent">
 
-    <meta
-        name="apple-mobile-web-app-title"
-        content="MARA OS"
-    >
-
-    <!-- =========================================
-         TITLE
-    ========================================== -->
+    <link
+        rel="manifest"
+        href="./manifest.json">
 
     <title>MARA OS</title>
 
+    <style>
 
-    <!-- =========================================
-         CSS
-    ========================================== -->
+        /* =====================================================
+           RESET
+        ===================================================== */
 
-    <link
-        rel="stylesheet"
-        href="./style.css"
-    >
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #000;
+            color: #fff;
+
+            user-select: none;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+
+        /* =====================================================
+           SCREEN SYSTEM
+        ===================================================== */
+
+        .screen {
+            position: fixed;
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            overflow: hidden;
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+
+            transform: scale(1.02);
+
+            transition:
+                opacity .28s ease,
+                transform .28s ease,
+                visibility .28s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+
+        /* =====================================================
+           SPLASH SCREEN
+        ===================================================== */
+
+        #splash-screen {
+            z-index: 1000;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            background:
+                radial-gradient(
+                    circle at 50% 35%,
+                    #17365c 0%,
+                    #0b1b31 35%,
+                    #020711 75%,
+                    #000 100%
+                );
+        }
+
+        .splash-content {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            text-align: center;
+        }
+
+        .splash-logo {
+            width: 105px;
+            height: 105px;
+
+            border-radius: 28px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            background:
+                rgba(255,255,255,.08);
+
+            border:
+                1px solid
+                rgba(255,255,255,.16);
+
+            box-shadow:
+                0 20px 60px
+                rgba(0,0,0,.45);
+
+            backdrop-filter:
+                blur(20px);
+
+            overflow: hidden;
+
+            animation:
+                splash-logo-in
+                .8s
+                ease both;
+        }
+
+        .splash-logo img {
+            width: 82%;
+            height: 82%;
+
+            object-fit: contain;
+        }
+
+        .splash-title {
+            margin-top: 22px;
+
+            font-size: 27px;
+            font-weight: 700;
+
+            letter-spacing: 3px;
+        }
+
+        .splash-subtitle {
+            margin-top: 7px;
+
+            font-size: 11px;
+
+            opacity: .55;
+
+            letter-spacing: 1.2px;
+        }
+
+        .splash-loading {
+            width: 130px;
+            height: 3px;
+
+            margin-top: 35px;
+
+            overflow: hidden;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.10);
+        }
+
+        .splash-loading-bar {
+            width: 35%;
+            height: 100%;
+
+            border-radius: inherit;
+
+            background: #60a5fa;
+
+            animation:
+                splash-loading
+                1.4s
+                ease-in-out
+                infinite;
+        }
+
+        .splash-version {
+            position: absolute;
+
+            bottom:
+                max(25px, env(safe-area-inset-bottom));
+
+            font-size: 9px;
+
+            opacity: .3;
+        }
+
+        @keyframes splash-logo-in {
+
+            from {
+                opacity: 0;
+                transform: scale(.75);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+        }
+
+        @keyframes splash-loading {
+
+            0% {
+                transform: translateX(-150%);
+            }
+
+            50% {
+                transform: translateX(130%);
+            }
+
+            100% {
+                transform: translateX(350%);
+            }
+
+        }
+
+
+        /* =====================================================
+           LOCK SCREEN
+        ===================================================== */
+
+        #lock-screen {
+            z-index: 900;
+
+            background: #000;
+        }
+
+        .lock-wallpaper {
+            position: absolute;
+            inset: 0;
+
+            background:
+                url("./wallpaper1.png")
+                center / cover
+                no-repeat;
+
+            transform: scale(1.04);
+        }
+
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(0,0,0,.12),
+                    rgba(0,0,0,.20) 45%,
+                    rgba(0,0,0,.68)
+                );
+        }
+
+        .lock-content {
+            position: relative;
+
+            z-index: 5;
+
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            text-align: center;
+
+            padding:
+                max(8vh, 55px)
+                20px
+                max(25px, env(safe-area-inset-bottom));
+        }
+
+        .lock-clock {
+            font-size:
+                clamp(58px, 17vw, 90px);
+
+            font-weight: 300;
+
+            line-height: 1;
+
+            letter-spacing: -4px;
+
+            text-shadow:
+                0 5px 25px
+                rgba(0,0,0,.4);
+        }
+
+        .lock-date {
+            margin-top: 12px;
+
+            font-size: 15px;
+
+            opacity: .9;
+        }
+
+        .lock-weather {
+            margin-top: 18px;
+
+            font-size: 14px;
+
+            opacity: .85;
+        }
+
+        .lock-profile {
+            margin-top: 30px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+        }
+
+        .lock-avatar {
+            width: 60px;
+            height: 60px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 27px;
+
+            background:
+                rgba(255,255,255,.13);
+
+            border:
+                2px solid
+                rgba(255,255,255,.7);
+
+            backdrop-filter:
+                blur(15px);
+        }
+
+        .lock-name {
+            margin-top: 9px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+        .lock-notification {
+            width:
+                min(100%, 390px);
+
+            margin-top: 25px;
+
+            padding: 13px 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            text-align: left;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,.12);
+
+            border:
+                1px solid
+                rgba(255,255,255,.14);
+
+            backdrop-filter:
+                blur(18px);
+        }
+
+        .notification-icon {
+            width: 38px;
+            height: 38px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                rgba(255,255,255,.15);
+        }
+
+        .notification-info {
+            flex: 1;
+        }
+
+        .notification-info strong {
+            display: block;
+
+            font-size: 13px;
+        }
+
+        .notification-info span {
+            display: block;
+
+            margin-top: 3px;
+
+            font-size: 11px;
+
+            opacity: .65;
+        }
+
+        .lock-unlock {
+            margin-top: auto;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            cursor: pointer;
+        }
+
+        .unlock-arrow {
+            font-size: 26px;
+
+            animation:
+                unlock-bounce
+                1.6s
+                ease-in-out
+                infinite;
+        }
+
+        .unlock-text {
+            margin-top: 4px;
+
+            font-size: 11px;
+
+            opacity: .7;
+        }
+
+        @keyframes unlock-bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-7px);
+            }
+
+        }
+
+        .lock-actions {
+            position: absolute;
+
+            z-index: 10;
+
+            left: 0;
+            right: 0;
+
+            bottom:
+                max(22px, env(safe-area-inset-bottom));
+
+            padding: 0 25px;
+
+            display: flex;
+
+            justify-content: space-between;
+        }
+
+        .lock-action {
+            width: 50px;
+            height: 50px;
+
+            border: none;
+
+            border-radius: 50%;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.14);
+
+            border:
+                1px solid
+                rgba(255,255,255,.15);
+
+            backdrop-filter:
+                blur(15px);
+        }
+
+
+        /* =====================================================
+           PIN PANEL
+        ===================================================== */
+
+        .pin-panel {
+            position: absolute;
+
+            inset: 0;
+
+            z-index: 100;
+
+            display: flex;
+
+            align-items: flex-end;
+            justify-content: center;
+
+            background:
+                rgba(0,0,0,.48);
+
+            backdrop-filter:
+                blur(8px);
+
+            opacity: 0;
+            pointer-events: none;
+
+            transition:
+                opacity .25s ease;
+        }
+
+        .pin-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .pin-box {
+            width: 100%;
+            max-width: 500px;
+
+            min-height: 57%;
+
+            padding:
+                28px
+                22px
+                max(28px, env(safe-area-inset-bottom));
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            border-radius:
+                30px 30px 0 0;
+
+            background:
+                rgba(15,18,25,.94);
+
+            border-top:
+                1px solid
+                rgba(255,255,255,.12);
+
+            transform:
+                translateY(100%);
+
+            transition:
+                transform .3s ease;
+        }
+
+        .pin-panel.active .pin-box {
+            transform: translateY(0);
+        }
+
+        .pin-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .pin-subtitle {
+            margin-top: 7px;
+
+            font-size: 12px;
+
+            opacity: .55;
+        }
+
+        .pin-indicators {
+            margin-top: 25px;
+
+            display: flex;
+
+            gap: 12px;
+        }
+
+        .pin-indicators span {
+            width: 11px;
+            height: 11px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255,255,255,.18);
+
+            transition: .15s;
+        }
+
+        .pin-indicators span.active {
+            background: #fff;
+
+            transform: scale(1.15);
+        }
+
+        .pin-keypad {
+            width:
+                min(100%, 330px);
+
+            margin-top: 25px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 11px;
+        }
+
+        .pin-key {
+            height: 56px;
+
+            border: none;
+
+            border-radius: 17px;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.09);
+
+            font-size: 19px;
+        }
+
+        .pin-key:active {
+            transform: scale(.94);
+
+            background:
+                rgba(255,255,255,.20);
+        }
+
+        .pin-cancel {
+            margin-top: 18px;
+
+            border: none;
+
+            background: transparent;
+
+            color: #fff;
+
+            font-size: 13px;
+
+            opacity: .65;
+        }
+
+
+        /* =====================================================
+           HOME SCREEN
+        ===================================================== */
+
+        #home-screen {
+            z-index: 700;
+
+            background: #07111f;
+        }
+
+        .home-wallpaper {
+            position: absolute;
+            inset: 0;
+
+            background:
+                url("./wallpaper1.png")
+                center / cover
+                no-repeat;
+        }
+
+        .home-overlay {
+            position: absolute;
+            inset: 0;
+
+            background:
+                rgba(0,0,0,.12);
+        }
+
+        .home-content {
+            position: relative;
+
+            z-index: 5;
+
+            width: 100%;
+            height: 100%;
+
+            padding:
+                max(30px, env(safe-area-inset-top))
+                18px
+                100px;
+
+            overflow-y: auto;
+
+            scrollbar-width: none;
+        }
+
+        .home-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .welcome {
+            padding: 18px;
+
+            border-radius: 24px;
+
+            background:
+                rgba(255,255,255,.10);
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            backdrop-filter:
+                blur(20px);
+        }
+
+        .welcome-small {
+            font-size: 12px;
+            opacity: .65;
+        }
+
+        .welcome-title {
+            margin-top: 5px;
+
+            font-size: 24px;
+
+            font-weight: 600;
+        }
+
+        .welcome-subtitle {
+            margin-top: 5px;
+
+            font-size: 11px;
+
+            opacity: .58;
+        }
+
+        .home-search {
+            height: 48px;
+
+            margin-top: 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 0 15px;
+
+            border-radius: 16px;
+
+            background:
+                rgba(255,255,255,.11);
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            backdrop-filter:
+                blur(18px);
+        }
+
+        .home-search span {
+            opacity: .7;
+        }
+
+        .home-search input {
+            flex: 1;
+
+            height: 100%;
+
+            border: none;
+            outline: none;
+
+            background: transparent;
+
+            color: #fff;
+
+            font-size: 14px;
+        }
+
+        .home-search input::placeholder {
+            color:
+                rgba(255,255,255,.52);
+        }
+
+        .section-header {
+            margin:
+                24px 0 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .section-action {
+            border: none;
+
+            background: transparent;
+
+            color: #60a5fa;
+
+            font-size: 11px;
+        }
+
+        .app-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 18px 12px;
+        }
+
+        .app {
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            gap: 7px;
+
+            cursor: pointer;
+        }
+
+        .app-icon {
+            width: 58px;
+            height: 58px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 19px;
+
+            font-size: 25px;
+
+            background:
+                rgba(255,255,255,.12);
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            backdrop-filter:
+                blur(15px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(0,0,0,.18);
+        }
+
+        .app-icon img {
+            width: 48px;
+            height: 48px;
+
+            object-fit: contain;
+        }
+
+        .app:active .app-icon {
+            transform: scale(.90);
+        }
+
+        .app-name {
+            max-width: 75px;
+
+            overflow: hidden;
+
+            white-space: nowrap;
+
+            text-overflow: ellipsis;
+
+            font-size: 10px;
+
+            opacity: .88;
+        }
+
+        .recommended {
+            padding: 13px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,.09);
+
+            border:
+                1px solid
+                rgba(255,255,255,.10);
+        }
+
+        .recommended-icon {
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background:
+                rgba(255,255,255,.12);
+
+            font-size: 22px;
+        }
+
+        .recommended-info {
+            flex: 1;
+        }
+
+        .recommended-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .recommended-desc {
+            margin-top: 4px;
+
+            font-size: 10px;
+
+            opacity: .55;
+        }
+
+        .recommended button {
+            padding: 9px 13px;
+
+            border: none;
+
+            border-radius: 12px;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.13);
+
+            font-size: 10px;
+        }
+
+        .home-dock {
+            position: absolute;
+
+            z-index: 30;
+
+            left: 50%;
+
+            bottom:
+                max(12px, env(safe-area-inset-bottom));
+
+            transform: translateX(-50%);
+
+            width:
+                calc(100% - 28px);
+
+            max-width: 500px;
+
+            height: 70px;
+
+            padding: 8px 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-around;
+
+            border-radius: 25px;
+
+            background:
+                rgba(8,18,32,.74);
+
+            border:
+                1px solid
+                rgba(255,255,255,.12);
+
+            backdrop-filter:
+                blur(25px);
+        }
+
+        .dock-app {
+            width: 48px;
+            height: 48px;
+
+            border: none;
+
+            border-radius: 16px;
+
+            color: #fff;
+
+            background: transparent;
+
+            font-size: 22px;
+        }
+
+        .dock-app:active {
+            transform: scale(.90);
+        }
+
+
+        /* =====================================================
+           CONTROL CENTER
+        ===================================================== */
+
+        #control-center {
+            z-index: 850;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #132b47,
+                    #07111f 45%,
+                    #020711
+                );
+
+            transform:
+                translateY(-100%);
+
+            transition:
+                transform .35s
+                cubic-bezier(.2,.8,.2,1);
+        }
+
+        #control-center.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+
+            transform: translateY(0);
+        }
+
+        .control-background {
+            position: absolute;
+            inset: 0;
+
+            pointer-events: none;
+
+            background:
+                radial-gradient(
+                    circle at 20% 5%,
+                    rgba(59,130,246,.30),
+                    transparent 30%
+                ),
+
+                radial-gradient(
+                    circle at 85% 70%,
+                    rgba(14,165,233,.14),
+                    transparent 35%
+                );
+        }
+
+        .control-scroll {
+            position: relative;
+
+            z-index: 5;
+
+            width: 100%;
+            height: 100%;
+
+            padding:
+                max(18px, env(safe-area-inset-top))
+                18px
+                30px;
+
+            overflow-y: auto;
+
+            scrollbar-width: none;
+        }
+
+        .control-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .control-header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 16px;
+        }
+
+        .control-title {
+            font-size: 23px;
+            font-weight: 600;
+        }
+
+        .control-subtitle {
+            margin-top: 3px;
+
+            font-size: 10px;
+
+            opacity: .43;
+        }
+
+        .control-close {
+            width: 42px;
+            height: 42px;
+
+            border: none;
+
+            border-radius: 14px;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.10);
+
+            font-size: 20px;
+        }
+
+        .connection-card {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 15px;
+
+            border-radius: 19px;
+
+            background:
+                rgba(255,255,255,.075);
+
+            border:
+                1px solid
+                rgba(255,255,255,.09);
+        }
+
+        .connection-icon {
+            width: 46px;
+            height: 46px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 14px;
+
+            background:
+                rgba(37,99,235,.18);
+
+            color: #60a5fa;
+        }
+
+        .connection-info {
+            flex: 1;
+        }
+
+        .connection-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            margin-top: 4px;
+
+            font-size: 9px;
+
+            opacity: .45;
+        }
+
+        .connection-button {
+            border: none;
+
+            padding: 8px 10px;
+
+            border-radius: 10px;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.08);
+
+            font-size: 9px;
+        }
+
+        .control-section {
+            margin-top: 17px;
+        }
+
+        .control-section-title {
+            margin:
+                0 5px 8px;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .7px;
+
+            opacity: .42;
+        }
+
+        .quick-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 8px;
+        }
+
+        .quick-button {
+            min-height: 75px;
+
+            border: none;
+
+            border-radius: 17px;
+
+            color: #fff;
+
+            background:
+                rgba(255,255,255,.075);
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 7px;
+        }
+
+        .quick-button.active {
+            background: #2563eb;
+        }
+
+        .quick-icon {
+            width: 31px;
+            height: 31px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.09);
+        }
+
+        .quick-name {
+            font-size: 8px;
+
+            opacity: .62;
+        }
+
+        .quick-button.active .quick-name {
+            opacity: .9;
+        }
+
+        .slider-card {
+            margin-top: 17px;
+
+            padding: 16px;
+
+            border-radius: 19px;
+
+            background:
+                rgba(255,255,255,.075);
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+        }
+
+        .slider-header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .slider-name {
+            font-size: 11px;
+            opacity: .62;
+        }
+
+        .slider-value {
+            font-size: 11px;
+            color: #60a5fa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+
+            margin-top: 14px;
+
+            accent-color: #3b82f6;
+        }
+
+        .dual-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 9px;
+
+            margin-top: 9px;
+        }
+
+        .control-card {
+            padding: 14px;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,.075);
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+        }
+
+        .control-card-top {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .control-card-title {
+            font-size: 10px;
+            opacity: .55;
+        }
+
+        .control-card-icon {
+            font-size: 17px;
+            opacity: .65;
+        }
+
+        .control-card-value {
+            margin-top: 10px;
+
+            font-size: 16px;
+        }
+
+        .switch {
+            position: relative;
+
+            display: block;
+
+            width: 39px;
+            height: 22px;
+
+            margin-top: 10px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .switch-track {
+            position: absolute;
+            inset: 0;
+
+            border-radius: 20px;
+
+            background:
+                rgba(255,255,255,.12);
+        }
+
+        .switch-track::after {
+            content: "";
+
+            position: absolute;
+
+            width: 16px;
+            height: 16px;
+
+            left: 3px;
+            top: 3px;
+
+            border-radius: 50%;
+
+            background: #fff;
+
+            transition: .2s;
+        }
+
+        .switch input:checked
+        + .switch-track {
+            background: #2563eb;
+        }
+
+        .switch input:checked
+        + .switch-track::after {
+            transform: translateX(17px);
+        }
+
+        .system-options {
+            overflow: hidden;
+
+            border-radius: 18px;
+
+            background:
+                rgba(255,255,255,.075);
+
+            border:
+                1px solid
+                rgba(255,255,255,.08);
+        }
+
+        .system-option {
+            width: 100%;
+            min-height: 56px;
+
+            padding: 10px 13px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            border: none;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,.055);
+
+            color: #fff;
+
+            background: transparent;
+
+            text-align: left;
+        }
+
+        .system-option:last-child {
+            border-bottom: none;
+        }
+
+        .option-icon {
+            width: 34px;
+            height: 34px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 11px;
+
+            background:
+                rgba(255,255,255,.08);
+        }
+
+        .option-info {
+            flex: 1;
+        }
+
+        .option-title {
+            font-size: 10px;
+        }
+
+        .option-description {
+            margin-top: 3px;
+
+            font-size: 8px;
+
+            opacity: .38;
+        }
+
+        .option-arrow {
+            opacity: .3;
+        }
+
+
+        /* =====================================================
+           DESKTOP
+        ===================================================== */
+
+        @media (min-width: 600px) {
+
+            .home-content {
+                max-width: 850px;
+                margin: auto;
+            }
+
+            .app-grid {
+                grid-template-columns:
+                    repeat(6, 1fr);
+            }
+
+            .control-scroll {
+                max-width: 720px;
+                margin: auto;
+            }
+
+        }
+
+        @media (min-width: 1000px) {
+
+            .home-content {
+                max-width: 1100px;
+            }
+
+            .app-grid {
+                grid-template-columns:
+                    repeat(8, 1fr);
+            }
+
+        }
+
+
+        /* =====================================================
+           LANDSCAPE
+        ===================================================== */
+
+        @media (orientation: landscape) {
+
+            .lock-content {
+                padding-top: 4vh;
+            }
+
+            .lock-clock {
+                font-size: 55px;
+            }
+
+            .lock-profile {
+                margin-top: 15px;
+            }
+
+            .lock-notification {
+                margin-top: 15px;
+            }
+
+            .app-grid {
+                grid-template-columns:
+                    repeat(6, 1fr);
+            }
+
+        }
+
+
+        /* =====================================================
+           REDUCED MOTION
+        ===================================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration:
+                    .01ms !important;
+
+                animation-iteration-count:
+                    1 !important;
+
+                transition-duration:
+                    .01ms !important;
+            }
+
+        }
+
+    </style>
 
 </head>
 
@@ -81,101 +1643,1868 @@
 <body>
 
 
-    <!-- =========================================
-         MARA LOCK SCREEN
-    ========================================== -->
+    <!-- =====================================================
+         SPLASH / LAYAR DEPAN
+    ===================================================== -->
 
-    <iframe
-        id="maraLockFrame"
-        class="mara-iframe"
-        src="./ux/lock-screen.html"
-        title="MARA OS Lock Screen"
-        frameborder="0"
-        scrolling="no"
-        allow="fullscreen"
-    ></iframe>
+    <section
+        id="splash-screen"
+        class="screen active">
 
+        <div class="splash-content">
 
-    <!-- =========================================
-         MARA STATUS BAR
-    ========================================== -->
+            <div class="splash-logo">
 
-    <header
-        class="mara-header"
-        id="maraHeader"
-    >
+                <img
+                    src="./mara-icon-192.png"
+                    alt="MARA OS">
 
-        <!-- JAM -->
+            </div>
 
-        <div
-            class="clock"
-            id="clock"
-        >
-            00:00
-        </div>
+            <div class="splash-title">
+                MARA
+            </div>
 
+            <div class="splash-subtitle">
+                MARA OPERATING SYSTEM
+            </div>
 
-        <!-- BATTERY -->
-
-        <div
-            class="battery"
-            id="battery"
-            aria-label="Status baterai"
-        >
-
-            <span
-                id="battery-percent"
-            >
-                --%
-            </span>
-
-
-            <div
-                class="battery-icon"
-                aria-hidden="true"
-            >
+            <div class="splash-loading">
 
                 <div
-                    class="battery-level"
-                    id="battery-level"
-                ></div>
+                    class="splash-loading-bar">
+                </div>
 
             </div>
 
         </div>
 
-    </header>
+        <div class="splash-version">
+            MARA OS
+        </div>
+
+    </section>
 
 
-    <!-- =========================================
+    <!-- =====================================================
+         LOCK SCREEN
+    ===================================================== -->
+
+    <section
+        id="lock-screen"
+        class="screen">
+
+        <div class="lock-wallpaper"></div>
+
+        <div class="lock-overlay"></div>
+
+
+        <div class="lock-content">
+
+            <div
+                id="lock-clock"
+                class="lock-clock">
+                00:00
+            </div>
+
+            <div
+                id="lock-date"
+                class="lock-date">
+                Memuat tanggal...
+            </div>
+
+            <div class="lock-weather">
+                ☀️ 28°C
+            </div>
+
+
+            <div class="lock-profile">
+
+                <div class="lock-avatar">
+                    👤
+                </div>
+
+                <div class="lock-name">
+                    Pengguna MARA
+                </div>
+
+            </div>
+
+
+            <article class="lock-notification">
+
+                <div class="notification-icon">
+                    ✉
+                </div>
+
+                <div class="notification-info">
+
+                    <strong>
+                        Remail
+                    </strong>
+
+                    <span>
+                        Pesan baru
+                    </span>
+
+                </div>
+
+                <small>
+                    2m
+                </small>
+
+            </article>
+
+
+            <div
+                id="unlock-button"
+                class="lock-unlock">
+
+                <div class="unlock-arrow">
+                    ↑
+                </div>
+
+                <div class="unlock-text">
+                    Geser untuk membuka
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="lock-actions">
+
+            <button
+                class="lock-action"
+                id="phone-button">
+                ☎
+            </button>
+
+            <button
+                class="lock-action"
+                id="camera-button">
+                📷
+            </button>
+
+        </div>
+
+
+        <!-- PIN -->
+
+        <section
+            id="pin-panel"
+            class="pin-panel">
+
+            <div class="pin-box">
+
+                <div class="pin-title">
+                    Buka MARA OS
+                </div>
+
+                <div class="pin-subtitle">
+                    Masukkan PIN untuk melanjutkan
+                </div>
+
+
+                <div
+                    id="pin-indicators"
+                    class="pin-indicators">
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+
+
+                <div class="pin-keypad">
+
+                    <button class="pin-key" data-pin="1">
+                        1
+                    </button>
+
+                    <button class="pin-key" data-pin="2">
+                        2
+                    </button>
+
+                    <button class="pin-key" data-pin="3">
+                        3
+                    </button>
+
+                    <button class="pin-key" data-pin="4">
+                        4
+                    </button>
+
+                    <button class="pin-key" data-pin="5">
+                        5
+                    </button>
+
+                    <button class="pin-key" data-pin="6">
+                        6
+                    </button>
+
+                    <button class="pin-key" data-pin="7">
+                        7
+                    </button>
+
+                    <button class="pin-key" data-pin="8">
+                        8
+                    </button>
+
+                    <button class="pin-key" data-pin="9">
+                        9
+                    </button>
+
+                    <button class="pin-key" data-pin="0">
+                        0
+                    </button>
+
+                </div>
+
+
+                <button
+                    id="pin-cancel"
+                    class="pin-cancel">
+
+                    Batal
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </section>
+
+
+    <!-- =====================================================
+         HOME SCREEN
+    ===================================================== -->
+
+    <section
+        id="home-screen"
+        class="screen">
+
+        <div class="home-wallpaper"></div>
+
+        <div class="home-overlay"></div>
+
+
+        <section class="home-content">
+
+
+            <div class="welcome">
+
+                <div class="welcome-small">
+                    Selamat datang
+                </div>
+
+                <div class="welcome-title">
+                    MARA OS
+                </div>
+
+                <div class="welcome-subtitle">
+                    Sistem operasi untuk ekosistem digital kamu.
+                </div>
+
+            </div>
+
+
+            <div class="home-search">
+
+                <span>
+                    ⌕
+                </span>
+
+                <input
+                    id="app-search"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Cari aplikasi...">
+
+            </div>
+
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Aplikasi
+                </h2>
+
+                <button
+                    id="all-apps"
+                    class="section-action">
+
+                    Semua
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="app-grid"
+                class="app-grid">
+
+
+                <div
+                    class="app"
+                    data-name="Rama">
+
+                    <div
+                        class="app-icon"
+                        style="background:#fff">
+
+                        <img
+                            src="./icon-svg/mara-browser.svg"
+                            alt="Rama">
+
+                    </div>
+
+                    <div class="app-name">
+                        Rama
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="VexaCut">
+
+                    <div class="app-icon">
+                        ✂
+                    </div>
+
+                    <div class="app-name">
+                        VexaCut
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Maps">
+
+                    <div
+                        class="app-icon"
+                        style="background:#fff">
+
+                        <img
+                            src="./icon-svg/maps.svg"
+                            alt="Maps">
+
+                    </div>
+
+                    <div class="app-name">
+                        Maps
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Web">
+
+                    <div class="app-icon">
+                        ◎
+                    </div>
+
+                    <div class="app-name">
+                        Web
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Remail">
+
+                    <div class="app-icon">
+                        ✉
+                    </div>
+
+                    <div class="app-name">
+                        Remail
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Storage">
+
+                    <div class="app-icon">
+                        ▣
+                    </div>
+
+                    <div class="app-name">
+                        Storage
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Berita">
+
+                    <div class="app-icon">
+                        ▤
+                    </div>
+
+                    <div class="app-name">
+                        Berita
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Rama Story">
+
+                    <div class="app-icon">
+                        ◇
+                    </div>
+
+                    <div class="app-name">
+                        Rama Story
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Rama School">
+
+                    <div class="app-icon">
+                        🎓
+                    </div>
+
+                    <div class="app-name">
+                        Rama School
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Game Store">
+
+                    <div class="app-icon">
+                        🎮
+                    </div>
+
+                    <div class="app-name">
+                        Game Store
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="Pengaturan">
+
+                    <div class="app-icon">
+                        ⚙
+                    </div>
+
+                    <div class="app-name">
+                        Pengaturan
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="app"
+                    data-name="File Manager">
+
+                    <div class="app-icon">
+                        📁
+                    </div>
+
+                    <div class="app-name">
+                        File Manager
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Untuk kamu
+                </h2>
+
+            </div>
+
+
+            <article class="recommended">
+
+                <div class="recommended-icon">
+                    🎬
+                </div>
+
+                <div class="recommended-info">
+
+                    <div class="recommended-title">
+                        VexaCut
+                    </div>
+
+                    <div class="recommended-desc">
+                        Buat dan edit video kamu.
+                    </div>
+
+                </div>
+
+                <button
+                    onclick="openApp('VexaCut')">
+
+                    Buka
+
+                </button>
+
+            </article>
+
+        </section>
+
+
+        <nav class="home-dock">
+
+            <button
+                class="dock-app"
+                onclick="openApp('Phone')">
+                ☎
+            </button>
+
+            <button
+                class="dock-app"
+                onclick="openApp('Web')">
+                ◎
+            </button>
+
+            <button
+                id="drawer-button"
+                class="dock-app">
+                ⠿
+            </button>
+
+            <button
+                class="dock-app"
+                onclick="openApp('Remail')">
+                ✉
+            </button>
+
+            <button
+                class="dock-app"
+                onclick="openApp('Camera')">
+                📷
+            </button>
+
+        </nav>
+
+    </section>
+
+
+    <!-- =====================================================
          CONTROL CENTER
-    ========================================== -->
+    ===================================================== -->
 
-    <div
-        id="controlCenterOverlay"
-        aria-hidden="true"
-    >
+    <section
+        id="control-center"
+        class="screen">
 
-        <iframe
-            id="controlCenterFrame"
-            src="./ux/control-center.html"
-            title="MARA OS Control Center"
-            frameborder="0"
-            scrolling="no"
-        ></iframe>
-
-    </div>
+        <div class="control-background"></div>
 
 
-    <!-- =========================================
-         JAVASCRIPT
-         Service Worker didaftarkan dari script.js
-    ========================================== -->
+        <div class="control-scroll">
 
-    <script
-        src="./script.js"
-        defer
-    ></script>
+            <header class="control-header">
+
+                <div>
+
+                    <h1 class="control-title">
+                        Control Center
+                    </h1>
+
+                    <p class="control-subtitle">
+                        Kendali cepat MARA OS
+                    </p>
+
+                </div>
+
+                <button
+                    id="control-close"
+                    class="control-close">
+                    ↓
+                </button>
+
+            </header>
+
+
+            <div class="connection-card">
+
+                <div class="connection-icon">
+                    ◉
+                </div>
+
+                <div class="connection-info">
+
+                    <div class="connection-name">
+                        Wi-Fi MARA
+                    </div>
+
+                    <div
+                        id="connection-status"
+                        class="connection-status">
+
+                        Terhubung ke jaringan
+
+                    </div>
+
+                </div>
+
+                <button
+                    class="connection-button"
+                    onclick="openWifi()">
+
+                    Detail
+
+                </button>
+
+            </div>
+
+
+            <section class="control-section">
+
+                <div class="control-section-title">
+                    Kontrol cepat
+                </div>
+
+
+                <div class="quick-grid">
+
+
+                    <button
+                        class="quick-button active"
+                        data-control="wifi"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ◉
+                        </div>
+
+                        <div class="quick-name">
+                            Wi-Fi
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button active"
+                        data-control="bluetooth"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ᛒ
+                        </div>
+
+                        <div class="quick-name">
+                            Bluetooth
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button"
+                        data-control="airplane"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ✈
+                        </div>
+
+                        <div class="quick-name">
+                            Pesawat
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button"
+                        data-control="rotation"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ↻
+                        </div>
+
+                        <div class="quick-name">
+                            Rotasi
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button active"
+                        data-control="sound"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ♪
+                        </div>
+
+                        <div class="quick-name">
+                            Suara
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button"
+                        data-control="flashlight"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ◇
+                        </div>
+
+                        <div class="quick-name">
+                            Senter
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button"
+                        data-control="hotspot"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ⋮
+                        </div>
+
+                        <div class="quick-name">
+                            Hotspot
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="quick-button"
+                        data-control="dnd"
+                        onclick="toggleQuick(this)">
+
+                        <div class="quick-icon">
+                            ◐
+                        </div>
+
+                        <div class="quick-name">
+                            Jangan Ganggu
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <div class="slider-card">
+
+                <div class="slider-header">
+
+                    <div class="slider-name">
+                        Kecerahan
+                    </div>
+
+                    <div
+                        id="brightness-value"
+                        class="slider-value">
+
+                        75%
+
+                    </div>
+
+                </div>
+
+                <input
+                    id="brightness"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="75">
+
+            </div>
+
+
+            <div class="slider-card">
+
+                <div class="slider-header">
+
+                    <div class="slider-name">
+                        Volume
+                    </div>
+
+                    <div
+                        id="volume-value"
+                        class="slider-value">
+
+                        60%
+
+                    </div>
+
+                </div>
+
+                <input
+                    id="volume"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="60">
+
+            </div>
+
+
+            <div class="dual-grid">
+
+                <div class="control-card">
+
+                    <div class="control-card-top">
+
+                        <div class="control-card-title">
+                            Data Seluler
+                        </div>
+
+                        <div class="control-card-icon">
+                            ≋
+                        </div>
+
+                    </div>
+
+                    <div class="control-card-value">
+                        Aktif
+                    </div>
+
+                    <label class="switch">
+
+                        <input
+                            type="checkbox"
+                            checked>
+
+                        <span class="switch-track"></span>
+
+                    </label>
+
+                </div>
+
+
+                <div class="control-card">
+
+                    <div class="control-card-top">
+
+                        <div class="control-card-title">
+                            Lokasi
+                        </div>
+
+                        <div class="control-card-icon">
+                            ⌖
+                        </div>
+
+                    </div>
+
+                    <div class="control-card-value">
+                        Aktif
+                    </div>
+
+                    <label class="switch">
+
+                        <input
+                            type="checkbox"
+                            checked>
+
+                        <span class="switch-track"></span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <section class="control-section">
+
+                <div class="control-section-title">
+                    Sistem
+                </div>
+
+                <div class="system-options">
+
+                    <button
+                        class="system-option"
+                        onclick="openSettings()">
+
+                        <div class="option-icon">
+                            ⚙
+                        </div>
+
+                        <div class="option-info">
+
+                            <div class="option-title">
+                                Pengaturan
+                            </div>
+
+                            <div class="option-description">
+                                Konfigurasi lengkap perangkat
+                            </div>
+
+                        </div>
+
+                        <div class="option-arrow">
+                            ›
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="system-option"
+                        onclick="openBattery()">
+
+                        <div class="option-icon">
+                            ▣
+                        </div>
+
+                        <div class="option-info">
+
+                            <div class="option-title">
+                                Baterai
+                            </div>
+
+                            <div
+                                id="control-battery-description"
+                                class="option-description">
+
+                                Memuat baterai...
+
+                            </div>
+
+                        </div>
+
+                        <div class="option-arrow">
+                            ›
+                        </div>
+
+                    </button>
+
+
+                    <button
+                        class="system-option"
+                        onclick="openSecurity()">
+
+                        <div class="option-icon">
+                            ✓
+                        </div>
+
+                        <div class="option-info">
+
+                            <div class="option-title">
+                                Keamanan
+                            </div>
+
+                            <div class="option-description">
+                                Perangkat terlindungi
+                            </div>
+
+                        </div>
+
+                        <div class="option-arrow">
+                            ›
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+
+    <script>
+
+        /* =====================================================
+           MARA OS — SINGLE PAGE ENGINE
+        ===================================================== */
+
+        "use strict";
+
+
+        /* =====================================================
+           SCREEN REFERENCES
+        ===================================================== */
+
+        const splashScreen =
+            document.getElementById("splash-screen");
+
+        const lockScreen =
+            document.getElementById("lock-screen");
+
+        const homeScreen =
+            document.getElementById("home-screen");
+
+        const controlCenter =
+            document.getElementById("control-center");
+
+
+        /* =====================================================
+           SCREEN NAVIGATION
+        ===================================================== */
+
+        function showScreen(screen) {
+
+            document
+                .querySelectorAll(".screen")
+                .forEach(element => {
+
+                    if (
+                        element === controlCenter &&
+                        screen !== controlCenter
+                    ) {
+                        element.classList.remove("active");
+                        return;
+                    }
+
+                    element.classList.remove("active");
+
+                });
+
+            screen.classList.add("active");
+
+        }
+
+
+        /* =====================================================
+           SPLASH → LOCK
+        ===================================================== */
+
+        window.addEventListener(
+            "load",
+            function() {
+
+                setTimeout(
+                    function() {
+
+                        showScreen(lockScreen);
+
+                    },
+                    1800
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           CLOCK
+        ===================================================== */
+
+        function updateClock() {
+
+            const now = new Date();
+
+            const hours =
+                String(
+                    now.getHours()
+                ).padStart(2, "0");
+
+            const minutes =
+                String(
+                    now.getMinutes()
+                ).padStart(2, "0");
+
+            document
+                .getElementById("lock-clock")
+                .textContent =
+                `${hours}:${minutes}`;
+
+        }
+
+
+        function updateDate() {
+
+            const now = new Date();
+
+            const date =
+                now.toLocaleDateString(
+                    "id-ID",
+                    {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long"
+                    }
+                );
+
+            document
+                .getElementById("lock-date")
+                .textContent = date;
+
+        }
+
+
+        updateClock();
+        updateDate();
+
+        setInterval(updateClock, 1000);
+        setInterval(updateDate, 60000);
+
+
+        /* =====================================================
+           PIN
+        ===================================================== */
+
+        const correctPIN = "1234";
+
+        let enteredPIN = "";
+
+        const pinPanel =
+            document.getElementById("pin-panel");
+
+        const indicators =
+            document.querySelectorAll(
+                "#pin-indicators span"
+            );
+
+
+        function openPIN() {
+
+            pinPanel.classList.add("active");
+
+        }
+
+
+        function closePIN() {
+
+            pinPanel.classList.remove("active");
+
+            resetPIN();
+
+        }
+
+
+        function resetPIN() {
+
+            enteredPIN = "";
+
+            updatePINIndicators();
+
+        }
+
+
+        function updatePINIndicators() {
+
+            indicators.forEach(
+                (indicator, index) => {
+
+                    indicator.classList.toggle(
+                        "active",
+                        index < enteredPIN.length
+                    );
+
+                }
+            );
+
+        }
+
+
+        function checkPIN() {
+
+            if (
+                enteredPIN === correctPIN
+            ) {
+
+                pinPanel.classList.remove("active");
+
+                setTimeout(
+                    function() {
+
+                        showScreen(homeScreen);
+
+                    },
+                    250
+                );
+
+                resetPIN();
+
+            } else {
+
+                const box =
+                    document.querySelector(
+                        ".pin-box"
+                    );
+
+                box.animate(
+                    [
+                        {
+                            transform:
+                                "translateX(0)"
+                        },
+                        {
+                            transform:
+                                "translateX(-8px)"
+                        },
+                        {
+                            transform:
+                                "translateX(8px)"
+                        },
+                        {
+                            transform:
+                                "translateX(-5px)"
+                        },
+                        {
+                            transform:
+                                "translateX(5px)"
+                        },
+                        {
+                            transform:
+                                "translateX(0)"
+                        }
+                    ],
+                    {
+                        duration: 260
+                    }
+                );
+
+                setTimeout(
+                    resetPIN,
+                    300
+                );
+
+            }
+
+        }
+
+
+        document
+            .getElementById("unlock-button")
+            .addEventListener(
+                "click",
+                openPIN
+            );
+
+
+        document
+            .getElementById("pin-cancel")
+            .addEventListener(
+                "click",
+                closePIN
+            );
+
+
+        document
+            .querySelectorAll("[data-pin]")
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        function() {
+
+                            if (
+                                enteredPIN.length >= 4
+                            ) {
+                                return;
+                            }
+
+                            enteredPIN +=
+                                this.dataset.pin;
+
+                            updatePINIndicators();
+
+                            if (
+                                enteredPIN.length === 4
+                            ) {
+
+                                setTimeout(
+                                    checkPIN,
+                                    180
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /* =====================================================
+           KEYBOARD PIN
+        ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    /^[0-9]$/.test(event.key)
+                ) {
+
+                    const button =
+                        document.querySelector(
+                            `[data-pin="${event.key}"]`
+                        );
+
+                    if (button) {
+                        button.click();
+                    }
+
+                }
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closePIN();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           HOME SEARCH
+        ===================================================== */
+
+        const searchInput =
+            document.getElementById(
+                "app-search"
+            );
+
+        const apps =
+            document.querySelectorAll(
+                ".app"
+            );
+
+
+        searchInput.addEventListener(
+            "input",
+            function() {
+
+                const query =
+                    this.value
+                        .toLowerCase()
+                        .trim();
+
+                apps.forEach(
+                    app => {
+
+                        const name =
+                            app.dataset.name
+                                .toLowerCase();
+
+                        app.style.display =
+                            !query ||
+                            name.includes(query)
+                                ? ""
+                                : "none";
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           OPEN APP
+        ===================================================== */
+
+        function openApp(appName) {
+
+            console.log(
+                "MARA membuka:",
+                appName
+            );
+
+            /*
+             * Untuk sementara aplikasi masih
+             * menggunakan placeholder.
+             *
+             * Nanti setiap aplikasi dapat
+             * dihubungkan ke halaman/app
+             * masing-masing.
+             */
+
+            alert(
+                "Membuka " + appName
+            );
+
+        }
+
+
+        /* =====================================================
+           APP DRAWER
+        ===================================================== */
+
+        document
+            .getElementById("drawer-button")
+            .addEventListener(
+                "click",
+                function() {
+
+                    alert(
+                        "MARA App Drawer"
+                    );
+
+                }
+            );
+
+
+        document
+            .getElementById("all-apps")
+            .addEventListener(
+                "click",
+                function() {
+
+                    alert(
+                        "MARA App Drawer"
+                    );
+
+                }
+            );
+
+
+        /* =====================================================
+           CONTROL CENTER
+        ===================================================== */
+
+        function openControlCenter() {
+
+            controlCenter.classList.add(
+                "active"
+            );
+
+        }
+
+
+        function closeControlCenter() {
+
+            controlCenter.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        document
+            .getElementById("control-close")
+            .addEventListener(
+                "click",
+                closeControlCenter
+            );
+
+
+        /* =====================================================
+           SWIPE CONTROL CENTER
+        ===================================================== */
+
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+
+
+        homeScreen.addEventListener(
+            "touchstart",
+            function(event) {
+
+                touchStartY =
+                    event.touches[0].clientY;
+
+                touchCurrentY =
+                    touchStartY;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        homeScreen.addEventListener(
+            "touchmove",
+            function(event) {
+
+                touchCurrentY =
+                    event.touches[0].clientY;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        homeScreen.addEventListener(
+            "touchend",
+            function() {
+
+                const distance =
+                    touchCurrentY -
+                    touchStartY;
+
+                /*
+                 * Swipe dari bagian atas
+                 * ke bawah.
+                 */
+
+                if (
+                    touchStartY < 90 &&
+                    distance > 60
+                ) {
+
+                    openControlCenter();
+
+                }
+
+                touchStartY = 0;
+                touchCurrentY = 0;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        /* =====================================================
+           SWIPE CLOSE CONTROL CENTER
+        ===================================================== */
+
+        let controlStartY = 0;
+        let controlCurrentY = 0;
+
+
+        controlCenter.addEventListener(
+            "touchstart",
+            function(event) {
+
+                controlStartY =
+                    event.touches[0].clientY;
+
+                controlCurrentY =
+                    controlStartY;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        controlCenter.addEventListener(
+            "touchmove",
+            function(event) {
+
+                controlCurrentY =
+                    event.touches[0].clientY;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        controlCenter.addEventListener(
+            "touchend",
+            function() {
+
+                const distance =
+                    controlCurrentY -
+                    controlStartY;
+
+                if (
+                    distance < -60
+                ) {
+
+                    closeControlCenter();
+
+                }
+
+                controlStartY = 0;
+                controlCurrentY = 0;
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        /* =====================================================
+           QUICK CONTROL
+        ===================================================== */
+
+        function toggleQuick(button) {
+
+            button.classList.toggle(
+                "active"
+            );
+
+            const control =
+                button.dataset.control;
+
+            const active =
+                button.classList.contains(
+                    "active"
+                );
+
+            if (
+                control === "wifi"
+            ) {
+
+                document
+                    .getElementById(
+                        "connection-status"
+                    )
+                    .textContent =
+                    active
+                        ? "Terhubung ke jaringan"
+                        : "Wi-Fi dimatikan";
+
+            }
+
+        }
+
+
+        /* =====================================================
+           BRIGHTNESS
+        ===================================================== */
+
+        const brightness =
+            document.getElementById(
+                "brightness"
+            );
+
+        brightness.addEventListener(
+            "input",
+            function() {
+
+                document
+                    .getElementById(
+                        "brightness-value"
+                    )
+                    .textContent =
+                    this.value + "%";
+
+            }
+        );
+
+
+        /* =====================================================
+           VOLUME
+        ===================================================== */
+
+        const volume =
+            document.getElementById(
+                "volume"
+            );
+
+        volume.addEventListener(
+            "input",
+            function() {
+
+                document
+                    .getElementById(
+                        "volume-value"
+                    )
+                    .textContent =
+                    this.value + "%";
+
+            }
+        );
+
+
+        /* =====================================================
+           BATTERY
+        ===================================================== */
+
+        function updateBattery(battery) {
+
+            const percent =
+                Math.round(
+                    battery.level * 100
+                );
+
+            document
+                .getElementById(
+                    "control-battery-description"
+                )
+                .textContent =
+                `${percent}% • Penggunaan normal`;
+
+        }
+
+
+        if (
+            "getBattery" in navigator
+        ) {
+
+            navigator
+                .getBattery()
+                .then(
+                    function(battery) {
+
+                        updateBattery(battery);
+
+                        battery.addEventListener(
+                            "levelchange",
+                            function() {
+
+                                updateBattery(
+                                    battery
+                                );
+
+                            }
+                        );
+
+                    }
+                )
+                .catch(
+                    function() {
+
+                        document
+                            .getElementById(
+                                "control-battery-description"
+                            )
+                            .textContent =
+                            "Informasi baterai tidak tersedia";
+
+                    }
+                );
+
+        } else {
+
+            document
+                .getElementById(
+                    "control-battery-description"
+                )
+                .textContent =
+                "Informasi baterai tidak tersedia";
+
+        }
+
+
+        /* =====================================================
+           CONTROL CENTER ACTIONS
+        ===================================================== */
+
+        function openWifi() {
+
+            alert(
+                "Pengaturan Wi-Fi MARA"
+            );
+
+        }
+
+
+        function openSettings() {
+
+            alert(
+                "MARA Settings"
+            );
+
+        }
+
+
+        function openBattery() {
+
+            alert(
+                "Informasi baterai MARA"
+            );
+
+        }
+
+
+        function openSecurity() {
+
+            alert(
+                "MARA Security\n\nPerangkat terlindungi."
+            );
+
+        }
+
+
+        /* =====================================================
+           LOCK SCREEN QUICK ACTION
+        ===================================================== */
+
+        document
+            .getElementById("camera-button")
+            .addEventListener(
+                "click",
+                function() {
+
+                    alert(
+                        "MARA Camera"
+                    );
+
+                }
+            );
+
+
+        document
+            .getElementById("phone-button")
+            .addEventListener(
+                "click",
+                function() {
+
+                    alert(
+                        "MARA Phone"
+                    );
+
+                }
+            );
+
+
+        /* =====================================================
+           PREVENT CONTEXT MENU
+        ===================================================== */
+
+        document.addEventListener(
+            "contextmenu",
+            function(event) {
+
+                event.preventDefault();
+
+            }
+        );
+
+    </script>
 
 
 </body>
