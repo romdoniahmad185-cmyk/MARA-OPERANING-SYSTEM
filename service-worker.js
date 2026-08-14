@@ -2,7 +2,10 @@ const CACHE_NAME = "mara-os-v2";
 
 const APP_FILES = [
     "./",
-    "./index.html"
+    "./index.html",
+    "./style.css",
+    "./script.js",
+    "./manifest.json"
 ];
 
 self.addEventListener("install", event => {
