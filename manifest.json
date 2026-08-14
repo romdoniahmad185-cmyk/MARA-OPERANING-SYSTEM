@@ -2,99 +2,25 @@
 
 const CACHE_NAME = "mara-os-v1";
 
-const FILES_TO_CACHE = [
-    "./",
-    "./index.html",
-    "./style.css",
-    "./script.js",
-    "./manifest.json",
-    "./mara-icon-192.png",
-    "./mara-icon-512.png",
-    "./ux/lock-screen.html",
-    "./ux/home-screen.html",
-    "./ux/control-center.html"
-];
-
-
-/* =========================================
-   INSTALL
-========================================= */
-
 self.addEventListener("install", event => {
 
-    event.waitUntil(
-
-        caches.open(CACHE_NAME)
-            .then(cache => {
-
-                return Promise.all(
-
-                    FILES_TO_CACHE.map(file => {
-
-                        return fetch(file)
-                            .then(response => {
-
-                                if (!response.ok) {
-                                    throw new Error(
-                                        "Gagal mengambil: " + file
-                                    );
-                                }
-
-                                return cache.put(
-                                    file,
-                                    response
-                                );
-
-                            });
-
-                    })
-
-                );
-
-            })
-
-    );
+    console.log("MARA Service Worker: INSTALL");
 
     self.skipWaiting();
 
 });
 
 
-/* =========================================
-   ACTIVATE
-========================================= */
-
 self.addEventListener("activate", event => {
 
+    console.log("MARA Service Worker: ACTIVATE");
+
     event.waitUntil(
-
-        caches.keys()
-            .then(cacheNames => {
-
-                return Promise.all(
-
-                    cacheNames
-                        .filter(name => {
-                            return name !== CACHE_NAME;
-                        })
-                        .map(name => {
-                            return caches.delete(name);
-                        })
-
-                );
-
-            })
-
+        self.clients.claim()
     );
-
-    self.clients.claim();
 
 });
 
-
-/* =========================================
-   FETCH
-========================================= */
 
 self.addEventListener("fetch", event => {
 
@@ -103,18 +29,7 @@ self.addEventListener("fetch", event => {
     }
 
     event.respondWith(
-
-        caches.match(event.request)
-            .then(cachedResponse => {
-
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                return fetch(event.request);
-
-            })
-
+        fetch(event.request)
     );
 
 });
