@@ -1,2257 +1,2227 @@
 /* =========================================================
-MARA OS — UNIFIED STYLE
-Splash + Lock + Home + Control Center
+   MARA OS — STYLE.CSS
+   SINGLE PAGE APPLICATION
 ========================================================= */
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  
-  -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-  }
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+
+    -webkit-tap-highlight-color: transparent;
+}
 
 html,
 body {
+    width: 100%;
+    height: 100%;
 
-width: 100%;
-height: 100%;
+    overflow: hidden;
 
-margin: 0;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-overflow: hidden;
+    background: #020711;
+    color: #fff;
 
-font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-background: #020711;
-
-color: #fff;
-
+    user-select: none;
 }
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
 
 /* =========================================================
-GLOBAL SCREEN SYSTEM
+   ROOT
 ========================================================= */
 
-.mara-screen {
+.mara-os {
+    position: fixed;
+    inset: 0;
 
-position: fixed;
+    width: 100%;
+    height: 100%;
 
-inset: 0;
+    overflow: hidden;
 
-width: 100%;
-height: 100%;
-
-overflow: hidden;
-
-opacity: 0;
-
-visibility: hidden;
-
-pointer-events: none;
-
-transform: scale(1.01);
-
-transition:
-    opacity .28s ease,
-    transform .28s ease,
-    visibility .28s ease;
-
+    background: #020711;
 }
 
-.mara-screen.active {
-
-opacity: 1;
-
-visibility: visible;
-
-pointer-events: auto;
-
-transform: scale(1);
-
-}
 
 /* =========================================================
-SPLASH SCREEN
+   SCREEN SYSTEM
 ========================================================= */
 
-#splash-screen {
+.screen {
+    position: absolute;
+    inset: 0;
 
-z-index: 1000;
+    width: 100%;
+    height: 100%;
 
-display: flex;
+    overflow: hidden;
 
-align-items: center;
+    opacity: 1;
+    transform: translateX(0) scale(1);
 
-justify-content: center;
+    transition:
+        opacity .28s ease,
+        transform .32s cubic-bezier(.2,.8,.2,1);
 
-flex-direction: column;
+    z-index: 1;
+}
 
-background:
+.screen.screen-enter {
+    animation:
+        screen-enter .35s ease both;
+}
 
-    radial-gradient(
-        circle at 50% 35%,
-        #173b68 0%,
-        #07111f 45%,
-        #020711 100%
-    );
+.screen.screen-exit {
+    animation:
+        screen-exit .28s ease both;
+}
 
+@keyframes screen-enter {
+
+    from {
+        opacity: 0;
+        transform:
+            scale(.98)
+            translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            scale(1)
+            translateY(0);
+    }
+}
+
+@keyframes screen-exit {
+
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.03);
+    }
+}
+
+
+/* =========================================================
+   SPLASH SCREEN
+========================================================= */
+
+.splash-screen {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            #173866,
+            #07111f 45%,
+            #020711 85%
+        );
+
+    z-index: 100;
 }
 
 .splash-logo {
 
-width: 110px;
-height: 110px;
+    width: 105px;
+    height: 105px;
 
-border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-display: flex;
+    border-radius: 28px;
 
-align-items: center;
-justify-content: center;
+    background:
+        rgba(255,255,255,.08);
 
-background:
-    rgba(255,255,255,.08);
+    border:
+        1px solid
+        rgba(255,255,255,.14);
 
-border:
-    1px solid
-    rgba(255,255,255,.15);
+    box-shadow:
+        0 20px 60px
+        rgba(0,0,0,.45);
 
-box-shadow:
-    0 20px 60px
-    rgba(0,0,0,.4);
-
-overflow: hidden;
-
-animation:
-    splash-logo-in
-    .7s
-    ease
-    both;
-
+    animation:
+        splash-logo 1.2s
+        ease-in-out
+        infinite alternate;
 }
 
 .splash-logo img {
 
-width: 100%;
-height: 100%;
+    width: 78px;
+    height: 78px;
 
-object-fit: cover;
-
+    object-fit: contain;
 }
 
-.splash-title {
+.splash-screen h1 {
 
-margin-top: 20px;
+    margin-top: 24px;
 
-font-size: 25px;
+    font-size: 28px;
 
-font-weight: 600;
+    font-weight: 600;
 
-letter-spacing: 1px;
-
+    letter-spacing: 2px;
 }
 
-.splash-subtitle {
+.splash-screen p {
 
-margin-top: 7px;
+    margin-top: 8px;
 
-font-size: 11px;
+    font-size: 12px;
 
-opacity: .45;
-
+    opacity: .5;
 }
 
-.splash-loading {
+.splash-loader {
 
-width: 80px;
-height: 3px;
+    width: 130px;
+    height: 3px;
 
-margin-top: 30px;
+    margin-top: 25px;
 
-overflow: hidden;
+    overflow: hidden;
 
-border-radius: 10px;
+    border-radius: 10px;
 
-background:
-    rgba(255,255,255,.08);
-
+    background:
+        rgba(255,255,255,.1);
 }
 
-.splash-loading::after {
+.splash-loader span {
 
-content: "";
+    display: block;
 
-display: block;
+    width: 45%;
+    height: 100%;
 
-width: 35%;
+    border-radius: inherit;
 
-height: 100%;
+    background: #60a5fa;
 
-border-radius: inherit;
-
-background: #60a5fa;
-
-animation:
-    splash-loading
-    1.1s
-    ease
-    infinite;
-
+    animation:
+        splash-loader 1.2s
+        ease-in-out
+        infinite;
 }
 
-@keyframes splash-logo-in {
+@keyframes splash-logo {
 
-from {
+    from {
+        transform: scale(.96);
+    }
 
-    opacity: 0;
-
-    transform:
-        scale(.75);
-
+    to {
+        transform: scale(1.04);
+    }
 }
 
-to {
+@keyframes splash-loader {
 
-    opacity: 1;
+    0% {
+        transform: translateX(-120%);
+    }
 
-    transform:
-        scale(1);
-
+    100% {
+        transform: translateX(300%);
+    }
 }
 
-}
-
-@keyframes splash-loading {
-
-from {
-
-    transform:
-        translateX(-120%);
-
-}
-
-to {
-
-    transform:
-        translateX(350%);
-
-}
-
-}
 
 /* =========================================================
-LOCK SCREEN
+   LOCK SCREEN
 ========================================================= */
 
-#lock-screen {
+.lock-screen {
 
-z-index: 200;
+    display: flex;
 
-display: flex;
+    flex-direction: column;
 
-flex-direction: column;
-
-background: #000;
-
+    color: #fff;
 }
 
 .lock-wallpaper {
 
-position: absolute;
+    position: absolute;
+    inset: 0;
 
-inset: 0;
+    background:
+        url("./wallpaper1.png")
+        center / cover
+        no-repeat;
 
-z-index: 0;
+    transform: scale(1.04);
 
-background:
-
-    radial-gradient(
-        circle at 50% 20%,
-        #3b82f6 0%,
-        #172554 35%,
-        #020617 75%,
-        #000 100%
-    );
-
-transform: scale(1.05);
-
+    z-index: 0;
 }
 
-.lock-wallpaper-overlay {
+.lock-overlay {
 
-position: absolute;
+    position: absolute;
+    inset: 0;
 
-inset: 0;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0,0,0,.12),
+            rgba(0,0,0,.25) 40%,
+            rgba(0,0,0,.72)
+        );
 
-z-index: 1;
-
-background:
-
-    linear-gradient(
-        180deg,
-        rgba(0,0,0,.08),
-        rgba(0,0,0,.20) 45%,
-        rgba(0,0,0,.68)
-    );
-
+    z-index: 1;
 }
+
 
 /* =========================================================
-STATUS BAR
+   STATUS BAR
 ========================================================= */
 
-.mara-status-bar {
+.status-bar,
+.home-status-bar {
 
-position: relative;
+    position: relative;
 
-z-index: 10;
+    z-index: 20;
 
-width: 100%;
+    width: 100%;
 
-min-height: 34px;
+    padding:
+        max(12px, env(safe-area-inset-top))
+        20px
+        0;
 
-padding:
-    max(10px, env(safe-area-inset-top))
-    18px
-    0;
+    min-height: 38px;
 
-display: flex;
+    display: flex;
 
-align-items: center;
+    align-items: center;
 
-justify-content: space-between;
+    justify-content: space-between;
 
-font-size: 12px;
-
+    font-size: 12px;
 }
 
-.status-right {
+.status-right,
+.home-status-right {
 
-display: flex;
+    display: flex;
 
-align-items: center;
+    align-items: center;
 
-gap: 8px;
+    gap: 8px;
 
+    opacity: .9;
 }
 
-.battery-status {
-
-display: flex;
-
-align-items: center;
-
-gap: 4px;
-
-}
-
-.battery-body {
-
-position: relative;
-
-width: 24px;
-height: 11px;
-
-padding: 2px;
-
-overflow: hidden;
-
-border:
-    1px solid
-    rgba(255,255,255,.8);
-
-border-radius: 3px;
-
-}
-
-.battery-level {
-
-width: 80%;
-
-height: 100%;
-
-border-radius: 1px;
-
-background: #fff;
-
-transition:
-    width .4s ease;
-
-}
-
-.battery-tip {
-
-width: 2px;
-height: 5px;
-
-margin-left: -1px;
-
-border-radius: 0 2px 2px 0;
-
-background: rgba(255,255,255,.8);
-
-}
-
-.battery-percent {
-
-font-size: 10px;
-
-opacity: .9;
-
-}
 
 /* =========================================================
-LOCK CONTENT
+   LOCK CONTENT
 ========================================================= */
 
 .lock-content {
 
-position: relative;
+    position: relative;
 
-z-index: 5;
+    z-index: 5;
 
-flex: 1;
+    flex: 1;
 
-display: flex;
+    display: flex;
 
-flex-direction: column;
+    flex-direction: column;
 
-align-items: center;
+    align-items: center;
 
-text-align: center;
+    text-align: center;
 
-padding:
-    7vh
-    20px
-    20px;
+    padding:
+        7vh
+        20px
+        20px;
 
+    min-height: 0;
 }
 
 .lock-clock {
 
-font-size:
-    clamp(
-        52px,
-        16vw,
-        82px
-    );
+    font-size:
+        clamp(58px, 17vw, 90px);
 
-font-weight: 300;
+    font-weight: 300;
 
-line-height: 1;
+    letter-spacing: -4px;
 
-letter-spacing: -3px;
+    line-height: 1;
 
-text-shadow:
-    0 4px 20px
-    rgba(0,0,0,.35);
-
+    text-shadow:
+        0 5px 25px
+        rgba(0,0,0,.4);
 }
 
 .lock-date {
 
-margin-top: 12px;
+    margin-top: 12px;
 
-font-size: 16px;
+    font-size: 16px;
 
-opacity: .9;
-
+    opacity: .9;
 }
 
 .lock-weather {
 
-margin-top: 18px;
+    display: flex;
 
-display: flex;
+    align-items: center;
 
-align-items: center;
+    gap: 7px;
 
-gap: 7px;
+    margin-top: 18px;
 
-font-size: 15px;
+    font-size: 15px;
 
-opacity: .9;
-
+    opacity: .9;
 }
 
+
 /* =========================================================
-PROFILE
+   PROFILE
 ========================================================= */
 
 .lock-profile {
 
-margin-top: 30px;
+    display: flex;
 
-display: flex;
+    flex-direction: column;
 
-flex-direction: column;
+    align-items: center;
 
-align-items: center;
-
+    margin-top: 28px;
 }
 
 .profile-avatar {
 
-width: 58px;
-height: 58px;
+    width: 60px;
+    height: 60px;
 
-border-radius: 50%;
+    display: flex;
 
-display: flex;
+    align-items: center;
+    justify-content: center;
 
-align-items: center;
-justify-content: center;
+    border-radius: 50%;
 
-overflow: hidden;
+    background:
+        rgba(255,255,255,.15);
 
-background:
-    rgba(255,255,255,.14);
+    border:
+        2px solid
+        rgba(255,255,255,.65);
 
-border:
-    2px solid
-    rgba(255,255,255,.7);
+    backdrop-filter:
+        blur(12px);
 
-backdrop-filter:
-    blur(10px);
+    font-size: 25px;
 
+    box-shadow:
+        0 10px 30px
+        rgba(0,0,0,.25);
 }
 
 .profile-name {
 
-margin-top: 9px;
+    margin-top: 9px;
 
-font-size: 15px;
+    font-size: 14px;
 
-font-weight: 600;
-
+    font-weight: 600;
 }
+
 
 /* =========================================================
-NOTIFICATION
+   LOCK NOTIFICATION
 ========================================================= */
-
-.lock-notifications {
-
-width:
-    min(
-        100%,
-        390px
-    );
-
-margin-top: 25px;
-
-}
 
 .lock-notification {
 
-display: flex;
+    width:
+        min(100%, 390px);
 
-align-items: center;
+    display: flex;
 
-gap: 12px;
+    align-items: center;
 
-padding:
-    13px 15px;
+    gap: 12px;
 
-border-radius: 18px;
+    margin-top: 25px;
 
-background:
-    rgba(255,255,255,.13);
+    padding:
+        13px 15px;
 
-border:
-    1px solid
-    rgba(255,255,255,.14);
+    border-radius: 18px;
 
-backdrop-filter:
-    blur(18px);
+    background:
+        rgba(255,255,255,.12);
 
-box-shadow:
-    0 10px 30px
-    rgba(0,0,0,.18);
+    border:
+        1px solid
+        rgba(255,255,255,.13);
 
-text-align: left;
+    backdrop-filter:
+        blur(20px);
 
+    text-align: left;
+
+    box-shadow:
+        0 12px 35px
+        rgba(0,0,0,.2);
 }
 
 .notification-icon {
 
-width: 38px;
-height: 38px;
+    width: 38px;
+    height: 38px;
 
-display: flex;
+    flex-shrink: 0;
 
-align-items: center;
-justify-content: center;
+    display: flex;
 
-border-radius: 12px;
+    align-items: center;
+    justify-content: center;
 
-background:
-    rgba(255,255,255,.16);
+    border-radius: 12px;
 
-font-size: 18px;
+    background:
+        rgba(255,255,255,.15);
 
+    font-size: 18px;
 }
 
-.notification-content {
+.notification-info {
 
-flex: 1;
+    flex: 1;
 
-display: flex;
+    display: flex;
 
-flex-direction: column;
+    flex-direction: column;
 
-gap: 3px;
+    gap: 3px;
 
+    min-width: 0;
 }
 
-.notification-content strong {
+.notification-info strong {
 
-font-size: 13px;
-
+    font-size: 13px;
 }
 
-.notification-content span {
+.notification-info span {
 
-font-size: 12px;
+    font-size: 11px;
 
-opacity: .8;
+    opacity: .7;
 
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
 }
 
 .lock-notification time {
 
-font-size: 11px;
+    font-size: 10px;
 
-opacity: .65;
-
+    opacity: .55;
 }
+
 
 /* =========================================================
-UNLOCK
+   UNLOCK BUTTON
 ========================================================= */
 
-.unlock-area {
+.unlock-button {
 
-margin-top: auto;
+    margin-top: auto;
 
-padding-top: 25px;
+    display: flex;
 
-display: flex;
+    flex-direction: column;
 
-flex-direction: column;
+    align-items: center;
 
-align-items: center;
+    justify-content: center;
 
-cursor: pointer;
+    gap: 5px;
 
+    background: transparent;
+
+    color: #fff;
+
+    padding: 12px 25px;
 }
 
-.unlock-arrow {
+.unlock-button span {
 
-font-size: 25px;
+    font-size: 27px;
 
-animation:
-    unlock-bounce
-    1.6s
-    ease-in-out
-    infinite;
-
+    animation:
+        unlock-bounce
+        1.5s
+        ease-in-out
+        infinite;
 }
 
-.unlock-text {
+.unlock-button small {
 
-margin-top: 5px;
+    font-size: 11px;
 
-font-size: 12px;
-
-opacity: .75;
-
+    opacity: .7;
 }
 
 @keyframes unlock-bounce {
 
-0%,
-100% {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
 
-    transform:
-        translateY(0);
-
+    50% {
+        transform: translateY(-7px);
+    }
 }
 
-50% {
-
-    transform:
-        translateY(-7px);
-
-}
-
-}
 
 /* =========================================================
-QUICK ACTIONS
+   LOCK QUICK ACTIONS
 ========================================================= */
 
-.lock-quick-actions {
+.lock-actions {
 
-position: relative;
+    position: relative;
 
-z-index: 10;
+    z-index: 20;
 
-width: 100%;
+    width: 100%;
 
-padding:
-    0
-    24px
-    max(
-        22px,
-        env(safe-area-inset-bottom)
-    );
+    display: flex;
 
-display: flex;
+    justify-content: space-between;
 
-justify-content: space-between;
-
+    padding:
+        0
+        24px
+        max(22px, env(safe-area-inset-bottom));
 }
 
 .quick-action {
 
-width: 50px;
-height: 50px;
+    width: 50px;
+    height: 50px;
 
-border: none;
+    border-radius: 50%;
 
-border-radius: 50%;
+    background:
+        rgba(255,255,255,.14);
 
-color: #fff;
+    border:
+        1px solid
+        rgba(255,255,255,.14);
 
-background:
-    rgba(255,255,255,.15);
+    backdrop-filter:
+        blur(15px);
 
-border:
-    1px solid
-    rgba(255,255,255,.16);
+    font-size: 20px;
 
-backdrop-filter:
-    blur(15px);
-
-font-size: 20px;
-
+    transition:
+        transform .12s ease,
+        background .15s ease;
 }
 
+.quick-action:active {
+
+    transform: scale(.9);
+
+    background:
+        rgba(255,255,255,.25);
+}
+
+
 /* =========================================================
-PIN PANEL
+   PIN SCREEN
 ========================================================= */
 
-.unlock-panel {
+.pin-screen {
 
-position: absolute;
+    display: flex;
 
-inset: 0;
+    align-items: center;
+    justify-content: center;
 
-z-index: 50;
-
-display: flex;
-
-align-items: flex-end;
-
-justify-content: center;
-
-background:
-    rgba(0,0,0,.45);
-
-backdrop-filter:
-    blur(8px);
-
-opacity: 0;
-
-pointer-events: none;
-
-transition:
-    opacity .25s ease;
-
+    background: #020711;
 }
 
-.unlock-panel.active {
+.pin-background {
 
-opacity: 1;
+    position: absolute;
+    inset: 0;
 
-pointer-events: auto;
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            #173866,
+            transparent 38%
+        ),
 
+        linear-gradient(
+            180deg,
+            #07111f,
+            #020711
+        );
 }
 
-.unlock-panel-content {
+.pin-content {
 
-width: 100%;
+    position: relative;
 
-max-width: 500px;
+    z-index: 5;
 
-min-height: 55%;
+    width:
+        min(100%, 390px);
 
-padding:
-    28px
-    22px
-    max(
-        28px,
-        env(safe-area-inset-bottom)
-    );
+    min-height: 100%;
 
-border-radius:
-    30px 30px 0 0;
+    display: flex;
 
-background:
-    rgba(20,20,25,.94);
+    flex-direction: column;
 
-border-top:
-    1px solid
-    rgba(255,255,255,.12);
+    align-items: center;
 
-display: flex;
-
-flex-direction: column;
-
-align-items: center;
-
-transform:
-    translateY(100%);
-
-transition:
-    transform .3s
-    cubic-bezier(.2,.8,.2,1);
-
+    padding:
+        max(30px, env(safe-area-inset-top))
+        20px
+        max(25px, env(safe-area-inset-bottom));
 }
 
-.unlock-panel.active
-.unlock-panel-content {
+.pin-close {
 
-transform:
-    translateY(0);
+    align-self: flex-end;
 
+    width: 40px;
+    height: 40px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    font-size: 24px;
 }
 
-.unlock-panel-title {
+.pin-icon {
 
-font-size: 20px;
+    margin-top: 45px;
 
-font-weight: 600;
-
+    font-size: 40px;
 }
 
-.unlock-panel-subtitle {
+.pin-content h2 {
 
-margin-top: 7px;
+    margin-top: 20px;
 
-font-size: 13px;
+    font-size: 23px;
 
-opacity: .6;
-
+    font-weight: 600;
 }
+
+.pin-content > p {
+
+    margin-top: 7px;
+
+    font-size: 12px;
+
+    opacity: .5;
+}
+
 
 /* =========================================================
-PIN
+   PIN INDICATORS
 ========================================================= */
 
 .pin-indicators {
 
-display: flex;
+    display: flex;
 
-gap: 12px;
+    gap: 13px;
 
-margin-top: 25px;
-
+    margin-top: 28px;
 }
 
 .pin-indicators span {
 
-width: 11px;
-height: 11px;
+    width: 11px;
+    height: 11px;
 
-border-radius: 50%;
+    border-radius: 50%;
 
-background:
-    rgba(255,255,255,.2);
+    background:
+        rgba(255,255,255,.18);
 
-transition:
-    background .15s ease,
-    transform .15s ease;
-
+    transition:
+        background .15s ease,
+        transform .15s ease;
 }
 
 .pin-indicators span.active {
 
-background: #fff;
+    background: #fff;
 
-transform:
-    scale(1.15);
-
+    transform: scale(1.18);
 }
+
+.pin-error {
+
+    height: 18px;
+
+    margin-top: 8px;
+
+    font-size: 11px;
+
+    color: #fca5a5;
+}
+
+
+/* =========================================================
+   PIN KEYPAD
+========================================================= */
 
 .pin-keypad {
 
-width:
-    min(
-        100%,
-        330px
-    );
+    width:
+        min(100%, 330px);
 
-margin-top: 25px;
+    display: grid;
 
-display: grid;
+    grid-template-columns:
+        repeat(3, 1fr);
 
-grid-template-columns:
-    repeat(3, 1fr);
+    gap: 11px;
 
-gap: 12px;
-
+    margin-top: 15px;
 }
 
 .pin-keypad button {
 
-height: 58px;
+    height: 58px;
 
-border: none;
+    border-radius: 18px;
 
-border-radius: 18px;
+    background:
+        rgba(255,255,255,.09);
 
-color: #fff;
+    border:
+        1px solid
+        rgba(255,255,255,.08);
 
-background:
-    rgba(255,255,255,.1);
+    font-size: 20px;
 
-font-size: 20px;
-
+    transition:
+        transform .1s ease,
+        background .15s ease;
 }
 
-.pin-keypad button:last-child {
+.pin-keypad button:active {
 
-grid-column: 2;
+    transform: scale(.93);
 
+    background:
+        rgba(255,255,255,.19);
 }
 
-.pin-cancel {
+.pin-special {
 
-margin-top: 20px;
+    font-size: 18px !important;
 
-padding: 10px 20px;
-
-border: none;
-
-background: transparent;
-
-color: #fff;
-
-opacity: .7;
-
-font-size: 14px;
-
+    opacity: .75;
 }
+
 
 /* =========================================================
-HOME SCREEN
+   HOME SCREEN
 ========================================================= */
 
-#home-screen {
+.home-screen {
 
-z-index: 100;
+    color: #fff;
 
-background: #07111f;
-
+    background: #07111f;
 }
 
 .home-wallpaper {
 
-position: absolute;
+    position: absolute;
+    inset: 0;
 
-inset: 0;
+    background:
+        url("./wallpaper1.png")
+        center / cover
+        no-repeat;
 
-z-index: 0;
-
-background-image:
-    url("wallpaper1.png");
-
-background-size: cover;
-
-background-position: center;
-
-background-repeat: no-repeat;
-
+    z-index: 0;
 }
 
 .home-overlay {
 
-position: absolute;
+    position: absolute;
+    inset: 0;
 
-inset: 0;
+    background:
+        rgba(0,0,0,.13);
 
-z-index: 1;
-
-background:
-    rgba(0,0,0,.12);
-
+    z-index: 1;
 }
+
+.home-status-bar {
+
+    z-index: 20;
+}
+
+
+/* =========================================================
+   HOME CONTENT
+========================================================= */
 
 .home-content {
 
-position: relative;
+    position: relative;
 
-z-index: 5;
+    z-index: 5;
 
-width: 100%;
+    height:
+        calc(100% - 38px);
 
-height: 100%;
+    padding:
+        12px
+        18px
+        105px;
 
-padding:
-    20px
-    18px
-    105px;
+    overflow-y: auto;
 
-overflow-y: auto;
-
-scrollbar-width: none;
-
+    scrollbar-width: none;
 }
 
 .home-content::-webkit-scrollbar {
-
-display: none;
-
+    display: none;
 }
 
+
 /* =========================================================
-WELCOME
+   WELCOME
 ========================================================= */
 
 .welcome-widget {
 
-padding: 18px;
+    padding: 18px;
 
-border-radius: 24px;
+    border-radius: 24px;
 
-background:
-    rgba(255,255,255,.10);
+    background:
+        rgba(255,255,255,.10);
 
-border:
-    1px solid
-    rgba(255,255,255,.12);
+    border:
+        1px solid
+        rgba(255,255,255,.12);
 
-backdrop-filter:
-    blur(20px);
+    backdrop-filter:
+        blur(20px);
 
-box-shadow:
-    0 15px 40px
-    rgba(0,0,0,.18);
-
+    box-shadow:
+        0 15px 40px
+        rgba(0,0,0,.18);
 }
 
-.welcome-small {
+.welcome-widget small {
 
-font-size: 13px;
+    font-size: 13px;
 
-opacity: .7;
-
+    opacity: .65;
 }
 
-.welcome-title {
+.welcome-widget h1 {
 
-margin-top: 5px;
+    margin-top: 5px;
 
-font-size: 23px;
+    font-size: 24px;
 
-font-weight: 600;
-
+    font-weight: 600;
 }
 
-.welcome-subtitle {
+.welcome-widget p {
 
-margin-top: 5px;
+    margin-top: 5px;
 
-font-size: 12px;
+    font-size: 11px;
 
-opacity: .65;
-
+    opacity: .55;
 }
+
 
 /* =========================================================
-SEARCH
+   HOME SEARCH
 ========================================================= */
 
-.home-search {
+.home-search,
+.drawer-search {
 
-margin-top: 15px;
+    display: flex;
 
-width: 100%;
-height: 48px;
+    align-items: center;
 
-display: flex;
+    gap: 10px;
 
-align-items: center;
+    height: 48px;
 
-gap: 10px;
+    margin-top: 15px;
 
-padding:
-    0 15px;
+    padding: 0 15px;
 
-border-radius: 16px;
+    border-radius: 16px;
 
-background:
-    rgba(255,255,255,.11);
+    background:
+        rgba(255,255,255,.11);
 
-border:
-    1px solid
-    rgba(255,255,255,.12);
+    border:
+        1px solid
+        rgba(255,255,255,.11);
 
-backdrop-filter:
-    blur(18px);
-
+    backdrop-filter:
+        blur(18px);
 }
 
-.home-search input {
+.home-search span,
+.drawer-search span {
 
-flex: 1;
-
-height: 100%;
-
-border: none;
-
-outline: none;
-
-background: transparent;
-
-color: #fff;
-
-font-size: 14px;
-
+    opacity: .7;
 }
 
-.home-search input::placeholder {
+.home-search input,
+.drawer-search input {
 
-color:
-    rgba(255,255,255,.55);
+    flex: 1;
 
+    width: 100%;
+
+    height: 100%;
+
+    outline: none;
+
+    border: none;
+
+    background: transparent;
+
+    color: #fff;
+
+    font-size: 14px;
 }
 
-.search-results {
+.home-search input::placeholder,
+.drawer-search input::placeholder {
 
-display: none;
-
-margin-top: 12px;
-
+    color:
+        rgba(255,255,255,.5);
 }
 
-.search-results.active {
-
-display: block;
-
-}
-
-.search-result {
-
-width: 100%;
-
-padding: 13px;
-
-margin-bottom: 7px;
-
-border: none;
-
-border-radius: 15px;
-
-background:
-    rgba(255,255,255,.09);
-
-color: #fff;
-
-text-align: left;
-
-font-size: 13px;
-
-}
 
 /* =========================================================
-SECTION
+   SECTION HEADER
 ========================================================= */
 
 .section-header {
 
-margin-top: 24px;
+    display: flex;
 
-margin-bottom: 12px;
+    align-items: center;
 
-display: flex;
+    justify-content: space-between;
 
-align-items: center;
+    margin-top: 24px;
 
-justify-content: space-between;
-
+    margin-bottom: 13px;
 }
 
-.section-title {
+.section-header h2 {
 
-font-size: 16px;
+    font-size: 16px;
 
-font-weight: 600;
-
+    font-weight: 600;
 }
 
-.section-action {
+.section-header button {
 
-border: none;
+    background: transparent;
 
-background: transparent;
+    color: #60a5fa;
 
-color: #60a5fa;
-
-font-size: 12px;
-
+    font-size: 12px;
 }
+
 
 /* =========================================================
-APP GRID
+   APP GRID
 ========================================================= */
 
 .app-grid {
 
-display: grid;
+    display: grid;
 
-grid-template-columns:
-    repeat(4, 1fr);
+    grid-template-columns:
+        repeat(4, 1fr);
 
-gap:
-    18px 12px;
-
+    gap: 18px 10px;
 }
 
 .app {
 
-display: flex;
+    display: flex;
 
-flex-direction: column;
+    flex-direction: column;
 
-align-items: center;
+    align-items: center;
 
-gap: 7px;
+    gap: 7px;
 
-cursor: pointer;
-
+    background: transparent;
 }
 
 .app-icon {
 
-width: 58px;
-height: 58px;
+    width: 58px;
+    height: 58px;
 
-display: flex;
+    display: flex;
 
-align-items: center;
-justify-content: center;
+    align-items: center;
+    justify-content: center;
 
-border-radius: 20px;
+    border-radius: 19px;
 
-background:
-    rgba(255,255,255,.12);
+    background:
+        rgba(255,255,255,.12);
 
-border:
-    1px solid
-    rgba(255,255,255,.12);
+    border:
+        1px solid
+        rgba(255,255,255,.12);
 
-backdrop-filter:
-    blur(15px);
+    backdrop-filter:
+        blur(15px);
 
-box-shadow:
-    0 8px 20px
-    rgba(0,0,0,.18);
+    box-shadow:
+        0 8px 20px
+        rgba(0,0,0,.18);
 
-font-size: 26px;
+    font-size: 25px;
 
-overflow: hidden;
-
+    transition:
+        transform .12s ease;
 }
 
-.app-icon img {
+.rama-icon {
 
-width: 50px;
-height: 50px;
-
-object-fit: contain;
-
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #38bdf8
+        );
 }
 
-.app-name {
+.app:active .app-icon {
 
-max-width: 72px;
-
-overflow: hidden;
-
-white-space: nowrap;
-
-text-overflow: ellipsis;
-
-font-size: 11px;
-
-text-align: center;
-
-opacity: .88;
-
+    transform: scale(.9);
 }
 
-.app:active
-.app-icon {
+.app > span {
 
-transform:
-    scale(.90);
+    max-width: 75px;
 
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    font-size: 10px;
+
+    opacity: .88;
 }
+
 
 /* =========================================================
-RECOMMENDED
+   SEARCH RESULTS
 ========================================================= */
 
-.recommended-card {
+.search-results {
 
-display: flex;
-
-align-items: center;
-
-gap: 13px;
-
-padding: 13px;
-
-border-radius: 18px;
-
-background:
-    rgba(255,255,255,.09);
-
-border:
-    1px solid
-    rgba(255,255,255,.10);
-
+    margin-top: 12px;
 }
 
-.recommended-icon {
+.search-result {
 
-width: 48px;
-height: 48px;
+    padding: 13px;
 
-display: flex;
+    margin-bottom: 7px;
 
-align-items: center;
-justify-content: center;
+    border-radius: 15px;
 
-border-radius: 14px;
-
-background:
-    rgba(255,255,255,.13);
-
-font-size: 23px;
-
+    background:
+        rgba(255,255,255,.09);
 }
 
-.recommended-info {
-
-flex: 1;
-
-}
-
-.recommended-title {
-
-font-size: 13px;
-
-font-weight: 600;
-
-}
-
-.recommended-desc {
-
-margin-top: 4px;
-
-font-size: 11px;
-
-opacity: .6;
-
-}
-
-.recommended-open {
-
-border: none;
-
-border-radius: 12px;
-
-padding:
-    9px 13px;
-
-background:
-    rgba(255,255,255,.13);
-
-color: #fff;
-
-font-size: 11px;
-
-}
 
 /* =========================================================
-HOME DOCK
+   HOME DOCK
 ========================================================= */
 
 .home-dock {
 
-position: absolute;
+    position: absolute;
 
-z-index: 30;
+    z-index: 30;
 
-left: 50%;
+    left: 50%;
+    bottom:
+        max(12px, env(safe-area-inset-bottom));
 
-bottom:
-    max(
-        12px,
-        env(safe-area-inset-bottom)
-    );
+    transform:
+        translateX(-50%);
 
-transform:
-    translateX(-50%);
+    width:
+        calc(100% - 28px);
 
-width:
-    calc(100% - 28px);
+    max-width: 500px;
 
-max-width: 500px;
+    height: 70px;
 
-height: 70px;
+    padding: 8px 12px;
 
-padding:
-    8px 12px;
+    display: flex;
 
-border-radius: 25px;
+    align-items: center;
 
-display: flex;
+    justify-content: space-around;
 
-align-items: center;
+    border-radius: 25px;
 
-justify-content: space-around;
+    background:
+        rgba(8,18,32,.72);
 
-background:
-    rgba(8,18,32,.72);
+    border:
+        1px solid
+        rgba(255,255,255,.12);
 
-border:
-    1px solid
-    rgba(255,255,255,.12);
+    backdrop-filter:
+        blur(25px);
 
-backdrop-filter:
-    blur(25px);
-
-box-shadow:
-    0 15px 40px
-    rgba(0,0,0,.35);
-
+    box-shadow:
+        0 15px 40px
+        rgba(0,0,0,.35);
 }
 
 .dock-app {
 
-width: 48px;
-height: 48px;
+    width: 48px;
+    height: 48px;
 
-border: none;
+    display: flex;
 
-border-radius: 16px;
+    align-items: center;
+    justify-content: center;
 
-background: transparent;
+    border-radius: 16px;
 
-color: #fff;
+    background: transparent;
 
-font-size: 23px;
+    font-size: 22px;
 
-display: flex;
-
-align-items: center;
-justify-content: center;
-
+    transition:
+        transform .12s ease,
+        background .15s ease;
 }
 
+.dock-app:active {
+
+    transform: scale(.9);
+
+    background:
+        rgba(255,255,255,.12);
+}
+
+.drawer-button {
+
+    background:
+        rgba(255,255,255,.12);
+}
+
+
 /* =========================================================
-CONTROL CENTER
+   MARA HEADER — SWIPE AREA
 ========================================================= */
 
-#control-center {
+.mara-header {
 
-z-index: 500;
+    position: absolute;
 
-overflow-y: auto;
+    top: 0;
+    left: 0;
 
-background:
+    z-index: 40;
 
-    linear-gradient(
-        145deg,
-        #132b47,
-        #07111f 45%,
-        #020711
-    );
+    width: 100%;
+    height: 35px;
 
+    display: flex;
+
+    justify-content: center;
+
+    align-items: flex-end;
+
+    padding-bottom: 7px;
+}
+
+.header-handle {
+
+    width: 38px;
+    height: 4px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.35);
+}
+
+
+/* =========================================================
+   APP DRAWER
+========================================================= */
+
+.app-drawer {
+
+    z-index: 60;
+
+    overflow-y: auto;
+
+    background: #07111f;
+
+    scrollbar-width: none;
+}
+
+.app-drawer::-webkit-scrollbar {
+    display: none;
+}
+
+.drawer-background {
+
+    position: fixed;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 20% 10%,
+            rgba(59,130,246,.28),
+            transparent 32%
+        ),
+
+        linear-gradient(
+            180deg,
+            #0b1b31,
+            #020711
+        );
+}
+
+.drawer-header {
+
+    position: relative;
+
+    z-index: 5;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding:
+        max(18px, env(safe-area-inset-top))
+        18px
+        10px;
+}
+
+.drawer-header button {
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(255,255,255,.1);
+
+    font-size: 20px;
+}
+
+.drawer-header h1 {
+
+    font-size: 22px;
+}
+
+.drawer-header p {
+
+    margin-top: 3px;
+
+    font-size: 10px;
+
+    opacity: .4;
+}
+
+.drawer-search {
+
+    position: relative;
+
+    z-index: 5;
+
+    margin:
+        8px 18px
+        20px;
+}
+
+.drawer-grid {
+
+    position: relative;
+
+    z-index: 5;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 20px 10px;
+
+    padding:
+        0 18px
+        100px;
+}
+
+.drawer-grid button {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 7px;
+
+    background: transparent;
+}
+
+.drawer-grid button div {
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 19px;
+
+    background:
+        rgba(255,255,255,.11);
+
+    border:
+        1px solid
+        rgba(255,255,255,.11);
+
+    font-size: 25px;
+}
+
+.drawer-grid button span {
+
+    font-size: 10px;
+
+    max-width: 75px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   CONTROL CENTER
+========================================================= */
+
+.control-center {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 80;
+
+    overflow-y: auto;
+
+    padding-bottom: 35px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #132b47,
+            #07111f 45%,
+            #020711
+        );
+
+    scrollbar-width: none;
+}
+
+.control-center::-webkit-scrollbar {
+    display: none;
 }
 
 .control-background {
 
-position: fixed;
+    position: fixed;
 
-inset: 0;
+    inset: 0;
 
-pointer-events: none;
+    pointer-events: none;
 
-background:
-
-    radial-gradient(
-        circle at 20% 5%,
-        rgba(59,130,246,.30),
-        transparent 30%
-    ),
-
-    radial-gradient(
-        circle at 85% 70%,
-        rgba(14,165,233,.14),
-        transparent 35%
-    );
-
+    background:
+        radial-gradient(
+            circle at 20% 5%,
+            rgba(59,130,246,.3),
+            transparent 30%
+        );
 }
 
 .control-header {
 
-position: relative;
+    position: relative;
 
-z-index: 5;
+    z-index: 5;
 
-padding:
-    18px
-    18px
-    13px;
+    display: flex;
 
-display: flex;
+    align-items: center;
 
-align-items: center;
+    gap: 12px;
 
-justify-content: space-between;
-
+    padding:
+        max(18px, env(safe-area-inset-top))
+        18px
+        15px;
 }
 
-.header-left {
+.control-close {
 
-display: flex;
+    width: 42px;
+    height: 42px;
 
-align-items: center;
+    flex-shrink: 0;
 
-gap: 12px;
+    border-radius: 14px;
 
+    background:
+        rgba(255,255,255,.1);
+
+    font-size: 20px;
 }
 
-.back-button {
+.control-header h1 {
 
-width: 42px;
-height: 42px;
+    font-size: 22px;
 
-border: none;
-
-border-radius: 14px;
-
-background:
-    rgba(255,255,255,.10);
-
-color: #fff;
-
-font-size: 19px;
-
+    font-weight: 600;
 }
 
-.header-title h1 {
+.control-header p {
 
-font-size: 23px;
+    margin-top: 3px;
 
-font-weight: 600;
+    font-size: 10px;
 
-}
-
-.header-title p {
-
-margin-top: 3px;
-
-font-size: 10px;
-
-opacity: .43;
-
-}
-
-.edit-button {
-
-padding:
-    8px 11px;
-
-border: none;
-
-border-radius: 10px;
-
-background:
-    rgba(255,255,255,.08);
-
-color: #60a5fa;
-
-font-size: 9px;
-
+    opacity: .42;
 }
 
 .control-content {
 
-position: relative;
+    position: relative;
 
-z-index: 5;
+    z-index: 5;
 
-padding:
-    3px 18px 35px;
-
+    padding:
+        3px 18px 35px;
 }
-
-/* =========================================================
-CONNECTION
-========================================================= */
 
 .connection-card {
 
-display: flex;
+    display: flex;
 
-align-items: center;
+    align-items: center;
 
-gap: 12px;
+    gap: 12px;
 
-padding: 15px;
+    padding: 15px;
 
-border-radius: 19px;
+    border-radius: 19px;
 
-background:
-    rgba(255,255,255,.075);
+    background:
+        rgba(255,255,255,.075);
 
-border:
-    1px solid
-    rgba(255,255,255,.09);
-
+    border:
+        1px solid
+        rgba(255,255,255,.09);
 }
 
 .connection-icon {
 
-width: 46px;
-height: 46px;
+    width: 46px;
+    height: 46px;
 
-border-radius: 14px;
+    display: flex;
 
-display: flex;
+    align-items: center;
+    justify-content: center;
 
-align-items: center;
-justify-content: center;
+    border-radius: 14px;
 
-background:
-    rgba(37,99,235,.18);
+    background:
+        rgba(37,99,235,.18);
 
-color: #60a5fa;
+    color: #60a5fa;
 
-font-size: 21px;
-
+    font-size: 21px;
 }
 
 .connection-info {
 
-flex: 1;
+    flex: 1;
 
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
 }
 
-.connection-name {
+.connection-info strong {
 
-font-size: 12px;
-
-font-weight: 600;
-
+    font-size: 12px;
 }
 
-.connection-status {
+.connection-info span {
 
-margin-top: 4px;
+    font-size: 9px;
 
-font-size: 9px;
-
-opacity: .42;
-
+    opacity: .45;
 }
 
-.connection-button {
+.connection-card > button {
 
-border: none;
+    padding: 8px 10px;
 
-padding:
-    8px 10px;
+    border-radius: 10px;
 
-border-radius: 10px;
+    background:
+        rgba(255,255,255,.08);
 
-background:
-    rgba(255,255,255,.08);
-
-color: #fff;
-
-font-size: 9px;
-
+    font-size: 9px;
 }
 
-/* =========================================================
-QUICK GRID
-========================================================= */
+.control-content > h2 {
 
-.quick-section {
+    margin:
+        18px 5px 9px;
 
-margin-top: 17px;
+    font-size: 10px;
 
-}
+    text-transform: uppercase;
 
-.control-section-title {
+    letter-spacing: .7px;
 
-margin:
-    0 5px 8px;
-
-font-size: 10px;
-
-text-transform: uppercase;
-
-letter-spacing: .7px;
-
-opacity: .42;
-
+    opacity: .42;
 }
 
 .quick-grid {
 
-display: grid;
+    display: grid;
 
-grid-template-columns:
-    repeat(4, 1fr);
+    grid-template-columns:
+        repeat(4, 1fr);
 
-gap: 8px;
-
+    gap: 8px;
 }
 
 .quick-button {
 
-min-height: 75px;
+    min-height: 75px;
 
-padding:
-    10px 5px;
+    display: flex;
 
-border: none;
+    flex-direction: column;
 
-border-radius: 17px;
+    align-items: center;
 
-background:
-    rgba(255,255,255,.075);
+    justify-content: center;
 
-border:
-    1px solid
-    rgba(255,255,255,.08);
+    gap: 7px;
 
-color: #fff;
+    border-radius: 17px;
 
-display: flex;
+    background:
+        rgba(255,255,255,.075);
 
-flex-direction: column;
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+}
 
-align-items: center;
+.quick-button span {
 
-justify-content: center;
+    width: 31px;
+    height: 31px;
 
-gap: 7px;
+    display: flex;
 
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.09);
+
+    font-size: 15px;
+}
+
+.quick-button small {
+
+    font-size: 8px;
+
+    opacity: .6;
 }
 
 .quick-button.active {
 
-background:
-    #2563eb;
-
+    background: #2563eb;
 }
 
-.quick-icon {
+.quick-button.active small {
 
-width: 31px;
-height: 31px;
-
-display: flex;
-
-align-items: center;
-justify-content: center;
-
-border-radius: 10px;
-
-background:
-    rgba(255,255,255,.09);
-
-font-size: 15px;
-
+    opacity: .9;
 }
 
-.quick-button.active
-.quick-icon {
+.quick-button.active span {
 
-background:
-    rgba(255,255,255,.15);
-
+    background:
+        rgba(255,255,255,.15);
 }
 
-.quick-name {
-
-font-size: 8px;
-
-opacity: .62;
-
-}
-
-.quick-button.active
-.quick-name {
-
-opacity: .9;
-
-}
 
 /* =========================================================
-SLIDERS
+   SLIDERS
 ========================================================= */
 
 .slider-card {
 
-margin-top: 17px;
+    margin-top: 12px;
 
-padding: 16px;
+    padding: 16px;
 
-border-radius: 19px;
+    border-radius: 19px;
 
-background:
-    rgba(255,255,255,.075);
+    background:
+        rgba(255,255,255,.075);
 
-border:
-    1px solid
-    rgba(255,255,255,.08);
-
+    border:
+        1px solid
+        rgba(255,255,255,.08);
 }
 
-.slider-header {
+.slider-card > div {
 
-display: flex;
+    display: flex;
 
-justify-content: space-between;
+    align-items: center;
 
-align-items: center;
-
+    justify-content: space-between;
 }
 
-.slider-name {
+.slider-card span {
 
-font-size: 11px;
+    font-size: 11px;
 
-opacity: .62;
-
+    opacity: .6;
 }
 
-.slider-value {
+.slider-card strong {
 
-font-size: 11px;
+    font-size: 11px;
 
-color: #60a5fa;
-
+    color: #60a5fa;
 }
 
-input[type="range"] {
+.slider-card input {
 
-width: 100%;
+    width: 100%;
 
-margin-top: 14px;
+    margin-top: 14px;
 
-accent-color:
-    #3b82f6;
-
+    accent-color: #3b82f6;
 }
+
 
 /* =========================================================
-DUAL CARDS
-========================================================= */
-
-.dual-grid {
-
-display: grid;
-
-grid-template-columns:
-    repeat(2, 1fr);
-
-gap: 9px;
-
-margin-top: 9px;
-
-}
-
-.control-card {
-
-padding: 14px;
-
-border-radius: 18px;
-
-background:
-    rgba(255,255,255,.075);
-
-border:
-    1px solid
-    rgba(255,255,255,.08);
-
-}
-
-.control-card-top {
-
-display: flex;
-
-align-items: center;
-
-justify-content: space-between;
-
-}
-
-.control-card-title {
-
-font-size: 10px;
-
-opacity: .55;
-
-}
-
-.control-card-icon {
-
-font-size: 17px;
-
-opacity: .65;
-
-}
-
-.control-card-value {
-
-margin-top: 10px;
-
-font-size: 16px;
-
-}
-
-/* =========================================================
-SWITCH
-========================================================= */
-
-.switch {
-
-position: relative;
-
-display: block;
-
-width: 39px;
-height: 22px;
-
-margin-top: 10px;
-
-}
-
-.switch input {
-
-display: none;
-
-}
-
-.switch-track {
-
-position: absolute;
-
-inset: 0;
-
-border-radius: 20px;
-
-background:
-    rgba(255,255,255,.12);
-
-}
-
-.switch-track::after {
-
-content: "";
-
-position: absolute;
-
-width: 16px;
-height: 16px;
-
-left: 3px;
-top: 3px;
-
-border-radius: 50%;
-
-background: #fff;
-
-transition: .2s;
-
-}
-
-.switch input:checked
-
-+ .switch-track {
-  
-  background:
-  #2563eb;
-  }
-
-.switch input:checked
-
-+ .switch-track::after {
-  
-  transform:
-  translateX(17px);
-  }
-
-/* =========================================================
-SYSTEM OPTIONS
+   SYSTEM OPTIONS
 ========================================================= */
 
 .system-options {
 
-overflow: hidden;
+    margin-top: 12px;
 
-border-radius: 18px;
+    overflow: hidden;
 
-background:
-    rgba(255,255,255,.075);
+    border-radius: 18px;
 
-border:
-    1px solid
-    rgba(255,255,255,.08);
+    background:
+        rgba(255,255,255,.075);
 
+    border:
+        1px solid
+        rgba(255,255,255,.08);
 }
 
-.system-option {
+.system-options button {
 
-width: 100%;
+    width: 100%;
 
-min-height: 56px;
+    min-height: 58px;
 
-display: flex;
+    display: flex;
 
-align-items: center;
+    align-items: center;
 
-gap: 12px;
+    gap: 12px;
 
-padding:
-    10px 13px;
+    padding:
+        10px 13px;
 
-border: none;
+    text-align: left;
 
-border-bottom:
-    1px solid
-    rgba(255,255,255,.055);
+    background: transparent;
 
-background: transparent;
-
-color: #fff;
-
-text-align: left;
-
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.05);
 }
 
-.system-option:last-child {
+.system-options button:last-child {
 
-border-bottom: none;
-
+    border-bottom: none;
 }
 
-.option-icon {
+.system-options button > span {
 
-width: 34px;
-height: 34px;
+    width: 34px;
+    height: 34px;
 
-border-radius: 11px;
+    display: flex;
 
-background:
-    rgba(255,255,255,.08);
+    align-items: center;
+    justify-content: center;
 
-display: flex;
+    border-radius: 11px;
 
-align-items: center;
-justify-content: center;
-
-font-size: 15px;
-
+    background:
+        rgba(255,255,255,.08);
 }
 
-.option-info {
+.system-options button div {
 
-flex: 1;
+    flex: 1;
 
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
 }
 
-.option-title {
+.system-options strong {
 
-font-size: 10px;
-
+    font-size: 10px;
 }
 
-.option-description {
+.system-options small {
 
-margin-top: 3px;
+    font-size: 8px;
 
-font-size: 8px;
-
-opacity: .38;
-
+    opacity: .38;
 }
 
-.option-arrow {
+.system-options b {
 
-font-size: 13px;
-
-opacity: .3;
-
+    opacity: .3;
 }
+
 
 /* =========================================================
-LANDSCAPE
+   APP MODAL
 ========================================================= */
 
-@media (orientation: landscape) {
+.app-modal {
 
-.lock-content {
+    position: absolute;
 
-    padding-top: 4vh;
+    inset: 0;
+
+    z-index: 120;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: center;
+
+    padding: 0;
+
+    background:
+        rgba(0,0,0,.5);
+
+    backdrop-filter:
+        blur(8px);
 }
 
+.app-modal-content {
 
-.lock-clock {
+    position: relative;
 
-    font-size: 54px;
+    width: 100%;
+
+    max-width: 500px;
+
+    padding:
+        30px 22px
+        max(30px, env(safe-area-inset-bottom));
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    text-align: center;
+
+    border-radius:
+        30px
+        30px
+        0
+        0;
+
+    background:
+        #101822;
+
+    border-top:
+        1px solid
+        rgba(255,255,255,.1);
+
+    animation:
+        modal-up .3s
+        cubic-bezier(.2,.8,.2,1);
 }
 
+@keyframes modal-up {
 
-.lock-profile {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+#modal-close {
+
+    position: absolute;
+
+    top: 15px;
+    right: 18px;
+
+    width: 35px;
+    height: 35px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    font-size: 22px;
+}
+
+.modal-icon {
+
+    width: 65px;
+    height: 65px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 20px;
+
+    background:
+        rgba(255,255,255,.1);
+
+    font-size: 28px;
+}
+
+.app-modal-content h2 {
 
     margin-top: 15px;
+
+    font-size: 20px;
 }
 
+.app-modal-content p {
 
-.lock-notifications {
+    margin-top: 6px;
 
-    margin-top: 15px;
+    font-size: 12px;
+
+    opacity: .5;
 }
 
+.modal-open {
 
-.home-content {
+    width: 100%;
 
-    padding-bottom: 85px;
+    max-width: 300px;
+
+    height: 48px;
+
+    margin-top: 20px;
+
+    border-radius: 15px;
+
+    background: #2563eb;
+
+    font-size: 13px;
 }
 
-
-.app-grid {
-
-    grid-template-columns:
-        repeat(6, 1fr);
-}
-
-}
 
 /* =========================================================
-TABLET / DESKTOP
+   TABLET / DESKTOP
 ========================================================= */
 
 @media (min-width: 600px) {
 
-.home-content {
+    .home-content {
 
-    max-width: 850px;
+        max-width: 850px;
 
-    margin:
-        0 auto;
-}
+        margin: 0 auto;
+    }
 
+    .app-grid {
 
-.app-grid {
+        grid-template-columns:
+            repeat(6, 1fr);
+    }
 
-    grid-template-columns:
-        repeat(6, 1fr);
-}
+    .drawer-grid {
 
+        max-width: 850px;
 
-.mara-status-bar {
+        margin: 0 auto;
 
-    padding-left: 24px;
-    padding-right: 24px;
-}
+        grid-template-columns:
+            repeat(6, 1fr);
+    }
 
+    .control-center {
 
-#control-center {
+        max-width: 720px;
 
-    max-width: 720px;
+        left: 50%;
 
-    margin:
-        0 auto;
-}
+        right: auto;
 
-}
+        width: 100%;
 
-@media (min-width: 1000px) {
-
-.home-content {
-
-    max-width: 1100px;
-}
-
-
-.app-grid {
-
-    grid-template-columns:
-        repeat(8, 1fr);
-}
+        transform: translateX(-50%);
+    }
 
 }
+
 
 /* =========================================================
-ACTIVE PRESS
+   LANDSCAPE
 ========================================================= */
 
-button {
+@media (orientation: landscape) {
 
-cursor: pointer;
+    .lock-content {
 
-font-family: inherit;
+        padding-top: 3vh;
+    }
 
--webkit-tap-highlight-color:
-    transparent;
+    .lock-clock {
 
+        font-size: 55px;
+    }
+
+    .lock-profile {
+
+        margin-top: 12px;
+    }
+
+    .lock-notification {
+
+        margin-top: 12px;
+    }
+
+    .home-content {
+
+        padding-bottom: 85px;
+    }
+
+    .app-grid {
+
+        grid-template-columns:
+            repeat(6, 1fr);
+    }
+
+    .drawer-grid {
+
+        grid-template-columns:
+            repeat(6, 1fr);
+    }
+
+    .pin-icon {
+
+        margin-top: 10px;
+    }
+
+    .pin-content h2 {
+
+        margin-top: 10px;
+    }
+
+    .pin-keypad {
+
+        margin-top: 10px;
+    }
 }
 
-button:active {
-
-transform:
-    scale(.96);
-
-}
 
 /* =========================================================
-REDUCED MOTION
+   SMALL DEVICES
+========================================================= */
+
+@media (max-height: 650px) {
+
+    .lock-content {
+
+        padding-top: 3vh;
+    }
+
+    .lock-clock {
+
+        font-size: 55px;
+    }
+
+    .lock-profile {
+
+        margin-top: 15px;
+    }
+
+    .lock-notification {
+
+        margin-top: 12px;
+    }
+
+    .pin-icon {
+
+        margin-top: 15px;
+    }
+
+    .pin-content h2 {
+
+        margin-top: 10px;
+    }
+
+    .pin-keypad button {
+
+        height: 48px;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
-*,
-*::before,
-*::after {
+    *,
+    *::before,
+    *::after {
 
-    animation-duration:
-        .01ms !important;
+        animation-duration: .01ms !important;
 
-    animation-iteration-count:
-        1 !important;
+        animation-iteration-count: 1 !important;
 
-    transition-duration:
-        .01ms !important;
-}
+        transition-duration: .01ms !important;
 
+        scroll-behavior: auto !important;
+    }
 }
