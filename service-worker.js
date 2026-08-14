@@ -1,57 +1,24 @@
 "use strict";
 
-
 /* =====================================================
    MARA OS — SERVICE WORKER
+   PWA SINGLE APP
 ===================================================== */
 
+const CACHE_NAME = "mara-os-v2";
 
-/* =====================================================
-   CACHE VERSION
-===================================================== */
-
-const CACHE_NAME =
-    "mara-os-v1";
-
-
-/* =====================================================
-   FILE YANG AKAN DISIMPAN OFFLINE
-===================================================== */
-
-const FILES_TO_CACHE = [
-
-    /* ROOT */
-
+/*
+    Semua file utama MARA OS
+*/
+const APP_SHELL = [
     "./",
     "./index.html",
     "./style.css",
     "./script.js",
     "./manifest.json",
 
-
-    /* ICON PWA */
-
     "./mara-icon-192.png",
-    "./mara-icon-512.png",
-
-
-    /* UX */
-
-    "./ux/lock-screen.html",
-    "./ux/home-screen.html",
-    "./ux/control-center.html",
-
-
-    /* WALLPAPER */
-
-    "./ux/wallpaper1.png",
-
-
-    /* ICON SVG */
-
-    "./ux/icon-svg/mara-browser.svg",
-    "./ux/icon-svg/maps.svg"
-
+    "./mara-icon-512.png"
 ];
 
 
@@ -59,258 +26,226 @@ const FILES_TO_CACHE = [
    INSTALL
 ===================================================== */
 
-self.addEventListener(
-    "install",
-    event => {
+self.addEventListener("install", event => {
 
-        event.waitUntil(
+    console.log("MARA OS: Service Worker installing...");
 
-            caches
-                .open(CACHE_NAME)
-                .then(
-                    async cache => {
+    event.waitUntil(
 
-                        /*
-                         * Cache file satu per satu.
-                         *
-                         * Jika satu file tidak ditemukan,
-                         * file lainnya tetap bisa masuk cache.
-                         */
+        caches.open(CACHE_NAME)
+            .then(cache => {
 
-                        for (
-                            const file
-                            of FILES_TO_CACHE
-                        ) {
+                return cache.addAll(APP_SHELL);
 
-                            try {
+            })
 
-                                await cache.add(
-                                    file
-                                );
+            .then(() => {
 
-                                console.log(
-                                    "MARA CACHE OK:",
-                                    file
-                                );
+                console.log(
+                    "MARA OS: App Shell berhasil dicache."
+                );
 
-                            } catch (error) {
+                return self.skipWaiting();
 
-                                console.warn(
-                                    "MARA CACHE GAGAL:",
-                                    file
-                                );
+            })
 
-                            }
+    );
 
-                        }
-
-                    }
-                )
-
-        );
-
-
-        /*
-         * Aktifkan Service Worker baru
-         * tanpa menunggu tab lama ditutup.
-         */
-
-        self.skipWaiting();
-
-    }
-);
+});
 
 
 /* =====================================================
    ACTIVATE
 ===================================================== */
 
-self.addEventListener(
-    "activate",
-    event => {
+self.addEventListener("activate", event => {
 
-        event.waitUntil(
+    console.log("MARA OS: Service Worker activating...");
 
-            caches
-                .keys()
-                .then(
-                    cacheNames => {
+    event.waitUntil(
 
-                        return Promise.all(
+        caches.keys()
+            .then(cacheNames => {
 
-                            cacheNames
-                                .filter(
-                                    name =>
-                                        name !==
-                                        CACHE_NAME
-                                )
-                                .map(
-                                    name =>
-                                        caches.delete(
-                                            name
-                                        )
-                                )
+                return Promise.all(
 
-                        );
+                    cacheNames
+                        .filter(name => {
 
-                    }
-                )
-                .then(
-                    () => {
+                            return (
+                                name.startsWith("mara-os-") &&
+                                name !== CACHE_NAME
+                            );
 
-                        /*
-                         * Ambil kontrol semua halaman
-                         * MARA OS yang sedang terbuka.
-                         */
+                        })
 
-                        return self.clients.claim();
+                        .map(name => {
 
-                    }
-                )
+                            console.log(
+                                "MARA OS: Menghapus cache lama:",
+                                name
+                            );
 
-        );
+                            return caches.delete(name);
 
-    }
-);
+                        })
+
+                );
+
+            })
+
+            .then(() => {
+
+                console.log(
+                    "MARA OS: Cache lama dibersihkan."
+                );
+
+                return self.clients.claim();
+
+            })
+
+    );
+
+});
 
 
 /* =====================================================
    FETCH
 ===================================================== */
 
-self.addEventListener(
-    "fetch",
-    event => {
+self.addEventListener("fetch", event => {
 
-        /*
-         * Hanya tangani request GET.
-         */
+    /*
+        Hanya menangani request GET.
+    */
 
-        if (
-            event.request.method !==
-            "GET"
-        ) {
-
-            return;
-
-        }
+    if (event.request.method !== "GET") {
+        return;
+    }
 
 
-        event.respondWith(
+    /*
+        Jangan mengganggu request eksternal.
+        Contohnya API, YouTube, CDN, dll.
+    */
 
-            caches
-                .match(
-                    event.request
-                )
-                .then(
-                    cachedResponse => {
+    const requestURL =
+        new URL(event.request.url);
+
+
+    if (
+        requestURL.origin !==
+        self.location.origin
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        CACHE FIRST
+
+        1. Cari file di cache.
+        2. Kalau ada → gunakan cache.
+        3. Kalau tidak ada → ambil dari internet.
+        4. Simpan hasilnya ke cache.
+    */
+
+    event.respondWith(
+
+        caches.match(event.request)
+            .then(cachedResponse => {
+
+                if (cachedResponse) {
+
+                    return cachedResponse;
+
+                }
+
+
+                return fetch(event.request)
+
+                    .then(networkResponse => {
 
                         /*
-                         * Kalau tersedia di cache,
-                         * gunakan cache.
-                         */
+                            Jangan cache response
+                            yang tidak valid.
+                        */
 
                         if (
-                            cachedResponse
+                            !networkResponse ||
+                            networkResponse.status !== 200 ||
+                            networkResponse.type !== "basic"
                         ) {
 
-                            return cachedResponse;
+                            return networkResponse;
 
                         }
 
 
                         /*
-                         * Kalau belum ada di cache,
-                         * ambil dari jaringan.
-                         */
+                            Clone response karena
+                            response hanya bisa digunakan
+                            sekali.
+                        */
 
-                        return fetch(
-                            event.request
-                        )
-                        .then(
-                            response => {
-
-                                /*
-                                 * Simpan response valid
-                                 * ke cache.
-                                 */
-
-                                if (
-                                    response &&
-                                    response.status === 200 &&
-                                    response.type !==
-                                        "opaque"
-                                ) {
-
-                                    const responseClone =
-                                        response.clone();
-
-                                    caches
-                                        .open(
-                                            CACHE_NAME
-                                        )
-                                        .then(
-                                            cache => {
-
-                                                cache.put(
-                                                    event.request,
-                                                    responseClone
-                                                );
-
-                                            }
-                                        );
-
-                                }
+                        const responseClone =
+                            networkResponse.clone();
 
 
-                                return response;
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
 
-                            }
-                        )
-                        .catch(
-                            () => {
-
-                                /*
-                                 * Jika internet mati
-                                 * dan file tidak ada
-                                 * di cache, coba fallback
-                                 * ke index.html.
-                                 */
-
-                                return caches.match(
-                                    "./index.html"
+                                cache.put(
+                                    event.request,
+                                    responseClone
                                 );
 
-                            }
-                        );
+                            });
 
-                    }
-                )
 
-        );
+                        return networkResponse;
 
-    }
-);
+                    });
+
+            })
+
+    );
+
+});
 
 
 /* =====================================================
    MESSAGE
-   UPDATE SERVICE WORKER
+===================================================== */
+
+self.addEventListener("message", event => {
+
+    if (
+        event.data &&
+        event.data.type === "SKIP_WAITING"
+    ) {
+
+        self.skipWaiting();
+
+    }
+
+});
+
+
+/* =====================================================
+   BACKGROUND ERROR PROTECTION
 ===================================================== */
 
 self.addEventListener(
-    "message",
+    "error",
     event => {
 
-        if (
-            event.data &&
-            event.data.type ===
-                "SKIP_WAITING"
-        ) {
-
-            self.skipWaiting();
-
-        }
+        console.error(
+            "MARA OS Service Worker Error:",
+            event.error
+        );
 
     }
 );
