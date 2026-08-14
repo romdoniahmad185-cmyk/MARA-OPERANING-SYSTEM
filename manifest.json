@@ -1,4 +1,6 @@
-const CACHE_NAME = "mara-os-v1";
+"use strict";
+
+const CACHE_NAME = "mara-os-v5";
 
 const FILES = [
     "./index.html",
