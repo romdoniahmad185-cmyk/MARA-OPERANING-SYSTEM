@@ -1,9 +1,9 @@
 {
   "name": "MARA OS",
   "short_name": "MARA",
-  "description": "MARA OS — Digital Application Interface",
-  "id": "./",
-  "start_url": "./index.html",
+  "description": "MARA OS Application",
+
+  "start_url": "./",
   "scope": "./",
 
   "display": "standalone",
@@ -14,15 +14,15 @@
 
   "orientation": "portrait",
 
-  "background_color": "#07111f",
-  "theme_color": "#07111f",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
 
-  "lang": "id",
+  "lang": "id-ID",
   "dir": "ltr",
 
   "categories": [
-    "utilities",
-    "productivity"
+    "productivity",
+    "utilities"
   ],
 
   "icons": [
