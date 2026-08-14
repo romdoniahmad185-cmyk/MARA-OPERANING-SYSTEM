@@ -1,0 +1,56 @@
+name: Create MARA Gradle Wrapper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  wrapper:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Generate Gradle Wrapper
+        run: |
+          gradle wrapper \
+            --gradle-version 8.7 \
+            --distribution-type bin
+
+      - name: Verify Gradle Wrapper
+        run: |
+          test -f gradlew
+          test -f gradlew.bat
+          test -f gradle/wrapper/gradle-wrapper.jar
+          test -f gradle/wrapper/gradle-wrapper.properties
+
+          echo "Gradle Wrapper berhasil dibuat."
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Test Gradle Wrapper
+        run: ./gradlew --version
+
+      - name: Upload Gradle Wrapper
+        uses: actions/upload-artifact@v4
+        with:
+          name: MARA-gradle-wrapper
+          path: |
+            gradlew
+            gradlew.bat
+            gradle/wrapper/gradle-wrapper.jar
+            gradle/wrapper/gradle-wrapper.properties
+          if-no-files-found: error
