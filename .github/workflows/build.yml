@@ -3,9 +3,12 @@ name: Build MARA APK
 on:
   workflow_dispatch:
 
+  push:
+    branches:
+      - main
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -22,18 +25,23 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Check project
+      - name: Check Gradle Wrapper
         run: |
-          echo "=== ROOT PROJECT ==="
-          ls -la
+          echo "Checking Gradle Wrapper..."
+          test -f ./gradlew
+          test -f ./gradlew.bat
+          test -f ./gradle/wrapper/gradle-wrapper.jar
+          test -f ./gradle/wrapper/gradle-wrapper.properties
+          echo "Gradle Wrapper lengkap."
 
-          echo "=== APP ==="
-          ls -la app
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Check Gradle
+        run: ./gradlew --version
 
       - name: Build MARA APK
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload MARA APK
         uses: actions/upload-artifact@v4
