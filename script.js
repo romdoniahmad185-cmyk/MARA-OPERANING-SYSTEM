@@ -1,560 +1,562 @@
 "use strict";
 
-/* =========================================================
-MARA OS — UNIFIED SCRIPT
-Semua layar dikendalikan dari satu index.html
-========================================================= */
+/* =====================================================
+   MARA OS — MASTER SCRIPT
+   Semua fungsi utama MARA OS
+===================================================== */
 
-/* =========================================================
-HELPER
-========================================================= */
 
-function $(selector) {
-return document.querySelector(selector);
-}
+/* =====================================================
+   1. HELPER
+===================================================== */
 
-function $$(selector) {
-return document.querySelectorAll(selector);
-}
+const $ = (selector) =>
+    document.querySelector(selector);
 
-/* =========================================================
-SCREEN SYSTEM
-========================================================= */
+const $$ = (selector) =>
+    document.querySelectorAll(selector);
 
-const screens = {
-splash: "#splash-screen",
-lock: "#lock-screen",
-home: "#home-screen",
-control: "#control-center"
+
+/* =====================================================
+   2. MARA OS STATE
+===================================================== */
+
+const MARA = {
+
+    currentScreen: "home",
+
+    pin: "",
+
+    correctPIN: "1234",
+
+    battery: null,
+
+    controlCenterOpen: false
+
 };
 
-function showScreen(name) {
 
-Object.values(screens).forEach(selector => {
+/* =====================================================
+   3. CLOCK
+===================================================== */
 
-    const screen = $(selector);
+function updateClock() {
 
-    if (!screen) return;
+    const now = new Date();
 
-    screen.classList.remove("active");
+    const hours =
+        String(now.getHours()).padStart(2, "0");
 
-});
+    const minutes =
+        String(now.getMinutes()).padStart(2, "0");
 
+    const time =
+        `${hours}:${minutes}`;
 
-const target = $(screens[name]);
+    const clock =
+        $("#clock");
 
-if (!target) {
+    const lockClock =
+        $("#lock-clock");
 
-    console.warn(
-        "MARA: layar tidak ditemukan:",
-        name
-    );
+    const homeTime =
+        $("#home-time");
 
-    return;
-}
+    const statusTime =
+        $("#status-time");
 
-
-target.classList.add("active");
-
-console.log(
-    "MARA: membuka layar",
-    name
-);
-
-}
-
-/* =========================================================
-INITIAL SCREEN
-========================================================= */
-
-function initializeMARA() {
-
-showScreen("splash");
-
-setTimeout(() => {
-
-    showScreen("lock");
-
-}, 1200);
-
-}
-
-/* =========================================================
-GLOBAL CLOCK
-========================================================= */
-
-function updateAllClocks() {
-
-const now = new Date();
-
-const hours =
-    String(now.getHours()).padStart(2, "0");
-
-const minutes =
-    String(now.getMinutes()).padStart(2, "0");
-
-const time =
-    `${hours}:${minutes}`;
-
-
-const clockElements = [
-
-    "#lock-clock",
-    "#status-time",
-    "#home-time",
-    "#control-time"
-
-];
-
-
-clockElements.forEach(selector => {
-
-    const element = $(selector);
-
-    if (element) {
-
-        element.textContent = time;
-
+    if (clock) {
+        clock.textContent = time;
     }
 
-});
+    if (lockClock) {
+        lockClock.textContent = time;
+    }
+
+    if (homeTime) {
+        homeTime.textContent = time;
+    }
+
+    if (statusTime) {
+        statusTime.textContent = time;
+    }
 
 }
 
-updateAllClocks();
+
+/* Jalankan langsung */
+
+updateClock();
+
+
+/* Update setiap detik */
 
 setInterval(
-updateAllClocks,
-1000
+    updateClock,
+    1000
 );
 
-/* =========================================================
-DATE
-========================================================= */
+
+/* =====================================================
+   4. DATE
+===================================================== */
 
 function updateDate() {
 
-const dateElement =
-    $("#lock-date");
+    const dateElement =
+        $("#lock-date");
 
-if (!dateElement) return;
+    if (!dateElement) {
+        return;
+    }
 
+    const now = new Date();
 
-const now = new Date();
+    const options = {
 
+        weekday: "long",
 
-const options = {
+        day: "numeric",
 
-    weekday: "long",
-    day: "numeric",
-    month: "long"
+        month: "long",
 
-};
+        year: "numeric"
 
+    };
 
-dateElement.textContent =
-    now.toLocaleDateString(
-        "id-ID",
-        options
-    );
+    dateElement.textContent =
+        now.toLocaleDateString(
+            "id-ID",
+            options
+        );
 
 }
+
 
 updateDate();
 
+
 setInterval(
-updateDate,
-60000
-);
-
-/* =========================================================
-BATTERY
-========================================================= */
-
-const batteryPercent =
-$("#battery-percent");
-
-const batteryLevel =
-$("#battery-level");
-
-function updateBattery(battery) {
-
-const percent =
-    Math.round(
-        battery.level * 100
-    );
-
-
-$$("[data-battery-percent]")
-    .forEach(element => {
-
-        element.textContent =
-            `${percent}%`;
-
-    });
-
-
-if (batteryPercent) {
-
-    batteryPercent.textContent =
-        `${percent}%`;
-
-}
-
-
-if (batteryLevel) {
-
-    batteryLevel.style.width =
-        `${percent}%`;
-
-}
-
-
-$$("[data-battery-level]")
-    .forEach(element => {
-
-        element.style.width =
-            `${percent}%`;
-
-    });
-
-}
-
-async function initializeBattery() {
-
-if (
-    !("getBattery" in navigator)
-) {
-
-    $$("[data-battery-percent]")
-        .forEach(element => {
-
-            element.textContent =
-                "--%";
-
-        });
-
-    return;
-
-}
-
-
-try {
-
-    const battery =
-        await navigator.getBattery();
-
-
-    updateBattery(
-        battery
-    );
-
-
-    battery.addEventListener(
-        "levelchange",
-        () => {
-
-            updateBattery(
-                battery
-            );
-
-        }
-    );
-
-
-    battery.addEventListener(
-        "chargingchange",
-        () => {
-
-            updateBattery(
-                battery
-            );
-
-        }
-    );
-
-
-} catch (error) {
-
-    console.warn(
-        "MARA: Battery API tidak tersedia",
-        error
-    );
-
-}
-
-}
-
-initializeBattery();
-
-/* =========================================================
-LOCK SCREEN
-========================================================= */
-
-const unlockArea =
-$("#unlock-area");
-
-const unlockPanel =
-$("#unlock-panel");
-
-const pinCancel =
-$("#pin-cancel");
-
-function openUnlockPanel() {
-
-if (!unlockPanel) return;
-
-
-unlockPanel.classList.add(
-    "active"
+    updateDate,
+    60000
 );
 
 
-unlockPanel.setAttribute(
-    "aria-hidden",
-    "false"
-);
+/* =====================================================
+   5. BATTERY
+===================================================== */
 
+async function initBattery() {
 
-resetPIN();
+    const batteryPercent =
+        $("#battery-percent");
 
-}
+    const batteryLevel =
+        $("#battery-level");
 
-function closeUnlockPanel() {
+    const batteryIcon =
+        $("#battery-icon");
 
-if (!unlockPanel) return;
-
-
-unlockPanel.classList.remove(
-    "active"
-);
-
-
-unlockPanel.setAttribute(
-    "aria-hidden",
-    "true"
-);
-
-
-resetPIN();
-
-}
-
-if (unlockArea) {
-
-unlockArea.addEventListener(
-    "click",
-    openUnlockPanel
-);
-
-}
-
-if (pinCancel) {
-
-pinCancel.addEventListener(
-    "click",
-    closeUnlockPanel
-);
-
-}
-
-/* =========================================================
-PIN SYSTEM
-========================================================= */
-
-const CORRECT_PIN = "1234";
-
-let enteredPIN = "";
-
-const pinButtons =
-$$("[data-pin]");
-
-const pinIndicators =
-$$("#pin-indicators span");
-
-pinButtons.forEach(button => {
-
-button.addEventListener(
-    "click",
-    () => {
+    try {
 
         if (
-            enteredPIN.length >=
-            CORRECT_PIN.length
+            !("getBattery" in navigator)
         ) {
+
+            showBatteryUnavailable();
 
             return;
 
         }
 
+        const battery =
+            await navigator.getBattery();
 
-        enteredPIN +=
-            button.dataset.pin;
+        MARA.battery =
+            battery;
+
+        updateBattery(
+            battery
+        );
 
 
-        updatePINIndicators();
+        battery.addEventListener(
+            "levelchange",
+            () => {
+
+                updateBattery(
+                    battery
+                );
+
+            }
+        );
 
 
-        if (
-            enteredPIN.length ===
-            CORRECT_PIN.length
-        ) {
+        battery.addEventListener(
+            "chargingchange",
+            () => {
 
-            setTimeout(
-                checkPIN,
-                180
+                updateBattery(
+                    battery
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Battery API error:",
+            error
+        );
+
+        showBatteryUnavailable();
+
+    }
+
+
+    function showBatteryUnavailable() {
+
+        if (batteryPercent) {
+            batteryPercent.textContent =
+                "--%";
+        }
+
+        if (batteryLevel) {
+            batteryLevel.style.width =
+                "0%";
+        }
+
+    }
+
+
+    function updateBattery(
+        battery
+    ) {
+
+        const percent =
+            Math.round(
+                battery.level * 100
             );
+
+        if (batteryPercent) {
+
+            batteryPercent.textContent =
+                `${percent}%`;
+
+        }
+
+        if (batteryLevel) {
+
+            batteryLevel.style.width =
+                `${percent}%`;
+
+        }
+
+
+        if (batteryIcon) {
+
+            if (battery.charging) {
+
+                batteryIcon.textContent =
+                    "⚡";
+
+            } else if (percent <= 15) {
+
+                batteryIcon.textContent =
+                    "🪫";
+
+            } else {
+
+                batteryIcon.textContent =
+                    "🔋";
+
+            }
 
         }
 
     }
-);
 
-});
+}
 
-function updatePINIndicators() {
 
-pinIndicators.forEach(
-    (indicator, index) => {
+initBattery();
 
-        indicator.classList.toggle(
-            "active",
-            index <
-            enteredPIN.length
+
+/* =====================================================
+   6. SCREEN SYSTEM
+===================================================== */
+
+function showScreen(
+    screenName
+) {
+
+    const screens =
+        $$(".mara-screen");
+
+    screens.forEach(
+        screen => {
+
+            screen.classList.remove(
+                "active"
+            );
+
+            screen.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        }
+    );
+
+
+    const target =
+        document.querySelector(
+            `[data-screen="${screenName}"]`
+        );
+
+
+    if (!target) {
+
+        console.warn(
+            "Screen tidak ditemukan:",
+            screenName
+        );
+
+        return;
+
+    }
+
+
+    target.classList.add(
+        "active"
+    );
+
+    target.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    MARA.currentScreen =
+        screenName;
+
+
+    console.log(
+        "MARA Screen:",
+        screenName
+    );
+
+}
+
+
+/* =====================================================
+   7. UNLOCK SCREEN
+===================================================== */
+
+function openUnlockPanel() {
+
+    const panel =
+        $("#unlock-panel");
+
+    if (!panel) {
+        return;
+    }
+
+    panel.classList.add(
+        "active"
+    );
+
+    panel.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+    MARA.pin = "";
+
+    updatePIN();
+
+}
+
+
+/* Tutup PIN */
+
+function closeUnlockPanel() {
+
+    const panel =
+        $("#unlock-panel");
+
+    if (!panel) {
+        return;
+    }
+
+    panel.classList.remove(
+        "active"
+    );
+
+    panel.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    MARA.pin = "";
+
+    updatePIN();
+
+}
+
+
+/* =====================================================
+   8. PIN SYSTEM
+===================================================== */
+
+function addPIN(
+    number
+) {
+
+    if (
+        MARA.pin.length >= 4
+    ) {
+        return;
+    }
+
+
+    MARA.pin +=
+        String(number);
+
+
+    updatePIN();
+
+
+    if (
+        MARA.pin.length === 4
+    ) {
+
+        setTimeout(
+            checkPIN,
+            180
         );
 
     }
-);
 
 }
 
-function resetPIN() {
 
-enteredPIN = "";
+/* =====================================================
+   9. UPDATE PIN INDICATOR
+===================================================== */
 
-updatePINIndicators();
+function updatePIN() {
+
+    const indicators =
+        $$("#pin-indicators span");
+
+
+    indicators.forEach(
+        (indicator, index) => {
+
+            indicator.classList.toggle(
+                "active",
+                index <
+                MARA.pin.length
+            );
+
+        }
+    );
 
 }
+
+
+/* =====================================================
+   10. CHECK PIN
+===================================================== */
 
 function checkPIN() {
 
-if (
-    enteredPIN ===
-    CORRECT_PIN
-) {
+    if (
+        MARA.pin ===
+        MARA.correctPIN
+    ) {
 
-    unlockMARA();
+        unlockMARA();
 
-} else {
+        return;
+
+    }
+
 
     shakePIN();
 
+
     setTimeout(
-        resetPIN,
+        () => {
+
+            MARA.pin = "";
+
+            updatePIN();
+
+        },
         400
     );
 
 }
 
-}
+
+/* =====================================================
+   11. PIN ERROR ANIMATION
+===================================================== */
 
 function shakePIN() {
 
-const panel =
-    $(".unlock-panel-content");
-
-if (!panel) return;
+    const panel =
+        $(".unlock-panel-content");
 
 
-panel.animate(
-
-    [
-
-        {
-            transform:
-                "translateX(0)"
-        },
-
-        {
-            transform:
-                "translateX(-8px)"
-        },
-
-        {
-            transform:
-                "translateX(8px)"
-        },
-
-        {
-            transform:
-                "translateX(-5px)"
-        },
-
-        {
-            transform:
-                "translateX(5px)"
-        },
-
-        {
-            transform:
-                "translateX(0)"
-        }
-
-    ],
-
-    {
-        duration: 250
+    if (!panel) {
+        return;
     }
 
-);
 
-}
-
-/* =========================================================
-UNLOCK MARA
-========================================================= */
-
-function unlockMARA() {
-
-if (unlockPanel) {
-
-    unlockPanel.classList.remove(
-        "active"
-    );
-
-}
-
-
-const lockScreen =
-    $("#lock-screen");
-
-
-if (lockScreen) {
-
-    lockScreen.animate(
+    panel.animate(
 
         [
 
             {
-                opacity: 1,
                 transform:
-                    "scale(1)"
+                    "translateX(0)"
             },
 
             {
-                opacity: 0,
                 transform:
-                    "scale(1.04)"
+                    "translateX(-8px)"
+            },
+
+            {
+                transform:
+                    "translateX(8px)"
+            },
+
+            {
+                transform:
+                    "translateX(-6px)"
+            },
+
+            {
+                transform:
+                    "translateX(6px)"
+            },
+
+            {
+                transform:
+                    "translateX(0)"
             }
 
         ],
 
         {
 
-            duration: 350,
-
-            easing:
-                "ease-in"
+            duration: 250
 
         }
 
@@ -563,126 +565,235 @@ if (lockScreen) {
 }
 
 
-setTimeout(() => {
+/* =====================================================
+   12. UNLOCK MARA
+===================================================== */
 
-    showScreen("home");
+function unlockMARA() {
 
-}, 300);
+    closeUnlockPanel();
+
+
+    const lockScreen =
+        $(".mara-lock-screen");
+
+
+    if (lockScreen) {
+
+        lockScreen.animate(
+
+            [
+
+                {
+                    opacity: 1,
+
+                    transform:
+                        "scale(1)"
+
+                },
+
+                {
+                    opacity: 0,
+
+                    transform:
+                        "scale(1.04)"
+
+                }
+
+            ],
+
+            {
+
+                duration: 350,
+
+                easing:
+                    "ease-in",
+
+                fill:
+                    "forwards"
+
+            }
+
+        );
+
+    }
+
+
+    setTimeout(
+        () => {
+
+            showScreen(
+                "home"
+            );
+
+        },
+        350
+    );
 
 }
 
-/* =========================================================
-KEYBOARD PIN
-========================================================= */
+
+/* =====================================================
+   13. PIN BUTTONS
+===================================================== */
+
+$$("[data-pin]").forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                addPIN(
+                    button.dataset.pin
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =====================================================
+   14. UNLOCK BUTTON
+===================================================== */
+
+const unlockArea =
+    $("#unlock-area");
+
+
+if (unlockArea) {
+
+    unlockArea.addEventListener(
+        "click",
+        openUnlockPanel
+    );
+
+}
+
+
+/* =====================================================
+   15. CANCEL PIN
+===================================================== */
+
+const pinCancel =
+    $("#pin-cancel");
+
+
+if (pinCancel) {
+
+    pinCancel.addEventListener(
+        "click",
+        closeUnlockPanel
+    );
+
+}
+
+
+/* =====================================================
+   16. KEYBOARD
+===================================================== */
 
 document.addEventListener(
-"keydown",
-event => {
+    "keydown",
+    event => {
 
-    if (
-        /^[0-9]$/.test(
-            event.key
-        )
-    ) {
+        if (
+            /^[0-9]$/.test(
+                event.key
+            )
+        ) {
 
-        const button =
-            $(
-                `[data-pin="${event.key}"]`
+            addPIN(
+                event.key
             );
 
+        }
 
-        if (button) {
 
-            button.click();
+        if (
+            event.key ===
+            "Escape"
+        ) {
+
+            closeUnlockPanel();
 
         }
 
     }
-
-
-    if (
-        event.key ===
-        "Escape"
-    ) {
-
-        closeUnlockPanel();
-
-        closeControlCenter();
-
-    }
-
-}
-
 );
 
-/* =========================================================
-HOME SEARCH
-========================================================= */
+
+/* =====================================================
+   17. APP SEARCH
+===================================================== */
 
 const searchInput =
-$("#app-search");
+    $("#app-search");
 
 const searchResults =
-$("#search-results");
-
-function initializeSearch() {
-
-if (!searchInput) return;
+    $("#search-results");
 
 
-searchInput.addEventListener(
-    "input",
-    function() {
+function searchApps() {
 
-        const query =
-            this.value
-                .toLowerCase()
-                .trim();
+    if (!searchInput) {
+        return;
+    }
 
 
-        const apps =
-            $$(".app");
+    const query =
+        searchInput.value
+            .toLowerCase()
+            .trim();
 
 
-        if (!query) {
-
-            if (searchResults) {
-
-                searchResults.classList.remove(
-                    "active"
-                );
-
-                searchResults.innerHTML =
-                    "";
-
-            }
+    const apps =
+        $$(".app");
 
 
-            apps.forEach(app => {
+    if (!query) {
+
+        apps.forEach(
+            app => {
 
                 app.style.display =
                     "";
 
-            });
-
-
-            return;
-
-        }
-
-
-        let found = 0;
+            }
+        );
 
 
         if (searchResults) {
+
+            searchResults.classList.remove(
+                "active"
+            );
 
             searchResults.innerHTML =
                 "";
 
         }
 
+        return;
 
-        apps.forEach(app => {
+    }
+
+
+    let found = 0;
+
+
+    if (searchResults) {
+
+        searchResults.innerHTML =
+            "";
+
+    }
+
+
+    apps.forEach(
+        app => {
 
             const name =
                 (
@@ -705,17 +816,14 @@ searchInput.addEventListener(
 
                     const result =
                         document.createElement(
-                            "button"
+                            "div"
                         );
-
 
                     result.className =
                         "search-result";
 
-
                     result.textContent =
                         app.dataset.name;
-
 
                     result.addEventListener(
                         "click",
@@ -727,7 +835,6 @@ searchInput.addEventListener(
 
                         }
                     );
-
 
                     searchResults.appendChild(
                         result
@@ -742,27 +849,26 @@ searchInput.addEventListener(
 
             }
 
-        });
+        }
+    );
 
 
-        if (
-            found === 0 &&
-            searchResults
-        ) {
+    if (
+        searchResults
+    ) {
+
+        if (!found) {
 
             const empty =
                 document.createElement(
                     "div"
                 );
 
-
             empty.className =
                 "search-result";
 
-
             empty.textContent =
                 "Aplikasi tidak ditemukan";
-
 
             searchResults.appendChild(
                 empty
@@ -771,98 +877,108 @@ searchInput.addEventListener(
         }
 
 
-        if (searchResults) {
-
-            searchResults.classList.add(
-                "active"
-            );
-
-        }
+        searchResults.classList.add(
+            "active"
+        );
 
     }
-);
 
 }
 
-initializeSearch();
 
-/* =========================================================
-OPEN APPLICATION
-========================================================= */
+if (searchInput) {
 
-function openApp(appName) {
-
-console.log(
-    "MARA: membuka aplikasi",
-    appName
-);
-
-
-/*
-   Nanti setiap aplikasi dapat
-   dihubungkan ke layar / modulnya
-   sendiri.
-
-   Contoh:
-
-   Rama
-   VexaCut
-   Maps
-   Web
-   Remail
-   Storage
-   Berita
-   Rama School
-   Game Store
-   Settings
-*/
-
-
-alert(
-    "Membuka " +
-    appName
-);
+    searchInput.addEventListener(
+        "input",
+        searchApps
+    );
 
 }
 
-/* =========================================================
-APP DRAWER
-========================================================= */
+
+/* =====================================================
+   18. OPEN APP
+===================================================== */
+
+function openApp(
+    appName
+) {
+
+    console.log(
+        "Membuka aplikasi:",
+        appName
+    );
+
+
+    /*
+     * Nanti setiap aplikasi
+     * dapat diberikan screen
+     * masing-masing.
+     */
+
+
+    const appScreen =
+        document.querySelector(
+            `[data-app="${appName}"]`
+        );
+
+
+    if (appScreen) {
+
+        showScreen(
+            appName
+        );
+
+        return;
+
+    }
+
+
+    alert(
+        `Membuka ${appName}`
+    );
+
+}
+
+
+/* =====================================================
+   19. APP DRAWER
+===================================================== */
 
 function openDrawer() {
 
-console.log(
-    "MARA: membuka App Drawer"
-);
+    const drawer =
+        $("#app-drawer");
 
 
-const drawer =
-    $("#app-drawer");
+    if (!drawer) {
 
+        console.log(
+            "App Drawer belum tersedia."
+        );
 
-if (drawer) {
+        return;
+
+    }
+
 
     drawer.classList.add(
         "active"
     );
 
-} else {
-
-    alert(
-        "App Drawer MARA OS"
-    );
-
 }
 
-}
 
 function closeDrawer() {
 
-const drawer =
-    $("#app-drawer");
+    const drawer =
+        $("#app-drawer");
 
 
-if (drawer) {
+    if (!drawer) {
+        return;
+    }
+
 
     drawer.classList.remove(
         "active"
@@ -870,512 +986,413 @@ if (drawer) {
 
 }
 
-}
 
-/* =========================================================
-CONTROL CENTER
-========================================================= */
-
-const controlCenter =
-$("#control-center");
+/* =====================================================
+   20. CONTROL CENTER
+===================================================== */
 
 function openControlCenter() {
 
-if (!controlCenter) return;
+    const overlay =
+        $("#controlCenterOverlay");
 
 
-controlCenter.classList.add(
-    "active"
-);
+    if (!overlay) {
 
+        /*
+         * Jika menggunakan screen
+         * Control Center biasa.
+         */
 
-controlCenter.setAttribute(
-    "aria-hidden",
-    "false"
-);
-
-}
-
-function closeControlCenter() {
-
-if (!controlCenter) return;
-
-
-controlCenter.classList.remove(
-    "active"
-);
-
-
-controlCenter.setAttribute(
-    "aria-hidden",
-    "true"
-);
-
-}
-
-/* =========================================================
-CONTROL CENTER SWIPE
-========================================================= */
-
-let touchStartY = 0;
-
-let touchCurrentY = 0;
-
-document.addEventListener(
-"touchstart",
-event => {
-
-    if (
-        !event.touches.length
-    ) {
+        showScreen(
+            "control-center"
+        );
 
         return;
 
     }
 
 
-    touchStartY =
-        event.touches[0].clientY;
-
-
-    touchCurrentY =
-        touchStartY;
-
-},
-{
-    passive: true
-}
-
-);
-
-document.addEventListener(
-"touchmove",
-event => {
-
-    if (
-        !event.touches.length
-    ) {
-
-        return;
-
-    }
-
-
-    touchCurrentY =
-        event.touches[0].clientY;
-
-},
-{
-    passive: true
-}
-
-);
-
-document.addEventListener(
-"touchend",
-() => {
-
-    const distance =
-        touchCurrentY -
-        touchStartY;
-
-
-    /*
-       Swipe dari bagian paling atas
-       ke bawah = buka Control Center
-    */
-
-    if (
-        touchStartY < 80 &&
-        distance > 70 &&
-        !controlCenter?.classList.contains(
-            "active"
-        )
-    ) {
-
-        openControlCenter();
-
-    }
-
-
-    /*
-       Swipe ke atas ketika Control Center
-       sedang terbuka = tutup
-    */
-
-    if (
-        distance < -70 &&
-        controlCenter?.classList.contains(
-            "active"
-        )
-    ) {
-
-        closeControlCenter();
-
-    }
-
-
-    touchStartY = 0;
-
-    touchCurrentY = 0;
-
-},
-{
-    passive: true
-}
-
-);
-
-/* =========================================================
-CONTROL CENTER QUICK TOGGLE
-========================================================= */
-
-function toggleQuick(button) {
-
-if (!button) return;
-
-
-button.classList.toggle(
-    "active"
-);
-
-
-const control =
-    button.dataset.control;
-
-
-const active =
-    button.classList.contains(
+    overlay.classList.add(
         "active"
     );
 
 
-console.log(
-    "MARA Control:",
-    control,
-    active
-);
+    MARA.controlCenterOpen =
+        true;
+
+}
 
 
-if (
-    control === "wifi"
-) {
+function closeControlCenter() {
 
-    const status =
-        $("#connection-status");
+    const overlay =
+        $("#controlCenterOverlay");
 
 
-    if (status) {
+    if (!overlay) {
 
-        status.textContent =
-            active
-                ? "Terhubung ke jaringan"
-                : "Wi-Fi dimatikan";
+        return;
 
     }
 
-}
+
+    overlay.classList.remove(
+        "active"
+    );
+
+
+    MARA.controlCenterOpen =
+        false;
 
 }
 
-/* =========================================================
-BRIGHTNESS
-========================================================= */
 
-const brightness =
-$("#brightness");
+/* =====================================================
+   21. CONTROL CENTER SWIPE
+===================================================== */
 
-const brightnessValue =
-$("#brightness-value");
+let startY = 0;
+let currentY = 0;
 
-if (brightness) {
 
-brightness.addEventListener(
-    "input",
-    function() {
+document.addEventListener(
+    "touchstart",
+    event => {
 
-        if (brightnessValue) {
+        if (
+            !event.touches ||
+            !event.touches.length
+        ) {
+            return;
+        }
 
-            brightnessValue.textContent =
-                `${this.value}%`;
+
+        startY =
+            event.touches[0].clientY;
+
+        currentY =
+            startY;
+
+    },
+    {
+        passive: true
+    }
+);
+
+
+document.addEventListener(
+    "touchmove",
+    event => {
+
+        if (
+            !event.touches ||
+            !event.touches.length
+        ) {
+            return;
+        }
+
+
+        currentY =
+            event.touches[0].clientY;
+
+    },
+    {
+        passive: true
+    }
+);
+
+
+document.addEventListener(
+    "touchend",
+    () => {
+
+        const distance =
+            currentY - startY;
+
+
+        /*
+         * Swipe dari atas ke bawah
+         */
+
+        if (
+            startY < 80 &&
+            distance > 60 &&
+            !MARA.controlCenterOpen
+        ) {
+
+            openControlCenter();
 
         }
 
 
         /*
-           Catatan:
-           Browser tidak mengizinkan
-           PWA mengubah brightness
-           perangkat secara langsung.
-        */
+         * Swipe ke atas
+         */
 
+        if (
+            MARA.controlCenterOpen &&
+            distance < -60
+        ) {
+
+            closeControlCenter();
+
+        }
+
+
+        startY = 0;
+
+        currentY = 0;
+
+    },
+    {
+        passive: true
     }
 );
 
-}
 
-/* =========================================================
-VOLUME
-========================================================= */
+/* =====================================================
+   22. QUICK CONTROL
+===================================================== */
 
-const volume =
-$("#volume");
+function toggleQuick(
+    button
+) {
 
-const volumeValue =
-$("#volume-value");
+    if (!button) {
+        return;
+    }
 
-if (volume) {
 
-volume.addEventListener(
-    "input",
-    function() {
+    button.classList.toggle(
+        "active"
+    );
 
-        if (volumeValue) {
 
-            volumeValue.textContent =
-                `${this.value}%`;
+    const control =
+        button.dataset.control;
+
+
+    const active =
+        button.classList.contains(
+            "active"
+        );
+
+
+    console.log(
+        "MARA Control:",
+        control,
+        active
+    );
+
+
+    if (
+        control === "wifi"
+    ) {
+
+        const status =
+            $("#connection-status");
+
+
+        if (status) {
+
+            status.textContent =
+                active
+                    ? "Terhubung ke jaringan"
+                    : "Wi-Fi dimatikan";
 
         }
 
     }
-);
 
 }
 
-/* =========================================================
-CONTROL CENTER BUTTONS
-========================================================= */
 
-function openWifi() {
+/* =====================================================
+   23. BRIGHTNESS
+===================================================== */
 
-alert(
-    "Pengaturan Wi-Fi MARA"
-);
+const brightness =
+    $("#brightness");
 
-}
+const brightnessValue =
+    $("#brightness-value");
 
-function editControls() {
 
-alert(
-    "Mode edit Control Center akan tersedia."
-);
+if (brightness) {
 
-}
+    brightness.addEventListener(
+        "input",
+        () => {
 
-function openSettings() {
+            const value =
+                brightness.value;
 
-openApp(
-    "Pengaturan"
-);
 
-}
+            if (brightnessValue) {
 
-function openBattery() {
+                brightnessValue.textContent =
+                    `${value}%`;
 
-alert(
-    "Membuka informasi baterai"
-);
+            }
+
+        }
+    );
 
 }
 
-function openSecurity() {
 
-alert(
-    "MARA Security\n\nPerangkat terlindungi."
-);
+/* =====================================================
+   24. VOLUME
+===================================================== */
+
+const volume =
+    $("#volume");
+
+const volumeValue =
+    $("#volume-value");
+
+
+if (volume) {
+
+    volume.addEventListener(
+        "input",
+        () => {
+
+            const value =
+                volume.value;
+
+
+            if (volumeValue) {
+
+                volumeValue.textContent =
+                    `${value}%`;
+
+            }
+
+        }
+    );
 
 }
 
-/* =========================================================
-BACK BUTTON
-========================================================= */
+
+/* =====================================================
+   25. BACK BUTTON
+===================================================== */
 
 function goBack() {
 
-if (
-    controlCenter?.classList.contains(
-        "active"
-    )
-) {
-
-    closeControlCenter();
-
-    return;
-
-}
-
-
-if (
-    $(".unlock-panel")?.classList.contains(
-        "active"
-    )
-) {
-
-    closeUnlockPanel();
-
-    return;
-
-}
-
-
-showScreen("home");
-
-}
-
-/* =========================================================
-QUICK ACTION LOCK SCREEN
-========================================================= */
-
-const cameraButton =
-$("#camera-button");
-
-const phoneButton =
-$("#phone-button");
-
-if (cameraButton) {
-
-cameraButton.addEventListener(
-    "click",
-    () => {
-
-        alert(
-            "MARA Camera"
-        );
-
-    }
-);
-
-}
-
-if (phoneButton) {
-
-phoneButton.addEventListener(
-    "click",
-    () => {
-
-        alert(
-            "MARA Phone"
-        );
-
-    }
-);
-
-}
-
-/* =========================================================
-ALL APPS
-========================================================= */
-
-const allApps =
-$("#all-apps");
-
-if (allApps) {
-
-allApps.addEventListener(
-    "click",
-    openDrawer
-);
-
-}
-
-/* =========================================================
-PREVENT CONTEXT MENU
-========================================================= */
-
-document.addEventListener(
-"contextmenu",
-event => {
-
-    event.preventDefault();
-
-}
-
-);
-
-/* =========================================================
-PREVENT DOUBLE TAP ZOOM
-========================================================= */
-
-let lastTouchEnd = 0;
-
-document.addEventListener(
-"touchend",
-event => {
-
-    const now =
-        Date.now();
-
-
     if (
-        now - lastTouchEnd <= 300
+        MARA.controlCenterOpen
     ) {
 
-        event.preventDefault();
+        closeControlCenter();
+
+        return;
 
     }
 
 
-    lastTouchEnd = now;
+    showScreen(
+        "home"
+    );
 
-},
-{
-    passive: false
 }
 
-);
 
-/* =========================================================
-SERVICE WORKER
-========================================================= */
+/* =====================================================
+   26. QUICK ACTIONS
+===================================================== */
 
-if (
-"serviceWorker" in navigator
-) {
+function openCamera() {
 
-window.addEventListener(
-    "load",
-    () => {
+    alert(
+        "MARA Camera"
+    );
 
-        navigator.serviceWorker
-            .register(
-                "./service-worker.js"
-            )
-            .then(
-                registration => {
+}
 
-                    console.log(
-                        "MARA SW aktif:",
-                        registration.scope
-                    );
 
-                }
-            )
-            .catch(
-                error => {
+function openPhone() {
 
-                    console.error(
-                        "MARA SW gagal:",
-                        error
-                    );
+    alert(
+        "MARA Phone"
+    );
 
-                }
+}
+
+
+function openWifi() {
+
+    alert(
+        "Pengaturan Wi-Fi MARA"
+    );
+
+}
+
+
+function openSettings() {
+
+    alert(
+        "MARA Settings"
+    );
+
+}
+
+
+function openBattery() {
+
+    if (
+        MARA.battery
+    ) {
+
+        const percent =
+            Math.round(
+                MARA.battery.level *
+                100
             );
 
+
+        alert(
+            `Baterai MARA: ${percent}%`
+        );
+
+    } else {
+
+        alert(
+            "Informasi baterai tidak tersedia."
+        );
+
     }
-);
 
 }
 
-/* =========================================================
-START MARA
-========================================================= */
 
-document.addEventListener(
-"DOMContentLoaded",
-() => {
+function openSecurity() {
 
-    initializeMARA();
+    alert(
+        "MARA Security\n\nPerangkat terlindungi."
+    );
 
 }
 
-);
+
+function editControls() {
+
+    alert(
+        "Mode Edit Control Center."
+    );
+
+}
+
+
+/* =====================================================
+   27. TOUCH FEEDBACK
+===================================================== */
+
+$$(
+    ".app, .dock-app, .quick-button"
+).forEach(
+    element => {
+
+        element.addEventListener(
