@@ -12,6 +12,9 @@
   "background_color": "#000000",
   "theme_color": "#000000",
 
+  "lang": "id",
+  "dir": "ltr",
+
   "icons": [
     {
       "src": "./mara-icon-192.png",
