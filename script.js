@@ -1,220 +1,417 @@
-/* =========================
+"use strict";
+
+
+/* =====================================================
+   MARA OS — SCRIPT.JS
+   Jam + Baterai + Control Center + Service Worker
+===================================================== */
+
+
+/* =====================================================
    JAM
-========================= */
+===================================================== */
 
 function updateClock() {
 
     const clock =
         document.getElementById("clock");
 
-    const now = new Date();
+    if (!clock) {
+        return;
+    }
+
+    const now =
+        new Date();
 
     const hours =
-        String(now.getHours()).padStart(2, "0");
+        String(
+            now.getHours()
+        ).padStart(2, "0");
 
     const minutes =
-        String(now.getMinutes()).padStart(2, "0");
+        String(
+            now.getMinutes()
+        ).padStart(2, "0");
 
     clock.textContent =
         `${hours}:${minutes}`;
 }
 
+
+/* Jalankan langsung */
+
 updateClock();
 
-setInterval(updateClock, 1000);
+
+/* Update setiap detik */
+
+setInterval(
+    updateClock,
+    1000
+);
 
 
-/* =========================
-   BATTERY
-========================= */
+/* =====================================================
+   BATERAI
+===================================================== */
 
 const batteryPercent =
-    document.getElementById("battery-percent");
+    document.getElementById(
+        "battery-percent"
+    );
 
 const batteryLevel =
-    document.getElementById("battery-level");
+    document.getElementById(
+        "battery-level"
+    );
 
 
-function updateBattery(battery) {
+function updateBattery(
+    battery
+) {
+
+    if (
+        !batteryPercent ||
+        !batteryLevel
+    ) {
+        return;
+    }
+
 
     const percent =
-        Math.round(battery.level * 100);
+        Math.round(
+            battery.level * 100
+        );
+
 
     batteryPercent.textContent =
         `${percent}%`;
+
 
     batteryLevel.style.width =
         `${percent}%`;
 }
 
 
-/* =========================
-   BATTERY API
-========================= */
+/* =====================================================
+   BATTERY STATUS API
+===================================================== */
 
-if ("getBattery" in navigator) {
+function showBatteryUnavailable() {
 
-    navigator.getBattery()
-        .then(function (battery) {
+    if (batteryPercent) {
 
-            updateBattery(battery);
+        batteryPercent.textContent =
+            "--%";
 
-            battery.addEventListener(
-                "levelchange",
-                function () {
-                    updateBattery(battery);
-                }
-            );
+    }
 
-        })
-        .catch(function () {
+    if (batteryLevel) {
 
-            batteryPercent.textContent = "--%";
-            batteryLevel.style.width = "0%";
+        batteryLevel.style.width =
+            "0%";
 
-        });
+    }
+}
+
+
+if (
+    "getBattery" in navigator
+) {
+
+    navigator
+        .getBattery()
+        .then(
+            function(battery) {
+
+                /* Tampilkan kondisi awal */
+
+                updateBattery(
+                    battery
+                );
+
+
+                /* Saat baterai berubah */
+
+                battery.addEventListener(
+                    "levelchange",
+                    function() {
+
+                        updateBattery(
+                            battery
+                        );
+
+                    }
+                );
+
+            }
+        )
+        .catch(
+            function() {
+
+                showBatteryUnavailable();
+
+            }
+        );
 
 } else {
 
-    batteryPercent.textContent = "--%";
-    batteryLevel.style.width = "0%";
+    /*
+     * Chrome/perangkat tertentu
+     * tidak menyediakan Battery API.
+     */
+
+    showBatteryUnavailable();
+
 }
 
-"use strict";
+
+/* =====================================================
+   CONTROL CENTER
+===================================================== */
 
 const maraHeader =
-    document.querySelector(".mara-header");
+    document.querySelector(
+        ".mara-header"
+    );
 
 const controlCenterOverlay =
-    document.querySelector("#controlCenterOverlay");
-
-let startY = 0;
-let currentY = 0;
-
-
-/* =====================================
-   MARA HEADER
-   SWIPE DOWN → OPEN
-===================================== */
-
-maraHeader.addEventListener(
-    "touchstart",
-    function (event) {
-
-        startY =
-            event.touches[0].clientY;
-
-        currentY = startY;
-    },
-    { passive: true }
-);
+    document.getElementById(
+        "controlCenterOverlay"
+    );
 
 
-maraHeader.addEventListener(
-    "touchmove",
-    function (event) {
+/* Jika elemen belum ada, jangan jalankan gesture */
 
-        currentY =
-            event.touches[0].clientY;
-    },
-    { passive: true }
-);
+if (
+    maraHeader &&
+    controlCenterOverlay
+) {
 
 
-maraHeader.addEventListener(
-    "touchend",
-    function () {
+    /* ================================================
+       SWIPE DOWN → OPEN
+    ================================================= */
 
-        const distance =
-            currentY - startY;
+    let startY = 0;
+    let currentY = 0;
 
-        if (distance > 60) {
 
-            controlCenterOverlay.classList.add(
-                "active"
-            );
+    maraHeader.addEventListener(
+        "touchstart",
+        function(event) {
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+                return;
+            }
+
+
+            startY =
+                event.touches[0].clientY;
+
+            currentY =
+                startY;
+
+        },
+        {
+            passive: true
         }
-
-        startY = 0;
-        currentY = 0;
-    },
-    { passive: true }
-);
+    );
 
 
-/* =====================================
-   CONTROL CENTER OVERLAY
-   SWIPE UP → CLOSE
-===================================== */
+    maraHeader.addEventListener(
+        "touchmove",
+        function(event) {
 
-let closeStartY = 0;
-let closeCurrentY = 0;
-
-
-controlCenterOverlay.addEventListener(
-    "touchstart",
-    function (event) {
-
-        closeStartY =
-            event.touches[0].clientY;
-
-        closeCurrentY =
-            closeStartY;
-    },
-    { passive: true }
-);
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+                return;
+            }
 
 
-controlCenterOverlay.addEventListener(
-    "touchmove",
-    function (event) {
+            currentY =
+                event.touches[0].clientY;
 
-        closeCurrentY =
-            event.touches[0].clientY;
-    },
-    { passive: true }
-);
-
-
-controlCenterOverlay.addEventListener(
-    "touchend",
-    function () {
-
-        const distance =
-            closeCurrentY - closeStartY;
-
-        if (distance < -60) {
-
-            controlCenterOverlay.classList.remove(
-                "active"
-            );
+        },
+        {
+            passive: true
         }
+    );
 
-        closeStartY = 0;
-        closeCurrentY = 0;
-    },
-    { passive: true }
-);
-if ("serviceWorker" in navigator) {
 
-    navigator.serviceWorker.register(
-        "./service-worker.js"
-    )
-    .then(function (registration) {
+    maraHeader.addEventListener(
+        "touchend",
+        function() {
 
-        console.log(
-            "MARA SW BERHASIL:",
-            registration.scope
-        );
+            const distance =
+                currentY -
+                startY;
 
-    })
-    .catch(function (error) {
 
-        console.error(
-            "MARA SW GAGAL:",
-            error
-        );
+            if (
+                distance > 60
+            ) {
 
-    });
+                controlCenterOverlay.classList.add(
+                    "active"
+                );
+
+                controlCenterOverlay.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+
+            }
+
+
+            startY = 0;
+            currentY = 0;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    /* ================================================
+       SWIPE UP → CLOSE
+    ================================================= */
+
+    let closeStartY = 0;
+    let closeCurrentY = 0;
+
+
+    controlCenterOverlay.addEventListener(
+        "touchstart",
+        function(event) {
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+                return;
+            }
+
+
+            closeStartY =
+                event.touches[0].clientY;
+
+            closeCurrentY =
+                closeStartY;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    controlCenterOverlay.addEventListener(
+        "touchmove",
+        function(event) {
+
+            if (
+                !event.touches ||
+                !event.touches.length
+            ) {
+                return;
+            }
+
+
+            closeCurrentY =
+                event.touches[0].clientY;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    controlCenterOverlay.addEventListener(
+        "touchend",
+        function() {
+
+            const distance =
+                closeCurrentY -
+                closeStartY;
+
+
+            if (
+                distance < -60
+            ) {
+
+                controlCenterOverlay.classList.remove(
+                    "active"
+                );
+
+                controlCenterOverlay.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+            }
+
+
+            closeStartY = 0;
+            closeCurrentY = 0;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+}
+
+
+/* =====================================================
+   SERVICE WORKER
+===================================================== */
+
+if (
+    "serviceWorker" in navigator
+) {
+
+    window.addEventListener(
+        "load",
+        function() {
+
+            navigator.serviceWorker
+                .register(
+                    "./service-worker.js",
+                    {
+                        scope: "./"
+                    }
+                )
+                .then(
+                    function(registration) {
+
+                        console.log(
+                            "MARA OS Service Worker aktif:",
+                            registration.scope
+                        );
+
+                    }
+                )
+                .catch(
+                    function(error) {
+
+                        console.error(
+                            "MARA OS Service Worker gagal:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
+    );
 
 }
