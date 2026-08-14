@@ -1,114 +1,120 @@
 "use strict";
 
-const CACHE_NAME = "mara-os-v5";
+const CACHE_NAME = "mara-os-v1";
 
-const FILES = [
+const FILES_TO_CACHE = [
+    "./",
     "./index.html",
     "./style.css",
     "./script.js",
     "./manifest.json",
-
     "./mara-icon-192.png",
     "./mara-icon-512.png",
-
     "./ux/lock-screen.html",
     "./ux/home-screen.html",
     "./ux/control-center.html"
 ];
 
 
-/* INSTALL */
+/* =========================================
+   INSTALL
+========================================= */
 
-self.addEventListener(
-    "install",
-    event => {
+self.addEventListener("install", event => {
 
-        event.waitUntil(
+    event.waitUntil(
 
-            caches.open(CACHE_NAME)
-                .then(cache => {
+        caches.open(CACHE_NAME)
+            .then(cache => {
 
-                    return cache.addAll(
-                        FILES
-                    );
+                return Promise.all(
 
-                })
+                    FILES_TO_CACHE.map(file => {
 
-        );
+                        return fetch(file)
+                            .then(response => {
 
-        self.skipWaiting();
-    }
-);
+                                if (!response.ok) {
+                                    throw new Error(
+                                        "Gagal mengambil: " + file
+                                    );
+                                }
 
+                                return cache.put(
+                                    file,
+                                    response
+                                );
 
-/* ACTIVATE */
+                            });
 
-self.addEventListener(
-    "activate",
-    event => {
+                    })
 
-        event.waitUntil(
-
-            caches.keys()
-                .then(names => {
-
-                    return Promise.all(
-
-                        names
-                            .filter(
-                                name =>
-                                    name !==
-                                    CACHE_NAME
-                            )
-                            .map(
-                                name =>
-                                    caches.delete(
-                                        name
-                                    )
-                            )
-
-                    );
-
-                })
-
-        );
-
-        self.clients.claim();
-    }
-);
-
-
-/* FETCH */
-
-self.addEventListener(
-    "fetch",
-    event => {
-
-        if (
-            event.request.method !==
-            "GET"
-        ) {
-            return;
-        }
-
-        event.respondWith(
-
-            caches.match(
-                event.request
-            )
-            .then(cached => {
-
-                if (cached) {
-                    return cached;
-                }
-
-                return fetch(
-                    event.request
                 );
 
             })
 
-        );
+    );
 
+    self.skipWaiting();
+
+});
+
+
+/* =========================================
+   ACTIVATE
+========================================= */
+
+self.addEventListener("activate", event => {
+
+    event.waitUntil(
+
+        caches.keys()
+            .then(cacheNames => {
+
+                return Promise.all(
+
+                    cacheNames
+                        .filter(name => {
+                            return name !== CACHE_NAME;
+                        })
+                        .map(name => {
+                            return caches.delete(name);
+                        })
+
+                );
+
+            })
+
+    );
+
+    self.clients.claim();
+
+});
+
+
+/* =========================================
+   FETCH
+========================================= */
+
+self.addEventListener("fetch", event => {
+
+    if (event.request.method !== "GET") {
+        return;
     }
-);
+
+    event.respondWith(
+
+        caches.match(event.request)
+            .then(cachedResponse => {
+
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+
+                return fetch(event.request);
+
+            })
+
+    );
+
+});
