@@ -1,0 +1,50 @@
+name: Create Gradle Wrapper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  wrapper:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.7
+
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+
+      - name: Verify Wrapper
+        run: |
+          ./gradlew --version
+          ls -la gradle/wrapper
+
+      - name: Package Gradle Wrapper
+        run: |
+          mkdir -p wrapper-package/gradle/wrapper
+          cp ./gradlew wrapper-package/
+          cp ./gradlew.bat wrapper-package/
+          cp ./gradle/wrapper/gradle-wrapper.jar wrapper-package/gradle/wrapper/
+          cp ./gradle/wrapper/gradle-wrapper.properties wrapper-package/gradle/wrapper/
+
+      - name: Upload Gradle Wrapper
+        uses: actions/upload-artifact@v4
+        with:
+          name: MARA-gradle-wrapper
+          path: wrapper-package/
