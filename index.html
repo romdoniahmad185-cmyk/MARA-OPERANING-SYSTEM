@@ -3,24 +3,72 @@
 
 <head>
 
+    <!-- =========================================
+         BASIC
+    ========================================== -->
+
     <meta charset="UTF-8">
 
     <meta
         name="viewport"
-        content="width=device-width,
-                   initial-scale=1.0,
-                   maximum-scale=1.0,
-                   user-scalable=no"
+        content="
+            width=device-width,
+            initial-scale=1.0,
+            maximum-scale=1.0,
+            user-scalable=no,
+            viewport-fit=cover
+        "
     >
 
-    <!-- PWA -->
-<link rel="manifest" href="manifest.json">
-   <!-- Memaksa tampilan standalone / seperti aplikasi native -->
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="MARA OS">
+    <meta
+        name="theme-color"
+        content="#000000"
+    >
+
+    <meta
+        name="background-color"
+        content="#000000"
+    >
+
+    <!-- =========================================
+         PWA
+    ========================================== -->
+
+    <link
+        rel="manifest"
+        href="./manifest.json"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"
+    >
+
+    <meta
+        name="apple-mobile-web-app-title"
+        content="MARA OS"
+    >
+
+    <!-- =========================================
+         TITLE
+    ========================================== -->
+
     <title>MARA OS</title>
+
+
+    <!-- =========================================
+         CSS
+    ========================================== -->
 
     <link
         rel="stylesheet"
@@ -33,71 +81,101 @@
 <body>
 
 
-<!-- =================================
-     MARA LOCK SCREEN
-================================= -->
+    <!-- =========================================
+         MARA LOCK SCREEN
+    ========================================== -->
 
-<iframe
-    class="mara-iframe"
-    src="./ux/lock-screen.html"
-    frameborder="0">
-</iframe>
+    <iframe
+        id="maraLockFrame"
+        class="mara-iframe"
+        src="./ux/lock-screen.html"
+        title="MARA OS Lock Screen"
+        frameborder="0"
+        scrolling="no"
+        allow="fullscreen"
+    ></iframe>
 
 
-<!-- =================================
-     MARA HEADER
-================================= -->
+    <!-- =========================================
+         MARA STATUS BAR
+    ========================================== -->
 
-<div class="mara-header">
-
-    <div
-        class="clock"
-        id="clock"
+    <header
+        class="mara-header"
+        id="maraHeader"
     >
-        00:00
-    </div>
+
+        <!-- JAM -->
+
+        <div
+            class="clock"
+            id="clock"
+        >
+            00:00
+        </div>
 
 
-    <div class="battery">
+        <!-- BATTERY -->
 
-        <span id="battery-percent">
-            --%
-        </span>
+        <div
+            class="battery"
+            id="battery"
+            aria-label="Status baterai"
+        >
 
-        <div class="battery-icon">
+            <span
+                id="battery-percent"
+            >
+                --%
+            </span>
+
 
             <div
-                class="battery-level"
-                id="battery-level">
+                class="battery-icon"
+                aria-hidden="true"
+            >
+
+                <div
+                    class="battery-level"
+                    id="battery-level"
+                ></div>
+
             </div>
 
         </div>
 
+    </header>
+
+
+    <!-- =========================================
+         CONTROL CENTER
+    ========================================== -->
+
+    <div
+        id="controlCenterOverlay"
+        aria-hidden="true"
+    >
+
+        <iframe
+            id="controlCenterFrame"
+            src="./ux/control-center.html"
+            title="MARA OS Control Center"
+            frameborder="0"
+            scrolling="no"
+        ></iframe>
+
     </div>
 
-</div>
 
+    <!-- =========================================
+         JAVASCRIPT
+         Service Worker didaftarkan dari script.js
+    ========================================== -->
 
-<!-- =================================
-     CONTROL CENTER OVERLAY
-================================= -->
-
-<div id="controlCenterOverlay">
-
-    <iframe
-        id="controlCenterFrame"
-        src="./ux/control-center.html"
-        frameborder="0">
-    </iframe>
-
-</div>
-
-
-<!-- =================================
-     MARA JAVASCRIPT
-================================= -->
-
-<script src="./script.js"></script>
+    <script
+        src="./script.js"
+        defer
+    ></script>
 
 
 </body>
