@@ -3,1153 +3,188 @@
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<meta
-    name="theme-color"
-    content="#07111f">
+    <meta
+        name="theme-color"
+        content="#ffffff">
 
-<meta
-    name="mobile-web-app-capable"
-    content="yes">
+    <meta
+        name="background-color"
+        content="#ffffff">
 
-<meta
-    name="apple-mobile-web-app-capable"
-    content="yes">
+    <link
+        rel="manifest"
+        href="./manifest.json">
 
-<meta
-    name="apple-mobile-web-app-status-bar-style"
-    content="black-translucent">
+    <title>MARA OS</title>
 
-<link
-    rel="manifest"
-    href="./manifest.json">
 
-<link
-    rel="icon"
-    type="image/png"
-    sizes="192x192"
-    href="./mara-icon-192.png">
+    <style>
 
-<title>MARA OS</title>
+        /* =========================================
+           MARA OS — APPLICATION SHELL
+        ========================================= */
 
-<link
-    rel="stylesheet"
-    href="./style.css">
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+            -webkit-tap-highlight-color:
+                transparent;
+
+        }
+
+
+        html,
+        body {
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+        }
+
+
+        body {
+
+            width: 100vw;
+
+            height: 100vh;
+
+            background: #ffffff;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+        }
+
+
+        /* =========================================
+           APPLICATION CONTAINER
+        ========================================= */
+
+        #mara-app {
+
+            position: fixed;
+
+            inset: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background: #ffffff;
+
+            overflow: hidden;
+
+        }
+
+    </style>
 
 </head>
 
 
 <body>
 
-<!-- =====================================================
-     MARA OS ROOT
-===================================================== -->
 
-<main
-    id="mara-os"
-    class="mara-os">
+    <!-- =========================================
+         MARA OS APPLICATION
+    ========================================= -->
 
+    <main id="mara-app">
 
-<!-- =====================================================
-     SPLASH SCREEN
-===================================================== -->
+        <!--
+            MARA OS KOSONG
 
-<section
-    id="splash-screen"
-    class="screen splash-screen">
+            Layar aplikasi akan dibangun
+            di dalam container ini.
 
-    <div class="splash-logo">
+        -->
 
-        <img
-            src="./mara-icon-192.png"
-            alt="MARA OS">
+    </main>
 
-    </div>
 
-    <h1>MARA OS</h1>
+    <script>
 
-    <p>Memulai sistem...</p>
+        /* =========================================
+           MARA OS — BASIC APPLICATION
+        ========================================= */
 
-    <div class="splash-loader">
-        <span></span>
-    </div>
+        "use strict";
 
-</section>
 
+        /*
+         * Saat ini sengaja tidak ada
+         * tampilan tambahan.
+         *
+         * MARA OS hanya menampilkan
+         * layar putih kosong.
+         */
 
-<!-- =====================================================
-     LOCK SCREEN
-===================================================== -->
 
-<section
-    id="lock-screen"
-    class="screen lock-screen hidden">
+        console.log(
+            "MARA OS berhasil dibuka."
+        );
 
 
-    <div class="lock-wallpaper"></div>
+        /* =========================================
+           SERVICE WORKER
+        ========================================= */
 
-    <div class="lock-overlay"></div>
+        if (
+            "serviceWorker" in navigator
+        ) {
 
+            window.addEventListener(
+                "load",
+                function () {
 
-    <!-- STATUS BAR -->
+                    navigator.serviceWorker
+                        .register(
+                            "./service-worker.js"
+                        )
+                        .then(
+                            function (registration) {
 
-    <header class="status-bar">
+                                console.log(
+                                    "MARA OS Service Worker aktif:",
+                                    registration.scope
+                                );
 
-        <span
-            id="lock-status-time">
-            00:00
-        </span>
+                            }
+                        )
+                        .catch(
+                            function (error) {
 
-        <div class="status-right">
+                                console.error(
+                                    "MARA OS Service Worker gagal:",
+                                    error
+                                );
 
-            <span
-                id="lock-battery">
-                --%
-            </span>
+                            }
+                        );
 
-            <span>
-                🔋
-            </span>
+                }
+            );
 
-        </div>
+        }
 
-    </header>
-
-
-    <!-- LOCK CONTENT -->
-
-    <section class="lock-content">
-
-
-        <div
-            id="lock-clock"
-            class="lock-clock">
-            00:00
-        </div>
-
-
-        <div
-            id="lock-date"
-            class="lock-date">
-            Memuat tanggal...
-        </div>
-
-
-        <div class="lock-weather">
-
-            <span>☀</span>
-
-            <span>
-                28°C
-            </span>
-
-        </div>
-
-
-        <!-- PROFILE -->
-
-        <div class="lock-profile">
-
-            <div class="profile-avatar">
-                👤
-            </div>
-
-            <div class="profile-name">
-                Pengguna MARA
-            </div>
-
-        </div>
-
-
-        <!-- NOTIFICATION -->
-
-        <div class="lock-notification">
-
-            <div class="notification-icon">
-                ✉
-            </div>
-
-            <div class="notification-info">
-
-                <strong>
-                    Remail
-                </strong>
-
-                <span>
-                    Selamat datang di MARA OS
-                </span>
-
-            </div>
-
-            <time>
-                sekarang
-            </time>
-
-        </div>
-
-
-        <!-- UNLOCK -->
-
-        <button
-            id="unlock-button"
-            class="unlock-button">
-
-            <span>
-                ↑
-            </span>
-
-            <small>
-                Ketuk untuk membuka
-            </small>
-
-        </button>
-
-
-    </section>
-
-
-    <!-- QUICK ACTIONS -->
-
-    <footer class="lock-actions">
-
-        <button
-            id="phone-button"
-            class="quick-action">
-            ☎
-        </button>
-
-        <button
-            id="camera-button"
-            class="quick-action">
-            📷
-        </button>
-
-    </footer>
-
-
-</section>
-
-
-<!-- =====================================================
-     PIN SCREEN
-===================================================== -->
-
-<section
-    id="pin-screen"
-    class="screen pin-screen hidden">
-
-
-    <div class="pin-background"></div>
-
-
-    <div class="pin-content">
-
-
-        <button
-            id="pin-close"
-            class="pin-close">
-            ×
-        </button>
-
-
-        <div class="pin-icon">
-            🔐
-        </div>
-
-
-        <h2>
-            Buka MARA OS
-        </h2>
-
-
-        <p>
-            Masukkan PIN untuk melanjutkan
-        </p>
-
-
-        <!-- PIN INDICATORS -->
-
-        <div
-            id="pin-indicators"
-            class="pin-indicators">
-
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-
-        </div>
-
-
-        <div
-            id="pin-error"
-            class="pin-error">
-        </div>
-
-
-        <!-- KEYPAD -->
-
-        <div class="pin-keypad">
-
-
-            <button data-pin="1">1</button>
-            <button data-pin="2">2</button>
-            <button data-pin="3">3</button>
-
-            <button data-pin="4">4</button>
-            <button data-pin="5">5</button>
-            <button data-pin="6">6</button>
-
-            <button data-pin="7">7</button>
-            <button data-pin="8">8</button>
-            <button data-pin="9">9</button>
-
-            <button
-                data-pin="clear"
-                class="pin-special">
-                ⌫
-            </button>
-
-            <button data-pin="0">0</button>
-
-            <button
-                data-pin="enter"
-                class="pin-special">
-                ✓
-            </button>
-
-        </div>
-
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     HOME SCREEN
-===================================================== -->
-
-<section
-    id="home-screen"
-    class="screen home-screen hidden">
-
-
-    <div class="home-wallpaper"></div>
-
-    <div class="home-overlay"></div>
-
-
-    <!-- HOME STATUS BAR -->
-
-    <header class="home-status-bar">
-
-        <span
-            id="home-time">
-            00:00
-        </span>
-
-
-        <div class="home-status-right">
-
-            <span>
-                MARA
-            </span>
-
-            <span
-                id="home-battery">
-                --%
-            </span>
-
-            <span>
-                🔋
-            </span>
-
-        </div>
-
-    </header>
-
-
-    <!-- HOME CONTENT -->
-
-    <section class="home-content">
-
-
-        <!-- WELCOME -->
-
-        <div class="welcome-widget">
-
-            <small>
-                Selamat datang
-            </small>
-
-            <h1>
-                MARA OS
-            </h1>
-
-            <p>
-                Sistem operasi untuk ekosistem digital kamu.
-            </p>
-
-        </div>
-
-
-        <!-- SEARCH -->
-
-        <div class="home-search">
-
-            <span>
-                🔍
-            </span>
-
-            <input
-                id="app-search"
-                type="search"
-                placeholder="Cari aplikasi...">
-
-        </div>
-
-
-        <!-- APPS -->
-
-        <div class="section-header">
-
-            <h2>
-                Aplikasi
-            </h2>
-
-            <button
-                id="open-drawer">
-                Semua
-            </button>
-
-        </div>
-
-
-        <div
-            id="app-grid"
-            class="app-grid">
-
-
-            <button
-                class="app"
-                data-name="Rama">
-
-                <div class="app-icon rama-icon">
-                    R
-                </div>
-
-                <span>
-                    Rama
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="VexaCut">
-
-                <div class="app-icon">
-                    ✂
-                </div>
-
-                <span>
-                    VexaCut
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Maps">
-
-                <div class="app-icon">
-                    🗺
-                </div>
-
-                <span>
-                    Maps
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Web">
-
-                <div class="app-icon">
-                    ◎
-                </div>
-
-                <span>
-                    Web
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Remail">
-
-                <div class="app-icon">
-                    ✉
-                </div>
-
-                <span>
-                    Remail
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Storage">
-
-                <div class="app-icon">
-                    ▣
-                </div>
-
-                <span>
-                    Storage
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Berita">
-
-                <div class="app-icon">
-                    ▤
-                </div>
-
-                <span>
-                    Berita
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Rama Story">
-
-                <div class="app-icon">
-                    ◇
-                </div>
-
-                <span>
-                    Rama Story
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Rama School">
-
-                <div class="app-icon">
-                    🎓
-                </div>
-
-                <span>
-                    Rama School
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Game Store">
-
-                <div class="app-icon">
-                    🎮
-                </div>
-
-                <span>
-                    Game Store
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="Pengaturan">
-
-                <div class="app-icon">
-                    ⚙
-                </div>
-
-                <span>
-                    Pengaturan
-                </span>
-
-            </button>
-
-
-            <button
-                class="app"
-                data-name="File Manager">
-
-                <div class="app-icon">
-                    📁
-                </div>
-
-                <span>
-                    File Manager
-                </span>
-
-            </button>
-
-
-        </div>
-
-
-        <!-- SEARCH RESULT -->
-
-        <div
-            id="search-results"
-            class="search-results">
-        </div>
-
-
-    </section>
-
-
-    <!-- HOME DOCK -->
-
-    <nav class="home-dock">
-
-        <button
-            class="dock-app"
-            data-app="Phone">
-            ☎
-        </button>
-
-        <button
-            class="dock-app"
-            data-app="Web">
-            ◎
-        </button>
-
-        <button
-            id="drawer-button"
-            class="dock-app drawer-button">
-            ⠿
-        </button>
-
-        <button
-            class="dock-app"
-            data-app="Remail">
-            ✉
-        </button>
-
-        <button
-            class="dock-app"
-            data-app="Camera">
-            📷
-        </button>
-
-    </nav>
-
-
-    <!-- HEADER FOR CONTROL CENTER -->
-
-    <div
-        id="mara-header"
-        class="mara-header">
-
-        <div class="header-handle"></div>
-
-    </div>
-
-
-</section>
-
-
-<!-- =====================================================
-     APP DRAWER
-===================================================== -->
-
-<section
-    id="app-drawer"
-    class="screen app-drawer hidden">
-
-
-    <div class="drawer-background"></div>
-
-
-    <header class="drawer-header">
-
-        <button
-            id="drawer-close">
-            ←
-        </button>
-
-        <div>
-
-            <h1>
-                Aplikasi
-            </h1>
-
-            <p>
-                MARA OS
-            </p>
-
-        </div>
-
-    </header>
-
-
-    <div class="drawer-search">
-
-        <span>
-            🔍
-        </span>
-
-        <input
-            id="drawer-search-input"
-            type="search"
-            placeholder="Cari aplikasi...">
-
-    </div>
-
-
-    <div
-        id="drawer-grid"
-        class="drawer-grid">
-
-
-        <button data-app-name="Rama">
-            <div>R</div>
-            <span>Rama</span>
-        </button>
-
-        <button data-app-name="VexaCut">
-            <div>✂</div>
-            <span>VexaCut</span>
-        </button>
-
-        <button data-app-name="Maps">
-            <div>🗺</div>
-            <span>Maps</span>
-        </button>
-
-        <button data-app-name="Web">
-            <div>◎</div>
-            <span>Web</span>
-        </button>
-
-        <button data-app-name="Remail">
-            <div>✉</div>
-            <span>Remail</span>
-        </button>
-
-        <button data-app-name="Storage">
-            <div>▣</div>
-            <span>Storage</span>
-        </button>
-
-        <button data-app-name="Berita">
-            <div>▤</div>
-            <span>Berita</span>
-        </button>
-
-        <button data-app-name="Rama Story">
-            <div>◇</div>
-            <span>Rama Story</span>
-        </button>
-
-        <button data-app-name="Rama School">
-            <div>🎓</div>
-            <span>Rama School</span>
-        </button>
-
-        <button data-app-name="Game Store">
-            <div>🎮</div>
-            <span>Game Store</span>
-        </button>
-
-        <button data-app-name="Pengaturan">
-            <div>⚙</div>
-            <span>Pengaturan</span>
-        </button>
-
-        <button data-app-name="File Manager">
-            <div>📁</div>
-            <span>File Manager</span>
-        </button>
-
-
-    </div>
-
-</section>
-
-
-<!-- =====================================================
-     CONTROL CENTER
-===================================================== -->
-
-<section
-    id="control-center"
-    class="control-center hidden">
-
-
-    <div class="control-background"></div>
-
-
-    <header class="control-header">
-
-        <button
-            id="control-close"
-            class="control-close">
-            ↓
-        </button>
-
-
-        <div>
-
-            <h1>
-                Control Center
-            </h1>
-
-            <p>
-                Kendali cepat MARA OS
-            </p>
-
-        </div>
-
-    </header>
-
-
-    <section class="control-content">
-
-
-        <!-- CONNECTION -->
-
-        <div class="connection-card">
-
-            <div class="connection-icon">
-                ◉
-            </div>
-
-            <div class="connection-info">
-
-                <strong>
-                    Wi-Fi MARA
-                </strong>
-
-                <span
-                    id="wifi-status">
-                    Terhubung
-                </span>
-
-            </div>
-
-            <button
-                id="wifi-detail">
-                Detail
-            </button>
-
-        </div>
-
-
-        <!-- QUICK CONTROLS -->
-
-        <h2>
-            Kontrol cepat
-        </h2>
-
-
-        <div class="quick-grid">
-
-
-            <button
-                class="quick-button active"
-                data-control="wifi">
-
-                <span>◉</span>
-                <small>Wi-Fi</small>
-
-            </button>
-
-
-            <button
-                class="quick-button active"
-                data-control="bluetooth">
-
-                <span>ᛒ</span>
-                <small>Bluetooth</small>
-
-            </button>
-
-
-            <button
-                class="quick-button"
-                data-control="airplane">
-
-                <span>✈</span>
-                <small>Pesawat</small>
-
-            </button>
-
-
-            <button
-                class="quick-button"
-                data-control="rotation">
-
-                <span>↻</span>
-                <small>Rotasi</small>
-
-            </button>
-
-
-            <button
-                class="quick-button active"
-                data-control="sound">
-
-                <span>♪</span>
-                <small>Suara</small>
-
-            </button>
-
-
-            <button
-                class="quick-button"
-                data-control="flashlight">
-
-                <span>◇</span>
-                <small>Senter</small>
-
-            </button>
-
-
-            <button
-                class="quick-button"
-                data-control="hotspot">
-
-                <span>⋮</span>
-                <small>Hotspot</small>
-
-            </button>
-
-
-            <button
-                class="quick-button"
-                data-control="dnd">
-
-                <span>◐</span>
-                <small>Jangan Ganggu</small>
-
-            </button>
-
-
-        </div>
-
-
-        <!-- BRIGHTNESS -->
-
-        <div class="slider-card">
-
-            <div>
-
-                <span>
-                    Kecerahan
-                </span>
-
-                <strong
-                    id="brightness-value">
-                    75%
-                </strong>
-
-            </div>
-
-
-            <input
-                id="brightness"
-                type="range"
-                min="0"
-                max="100"
-                value="75">
-
-        </div>
-
-
-        <!-- VOLUME -->
-
-        <div class="slider-card">
-
-            <div>
-
-                <span>
-                    Volume
-                </span>
-
-                <strong
-                    id="volume-value">
-                    60%
-                </strong>
-
-            </div>
-
-
-            <input
-                id="volume"
-                type="range"
-                min="0"
-                max="100"
-                value="60">
-
-        </div>
-
-
-        <!-- SYSTEM -->
-
-        <div class="system-options">
-
-
-            <button
-                data-system="settings">
-
-                <span>⚙</span>
-
-                <div>
-
-                    <strong>
-                        Pengaturan
-                    </strong>
-
-                    <small>
-                        Konfigurasi MARA OS
-                    </small>
-
-                </div>
-
-                <b>›</b>
-
-            </button>
-
-
-            <button
-                data-system="battery">
-
-                <span>🔋</span>
-
-                <div>
-
-                    <strong>
-                        Baterai
-                    </strong>
-
-                    <small
-                        id="control-battery">
-                        --%
-                    </small>
-
-                </div>
-
-                <b>›</b>
-
-            </button>
-
-
-            <button
-                data-system="security">
-
-                <span>✓</span>
-
-                <div>
-
-                    <strong>
-                        Keamanan
-                    </strong>
-
-                    <small>
-                        Perangkat terlindungi
-                    </small>
-
-                </div>
-
-                <b>›</b>
-
-            </button>
-
-
-        </div>
-
-
-    </section>
-
-</section>
-
-
-<!-- =====================================================
-     APP MODAL
-===================================================== -->
-
-<div
-    id="app-modal"
-    class="app-modal hidden">
-
-    <div class="app-modal-content">
-
-        <button
-            id="modal-close">
-            ×
-        </button>
-
-        <div
-            id="modal-icon"
-            class="modal-icon">
-            ◉
-        </div>
-
-        <h2
-            id="modal-title">
-            MARA
-        </h2>
-
-        <p
-            id="modal-description">
-            Aplikasi MARA OS
-        </p>
-
-        <button
-            id="modal-open"
-            class="modal-open">
-            Buka
-        </button>
-
-    </div>
-
-</div>
-
-
-</main>
-
-
-<!-- =====================================================
-     JAVASCRIPT
-===================================================== -->
-
-<script
-    src="./script.js"
-    defer>
-</script>
+    </script>
 
 
 </body>
