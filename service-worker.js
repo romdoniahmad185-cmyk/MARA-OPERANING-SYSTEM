@@ -5,6 +5,8 @@ const APP_FILES = [
     "./index.html",
     "./style.css",
     "./script.js",
+    "./mara-icon-192.png",
+    "./mara-icon-512.png",
     "./manifest.json"
 ];
 
