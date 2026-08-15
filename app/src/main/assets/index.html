@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0,
+                   maximum-scale=1.0, user-scalable=no">
+
+    <title>MARA Status Bar</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<iframe
+    class="mara-iframe"
+    src="ux/lock-screen.html"
+    frameborder="0">
+</iframe>
+
+<div class="mara-header">
+
+    <div class="clock" id="clock">
+        00:00
+    </div>
+
+    <div class="battery">
+
+        <span id="battery-percent">
+            --%
+        </span>
+
+        <div class="battery-icon">
+            <div
+                class="battery-level"
+                id="battery-level">
+            </div>
+        </div>
+
+    </div>
+
+</div>
+  <div id="controlCenterOverlay">
+
+    <iframe
+        id="controlCenterFrame"
+        src="ux/control-center.html"
+        frameborder="0">
+    </iframe>
+
+</div>
+  <!-- CONTROL CENTER OVERLAY -->
+  <script src="script.js"></script>
+
+</body>
+</html>
