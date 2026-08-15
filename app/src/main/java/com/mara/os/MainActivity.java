@@ -2,25 +2,39 @@ package com.mara.os;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.graphics.Color;
-import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
+
+    private WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        /*
-         * Layar kosong MARA
-         * Tidak menggunakan HTML, WebView,
-         * JavaScript, atau service worker.
-         */
+        webView = new WebView(this);
 
-        View emptyScreen = new View(this);
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
 
-        emptyScreen.setBackgroundColor(Color.WHITE);
+        webView.setWebViewClient(new WebViewClient());
 
-        setContentView(emptyScreen);
+        webView.loadUrl("file:///android_asset/index.html");
+
+        setContentView(webView);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
