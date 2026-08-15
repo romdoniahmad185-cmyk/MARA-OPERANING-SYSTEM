@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="./manifest.json">
+
+
+<title>MARA OS — Lock Screen</title>
+
+<style>
+
+/* =====================================================
+   MARA OS — LOCK SCREEN
+   HTML + CSS + JAVASCRIPT
+===================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #000;
+}
+
+body {
+    user-select: none;
+}
+
+
+/* =====================================================
+   LOCK SCREEN
+===================================================== */
+
+.mara-lock-screen {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    color: #fff;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0,0,0,.15),
+            rgba(0,0,0,.45)
+        );
+}
+
+
+/* =====================================================
+   WALLPAPER
+===================================================== */
+
+.mara-wallpaper {
+    position: absolute;
+    inset: 0;
+
+    z-index: 0;
+
+    background:
+        radial-gradient(
+            circle at 50% 20%,
+            #3b82f6 0%,
+            #172554 35%,
+            #020617 75%,
+            #000 100%
+        );
+
+    transform: scale(1.05);
+
+    transition:
+        transform 800ms ease;
+}
+
+.mara-lock-screen:hover .mara-wallpaper {
+    transform: scale(1.08);
+}
+
+.mara-wallpaper-overlay {
+    position: absolute;
+    inset: 0;
+
+    z-index: 1;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0,0,0,.10),
+            rgba(0,0,0,.20) 45%,
+            rgba(0,0,0,.65)
+        );
+}
+
+
+/* =====================================================
+   STATUS BAR
+===================================================== */
+
+.mara-status-bar {
+    position: relative;
+
+    z-index: 10;
+
+    width: 100%;
+
+    padding:
+        max(14px, env(safe-area-inset-top))
+        20px
+        0;
+
+    display: none;
+
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 13px;
+}
+
+.status-time {
+    font-weight: 600;
+}
+
+.status-icons {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+.status-icon {
+    font-size: 14px;
+
+    opacity: .95;
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.mara-lock-content {
+    position: relative;
+
+    z-index: 5;
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    text-align: center;
+
+    padding:
+        7vh
+        20px
+        20px;
+}
+
+
+/* =====================================================
+   CLOCK
+===================================================== */
+
+.lock-clock {
+    font-size: clamp(
+        52px,
+        16vw,
+        82px
+    );
+
+    font-weight: 300;
+
+    letter-spacing: -3px;
+
+    line-height: 1;
+
+    text-shadow:
+        0 4px 20px rgba(0,0,0,.35);
+}
+
+
+/* =====================================================
+   DATE
+===================================================== */
+
+.lock-date {
+    margin-top: 12px;
+
+    font-size: 16px;
+
+    font-weight: 400;
+
+    opacity: .9;
+}
+
+
+/* =====================================================
+   WEATHER
+===================================================== */
+
+.lock-weather {
+    margin-top: 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    font-size: 15px;
+
+    opacity: .92;
+}
+
+.weather-icon {
+    font-size: 19px;
+}
+
+
+/* =====================================================
+   PROFILE
+===================================================== */
+
+.mara-profile {
+    margin-top: 30px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+}
+
+.profile-avatar {
+    width: 58px;
+    height: 58px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background:
+        rgba(255,255,255,.15);
+
+    border:
+        2px solid
+        rgba(255,255,255,.7);
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    backdrop-filter:
+        blur(10px);
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.25);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.profile-name {
+    margin-top: 9px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   NOTIFICATION
+===================================================== */
+
+.lock-notifications {
+    width: min(
+        100%,
+        390px
+    );
+
+    margin-top: 25px;
+}
+
+.lock-notification {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 13px 15px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,.13);
+
+    border:
+        1px solid
+        rgba(255,255,255,.14);
+
+    backdrop-filter:
+        blur(18px);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.18);
+
+    text-align: left;
+}
+
+.notification-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,.16);
+
+    font-size: 18px;
+}
+
+.notification-content {
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.notification-content strong {
+    font-size: 13px;
+}
+
+.notification-content span {
+    font-size: 12px;
+
+    opacity: .8;
+}
+
+.lock-notification time {
+    font-size: 11px;
+
+    opacity: .65;
+}
+
+
+/* =====================================================
+   UNLOCK AREA
+===================================================== */
+
+.unlock-area {
+    margin-top: auto;
+
+    padding-top: 25px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    cursor: pointer;
+}
+
+.unlock-arrow {
+    font-size: 25px;
+
+    animation:
+        unlock-bounce
+        1.6s
+        ease-in-out
+        infinite;
+}
+
+.unlock-text {
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    opacity: .75;
+}
+
+@keyframes unlock-bounce {
+
+    0%,
+    100% {
+        transform:
+            translateY(0);
+    }
+
+    50% {
+        transform:
+            translateY(-7px);
+    }
+}
+
+
+/* =====================================================
+   QUICK ACTIONS
+===================================================== */
+
+.mara-quick-actions {
+    position: relative;
+
+    z-index: 10;
+
+    width: 100%;
+
+    padding:
+        0
+        24px
+        max(22px, env(safe-area-inset-bottom));
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.quick-action {
+    width: 50px;
+    height: 50px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    color: #fff;
+
+    background:
+        rgba(255,255,255,.15);
+
+    border:
+        1px solid
+        rgba(255,255,255,.16);
+
+    backdrop-filter:
+        blur(15px);
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    transition:
+        transform .1s ease,
+        background .15s ease;
+}
+
+.quick-action:active {
+    transform:
+        scale(.91);
+
+    background:
+        rgba(255,255,255,.25);
+}
+
+
+/* =====================================================
+   UNLOCK PANEL
+===================================================== */
+
+.unlock-panel {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 50;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: center;
+
+    padding: 0;
+
+    background:
+        rgba(0,0,0,.45);
+
+    backdrop-filter:
+        blur(8px);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity .25s ease;
+}
+
+.unlock-panel.active {
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+.unlock-panel-content {
+    width: 100%;
+
+    max-width: 500px;
+
+    min-height: 55%;
+
+    padding:
+        28px
+        22px
+        max(28px, env(safe-area-inset-bottom));
+
+    border-radius:
+        30px
+        30px
+        0
+        0;
+
+    background:
+        rgba(20,20,25,.92);
+
+    border-top:
+        1px solid
+        rgba(255,255,255,.12);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    transform:
+        translateY(100%);
+
+    transition:
+        transform .3s cubic-bezier(.2,.8,.2,1);
+}
+
+.unlock-panel.active
+.unlock-panel-content {
+    transform:
+        translateY(0);
+}
+
+.unlock-panel-title {
+    font-size: 20px;
+
+    font-weight: 600;
+}
+
+.unlock-panel-subtitle {
+    margin-top: 7px;
+
+    font-size: 13px;
+
+    opacity: .6;
+}
+
+
+/* =====================================================
+   PIN INDICATORS
+===================================================== */
+
+.pin-indicators {
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 25px;
+}
+
+.pin-indicators span {
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,.2);
+
+    transition:
+        background .15s ease,
+        transform .15s ease;
+}
+
+.pin-indicators span.active {
+    background: #fff;
+
+    transform:
+        scale(1.15);
+}
+
+
+/* =====================================================
+   PIN KEYPAD
+===================================================== */
+
+.pin-keypad {
+    width: min(
+        100%,
+        330px
+    );
+
+    margin-top: 25px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+}
+
+.pin-keypad button {
+    height: 58px;
+
+    border: none;
+
+    border-radius: 18px;
+
+    color: #fff;
+
+    background:
+        rgba(255,255,255,.1);
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    transition:
+        transform .1s ease,
+        background .15s ease;
+}
+
+.pin-keypad button:active {
+    transform:
+        scale(.94);
+
+    background:
+        rgba(255,255,255,.2);
+}
+
+.pin-keypad button:last-child {
+    grid-column: 2;
+}
+
+
+/* =====================================================
+   CANCEL
+===================================================== */
+
+.pin-cancel {
+    margin-top: 20px;
+
+    padding: 10px 20px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #fff;
+
+    opacity: .7;
+
+    font-size: 14px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (min-width: 600px) {
+
+    .mara-lock-content {
+        padding-top: 9vh;
+    }
+
+    .lock-clock {
+        font-size: 90px;
+    }
+
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    .lock-notifications {
+        max-width: 450px;
+    }
+
+}
+
+
+@media (orientation: landscape) {
+
+    .mara-lock-content {
+        padding-top: 4vh;
+    }
+
+    .lock-clock {
+        font-size: 54px;
+    }
+
+    .mara-profile {
+        margin-top: 15px;
+    }
+
+    .lock-notifications {
+        margin-top: 15px;
+    }
+
+}
+
+
+/* =====================================================
+   REDUCED MOTION
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+
+        animation-duration:
+            .01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            .01ms !important;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     MARA LOCK SCREEN
+===================================================== -->
+
+<main
+    id="mara-lock-screen"
+    class="mara-lock-screen">
+
+
+    <!-- WALLPAPER -->
+
+    <div
+        class="mara-wallpaper">
+    </div>
+
+    <div
+        class="mara-wallpaper-overlay">
+    </div>
+
+
+    <!-- STATUS BAR -->
+
+    <header
+        class="mara-status-bar">
+
+        <div
+            id="status-time"
+            class="status-time">
+
+            09:41
+
+        </div>
+
+        <div
+            class="status-icons">
+
+            <span
+                class="status-icon">
+                ◉
+            </span>
+
+            <span
+                class="status-icon">
+                ◌
+            </span>
+
+            <span
+                id="battery-icon"
+                class="status-icon">
+
+                🔋
+
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+
+    <section
+        class="mara-lock-content">
+
+
+        <!-- CLOCK -->
+
+        <div
+            id="lock-clock"
+            class="lock-clock">
+
+            09:41
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div
+            id="lock-date"
+            class="lock-date">
+
+            Senin, 10 Agustus
+
+        </div>
+
+
+        <!-- WEATHER -->
+
+        <div
+            class="lock-weather">
+
+            <span
+                class="weather-icon">
+
+                ☀
+
+            </span>
+
+            <span>
+
+                28°C
+
+            </span>
+
+        </div>
+
+
+        <!-- PROFILE -->
+
+        <div
+            class="mara-profile">
+
+            <div
+                class="profile-avatar">
+
+                <div
+                    style="
+                    width:100%;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:25px;
+                    ">
+
+                    👤
+
+                </div>
+
+            </div>
+
+            <div
+                class="profile-name">
+
+                Pengguna MARA
+
+            </div>
+
+        </div>
+
+
+        <!-- NOTIFICATION -->
+
+        <div
+            class="lock-notifications">
+
+            <article
+                class="lock-notification">
+
+                <div
+                    class="notification-icon">
+
+                    ✉
+
+                </div>
+
+                <div
+                    class="notification-content">
+
+                    <strong>
+                        Remail
+                    </strong>
+
+                    <span>
+                        Pesan baru
+                    </span>
+
+                </div>
+
+                <time>
+                    2m
+                </time>
+
+            </article>
+
+        </div>
+
+
+        <!-- UNLOCK -->
+
+        <div
+            id="unlock-area"
+            class="unlock-area">
+
+            <div
+                class="unlock-arrow">
+
+                ↑
+
+            </div>
+
+            <div
+                class="unlock-text">
+
+                Geser untuk membuka
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- QUICK ACTION -->
+
+    <footer
+        class="mara-quick-actions">
+
+        <button
+            id="phone-button"
+            class="quick-action"
+            aria-label="Telepon">
+
+            ☎
+
+        </button>
+
+        <button
+            id="camera-button"
+            class="quick-action"
+            aria-label="Kamera">
+
+            📷
+
+        </button>
+
+    </footer>
+
+
+    <!-- =================================================
+         PIN PANEL
+    ================================================== -->
+
+    <section
+        id="unlock-panel"
+        class="unlock-panel"
+        aria-hidden="true">
+
+        <div
+            class="unlock-panel-content">
+
+            <div
+                class="unlock-panel-title">
+
+                Buka MARA OS
+
+            </div>
+
+            <div
+                class="unlock-panel-subtitle">
+
+                Masukkan PIN untuk melanjutkan
+
+            </div>
+
+
+            <!-- PIN INDICATORS -->
+
+            <div
+                id="pin-indicators"
+                class="pin-indicators">
+
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+
+            <!-- KEYPAD -->
+
+            <div
+                id="pin-keypad"
+                class="pin-keypad">
+
+                <button data-pin="1">
+                    1
+                </button>
+
+                <button data-pin="2">
+                    2
+                </button>
+
+                <button data-pin="3">
+                    3
+                </button>
+
+                <button data-pin="4">
+                    4
+                </button>
+
+                <button data-pin="5">
+                    5
+                </button>
+
+                <button data-pin="6">
+                    6
+                </button>
+
+                <button data-pin="7">
+                    7
+                </button>
+
+                <button data-pin="8">
+                    8
+                </button>
+
+                <button data-pin="9">
+                    9
+                </button>
+
+                <button data-pin="0">
+                    0
+                </button>
+
+            </div>
+
+
+            <button
+                id="pin-cancel"
+                class="pin-cancel">
+
+                Batal
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   MARA OS — LOCK SCREEN JS
+===================================================== */
+
+
+/* -----------------------------------------------------
+   CLOCK
+----------------------------------------------------- */
+
+function updateClock() {
+
+    const now =
+        new Date();
+
+    const hours =
+        String(
+            now.getHours()
+        ).padStart(2, "0");
+
+    const minutes =
+        String(
+            now.getMinutes()
+        ).padStart(2, "0");
+
+    const clock =
+        document.getElementById(
+            "lock-clock"
+        );
+
+    const statusTime =
+        document.getElementById(
+            "status-time"
+        );
+
+    clock.textContent =
+        `${hours}:${minutes}`;
+
+    statusTime.textContent =
+        `${hours}:${minutes}`;
+}
+
+
+/* -----------------------------------------------------
+   DATE
+----------------------------------------------------- */
+
+function updateDate() {
+
+    const now =
+        new Date();
+
+    const options = {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    };
+
+    const date =
+        now.toLocaleDateString(
+            "id-ID",
+            options
+        );
+
+    document.getElementById(
+        "lock-date"
+    ).textContent = date;
+}
+
+
+/* -----------------------------------------------------
+   INITIALIZE CLOCK
+----------------------------------------------------- */
+
+updateClock();
+updateDate();
+
+setInterval(
+    updateClock,
+    1000
+);
+
+setInterval(
+    updateDate,
+    60000
+);
+
+
+/* -----------------------------------------------------
+   UNLOCK PANEL
+----------------------------------------------------- */
+
+const unlockArea =
+    document.getElementById(
+        "unlock-area"
+    );
+
+const unlockPanel =
+    document.getElementById(
+        "unlock-panel"
+    );
+
+const pinCancel =
+    document.getElementById(
+        "pin-cancel"
+    );
+
+
+function openUnlockPanel() {
+
+    unlockPanel.classList.add(
+        "active"
+    );
+
+    unlockPanel.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+}
+
+
+function closeUnlockPanel() {
+
+    unlockPanel.classList.remove(
+        "active"
+    );
+
+    unlockPanel.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+    resetPIN();
+}
+
+
+unlockArea.addEventListener(
+    "click",
+    openUnlockPanel
+);
+
+unlockArea.addEventListener(
+    "touchend",
+    function(event) {
+
+        event.preventDefault();
+
+        openUnlockPanel();
+
+    }
+);
+
+
+pinCancel.addEventListener(
+    "click",
+    closeUnlockPanel
+);
+
+
+/* -----------------------------------------------------
+   PIN SYSTEM
+----------------------------------------------------- */
+
+const correctPIN =
+    "1234";
+
+let enteredPIN =
+    "";
+
+const pinButtons =
+    document.querySelectorAll(
+        "[data-pin]"
+    );
+
+const indicators =
+    document.querySelectorAll(
+        "#pin-indicators span"
+    );
+
+
+pinButtons.forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            function() {
+
+                if (
+                    enteredPIN.length >= 4
+                ) {
+                    return;
+                }
+
+                enteredPIN +=
+                    button.dataset.pin;
+
+                updatePINIndicators();
+
+                if (
+                    enteredPIN.length === 4
+                ) {
+
+                    setTimeout(
+                        checkPIN,
+                        180
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* -----------------------------------------------------
+   PIN INDICATORS
+----------------------------------------------------- */
+
+function updatePINIndicators() {
+
+    indicators.forEach(
+        (indicator, index) => {
+
+            indicator.classList.toggle(
+                "active",
+                index <
+                enteredPIN.length
+            );
+
+        }
+    );
+}
+
+
+/* -----------------------------------------------------
+   CHECK PIN
+----------------------------------------------------- */
+
+function checkPIN() {
+
+    if (
+        enteredPIN ===
+        correctPIN
+    ) {
+
+        unlockDevice();
+
+    } else {
+
+        shakePIN();
+
+        setTimeout(
+            resetPIN,
+            400
+        );
+
+    }
+}
+
+
+/* -----------------------------------------------------
+   RESET PIN
+----------------------------------------------------- */
+
+function resetPIN() {
+
+    enteredPIN =
+        "";
+
+    updatePINIndicators();
+}
+
+
+/* -----------------------------------------------------
+   PIN ERROR
+----------------------------------------------------- */
+
+function shakePIN() {
+
+    const panel =
+        document.querySelector(
+            ".unlock-panel-content"
+        );
+
+    panel.animate(
+        [
+            {
+                transform:
+                    "translateX(0)"
+            },
+
+            {
+                transform:
+                    "translateX(-8px)"
+            },
+
+            {
+                transform:
+                    "translateX(8px)"
+            },
+
+            {
+                transform:
+                    "translateX(-5px)"
+            },
+
+            {
+                transform:
+                    "translateX(5px)"
+            },
+
+            {
+                transform:
+                    "translateX(0)"
+            }
+        ],
+        {
+            duration: 250
+        }
+    );
+}
+
+
+/* -----------------------------------------------------
+   UNLOCK DEVICE
+----------------------------------------------------- */
+
+function unlockDevice() {
+
+    unlockPanel.classList.remove(
+        "active"
+    );
+
+    document.querySelector(
+        ".mara-lock-screen"
+    ).animate(
+        [
+            {
+                opacity: 1,
+                transform:
+                    "scale(1)"
+            },
+
+            {
+                opacity: 0,
+                transform:
+                    "scale(1.04)"
+            }
+        ],
+        {
+            duration: 350,
+            easing:
+                "ease-in",
+            fill:
+                "forwards"
+        }
+    );
+
+   /* setTimeout(
+        function() {
+
+            alert(
+                "MARA OS berhasil dibuka."
+            );
+
+            location.reload();
+
+        },
+        350
+    );*/
+
+
+        window.location.href =
+            "home-screen.html";
+
+    
+}
+
+
+/* -----------------------------------------------------
+   QUICK ACTIONS
+----------------------------------------------------- */
+
+document
+    .getElementById(
+        "camera-button"
+    )
+    .addEventListener(
+        "click",
+        function() {
+
+            alert(
+                "MARA Camera"
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "phone-button"
+    )
+    .addEventListener(
+        "click",
+        function() {
+
+            alert(
+                "MARA Phone"
+            );
+
+        }
+    );
+
+
+/* -----------------------------------------------------
+   KEYBOARD PIN
+----------------------------------------------------- */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            /^[0-9]$/.test(
+                event.key
+            )
+        ) {
+
+            const button =
+                document.querySelector(
+                    `[data-pin="${event.key}"]`
+                );
+
+            if (button) {
+                button.click();
+            }
+
+        }
+
+        if (
+            event.key ===
+            "Escape"
+        ) {
+
+            closeUnlockPanel();
+
+        }
+
+    }
+);
+
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("./service-worker.js")
+            .then(registration => {
+
+                console.log(
+                    "CreatorView Service Worker aktif:",
+                    registration.scope
+                );
+
+            })
+            .catch(error => {
+
+                console.error(
+                    "CreatorView Service Worker gagal:",
+                    error
+                );
+
+            });
+
+    });
+
+}
+</script>
+
+
+</body>
+</html>

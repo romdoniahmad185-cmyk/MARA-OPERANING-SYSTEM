@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="theme-color"
+    content="#07111f">
+
+<title>MARA OS — Home Screen</title>
+
+
+<style>
+
+/* =====================================================
+   MARA OS — HOME SCREEN
+   HTML + CSS + JAVASCRIPT
+===================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        #07111f;
+
+    color: #fff;
+
+    user-select: none;
+}
+
+
+/* =====================================================
+   HOME SCREEN
+===================================================== */
+
+.mara-home {
+margin-top: 5;
+    position: fixed;
+
+    inset: 0;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0b1b31,
+            #07111f
+        );
+
+}
+
+
+/* =====================================================
+   WALLPAPER
+===================================================== */
+
+.home-wallpaper {
+
+    position: absolute;
+
+    inset: 0;
+    background:url("wallpaper1.png");
+  background-size: cover;
+  background-position:center;
+  background-repeat: no-repeat;
+
+
+/*    background:
+
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(59,130,246,.55),
+            transparent 32%
+        ),
+
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(14,165,233,.25),
+            transparent 35%
+        ),
+
+        linear-gradient(
+            145deg,
+            #0f2745,
+            #06101e
+        );*/
+
+    z-index: 0;
+
+}
+
+
+.home-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        rgba(0,0,0,.12);
+
+    z-index: 1;
+
+}
+
+
+/* =====================================================
+   STATUS BAR
+===================================================== */
+
+.status-bar {
+
+    position: relative;
+
+    z-index: 20;
+
+    height: 34px;
+
+    padding:
+        8px 18px 0;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    font-size: 12px;
+
+}
+
+
+.status-right {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.home-content {
+
+    position: relative;
+
+    z-index: 5;
+
+    height:
+        calc(100% - 34px);
+
+    padding:
+        12px 18px 100px;
+
+    overflow-y: auto;
+
+    scrollbar-width: none;
+
+}
+
+.home-content::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =====================================================
+   WIDGET AREA
+===================================================== */
+
+.welcome-widget {
+
+    margin-top: 10px;
+
+    padding:
+        18px;
+
+    border-radius:
+        24px;
+
+    background:
+        rgba(255,255,255,.10);
+
+    border:
+        1px solid
+        rgba(255,255,255,.12);
+
+    backdrop-filter:
+        blur(20px);
+
+    box-shadow:
+        0 15px 40px
+        rgba(0,0,0,.18);
+
+}
+
+
+.welcome-small {
+
+    font-size: 13px;
+
+    opacity: .7;
+
+}
+
+
+.welcome-title {
+
+    margin-top: 5px;
+
+    font-size: 23px;
+
+    font-weight: 600;
+
+}
+
+
+.welcome-subtitle {
+
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    opacity: .65;
+
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+.home-search {
+
+    margin-top: 15px;
+
+    width: 100%;
+
+    height: 48px;
+
+    border-radius: 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding:
+        0 15px;
+
+    background:
+        rgba(255,255,255,.11);
+
+    border:
+        1px solid
+        rgba(255,255,255,.12);
+
+    backdrop-filter:
+        blur(18px);
+
+}
+
+
+.search-icon {
+
+    font-size: 18px;
+
+    opacity: .75;
+
+}
+
+
+.home-search input {
+
+    flex: 1;
+
+    height: 100%;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: #fff;
+
+    font-size: 14px;
+
+}
+
+
+.home-search input::placeholder {
+
+    color:
+        rgba(255,255,255,.55);
+
+}
+
+
+/* =====================================================
+   SECTION HEADER
+===================================================== */
+
+.section-header {
+
+    margin-top: 24px;
+
+    margin-bottom: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+}
+
+
+.section-title {
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+}
+
+
+.section-action {
+
+    border: none;
+
+    background: transparent;
+
+    color: #60a5fa;
+
+    font-size: 12px;
+
+}
+
+
+/* =====================================================
+   APP GRID
+===================================================== */
+
+.app-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap:
+        18px 12px;
+
+}
+
+
+.app {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 7px;
+
+    cursor: pointer;
+
+}
+
+
+.app-icon {
+
+    width: 58px;
+
+    height: 58px;
+
+    border-radius: 30px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 26px;
+
+    background:
+        rgba(255,255,255,.12);
+
+    border:
+        1px solid
+        rgba(255,255,255,.12);
+
+    backdrop-filter:
+        blur(15px);
+
+    box-shadow:
+        0 8px 20px
+        rgba(0,0,0,.18);
+
+    transition:
+        transform .12s ease,
+        background .15s ease;
+
+}
+
+
+.app:active .app-icon {
+
+    transform:
+        scale(.90);
+
+    background:
+        rgba(255,255,255,.20);
+
+}
+
+
+.app-name {
+
+    max-width: 72px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    font-size: 11px;
+
+    text-align: center;
+
+    opacity: .88;
+
+}
+
+
+/* =====================================================
+   FEATURED APP
+===================================================== */
+
+.featured {
+
+    grid-column:
+        span 2;
+
+}
+
+
+.featured .app-icon {
+
+    width: 100%;
+
+    height: 80px;
+
+    border-radius: 20px;
+
+}
+
+
+/* =====================================================
+   RECENT / RECOMMENDED
+===================================================== */
+
+.recommended-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding:
+        13px;
+
+    border-radius:
+        18px;
+
+    background:
+        rgba(255,255,255,.09);
+
+    border:
+        1px solid
+        rgba(255,255,255,.10);
+
+}
+
+
+.recommended-icon {
+
+    width: 48px;
+
+    height: 48px;
+
+    border-radius: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 23px;
+
+    background:
+        rgba(255,255,255,.13);
+
+}
+
+
+.recommended-info {
+
+    flex: 1;
+
+}
+
+
+.recommended-title {
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.recommended-desc {
+
+    margin-top: 4px;
+
+    font-size: 11px;
+
+    opacity: .6;
+
+}
+
+
+.recommended-open {
+
+    border: none;
+
+    border-radius: 12px;
+
+    padding:
+        9px 13px;
+
+    background:
+        rgba(255,255,255,.13);
+
+    color: #fff;
+
+    font-size: 11px;
+
+}
+
+
+/* =====================================================
+   DOCK
+===================================================== */
+
+.home-dock {
+
+    position: absolute;
+
+    z-index: 30;
+
+    left: 50%;
+
+    bottom:
+        max(12px, env(safe-area-inset-bottom));
+
+    transform:
+        translateX(-50%);
+
+    width:
+        calc(100% - 28px);
+
+    max-width: 500px;
+
+    height: 70px;
+
+    padding:
+        8px 12px;
+
+    border-radius:
+        25px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-around;
+
+    background:
+        rgba(8,18,32,.72);
+
+    border:
+        1px solid
+        rgba(255,255,255,.12);
+
+    backdrop-filter:
+        blur(25px);
+
+    box-shadow:
+        0 15px 40px
+        rgba(0,0,0,.35);
+
+}
+
+
+.dock-app {
+
+    width: 48px;
+
+    height: 48px;
+
+    border-radius: 16px;
+
+    border: none;
+
+    background:
+        transparent;
+
+    color: #fff;
+
+    font-size: 23px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        transform .12s ease,
+        background .15s ease;
+
+}
+
+
+.dock-app:active {
+
+    transform:
+        scale(.90);
+
+    background:
+        rgba(255,255,255,.12);
+
+}
+
+
+/* =====================================================
+   APP DRAWER BUTTON
+===================================================== */
+
+.drawer-button {
+
+    background:
+        rgba(255,255,255,.12);
+
+}
+
+
+/* =====================================================
+   SEARCH RESULTS
+===================================================== */
+
+.search-results {
+
+    display: none;
+
+    margin-top: 15px;
+
+}
+
+
+.search-results.active {
+
+    display: block;
+
+}
+
+
+.search-result {
+
+    padding:
+        14px;
+
+    border-radius:
+        16px;
+
+    margin-bottom: 8px;
+
+    background:
+        rgba(255,255,255,.09);
+
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (min-width: 600px) {
+
+    .home-content {
+
+        max-width:
+            850px;
+
+        margin:
+            0 auto;
+
+    }
+
+    .app-grid {
+
+        grid-template-columns:
+            repeat(6, 1fr);
+
+    }
+
+}
+
+
+@media (min-width: 1000px) {
+
+    .home-content {
+
+        max-width:
+            1100px;
+
+    }
+
+    .app-grid {
+
+        grid-template-columns:
+            repeat(8, 1fr);
+
+    }
+
+}
+
+
+/* =====================================================
+   LANDSCAPE
+===================================================== */
+
+@media (orientation: landscape) {
+
+    .home-content {
+
+        padding-bottom:
+            85px;
+
+    }
+
+    .app-grid {
+
+        grid-template-columns:
+            repeat(6, 1fr);
+
+    }
+
+}
+
+
+/* =====================================================
+   REDUCED MOTION
+===================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+    * {
+
+        animation: none !important;
+
+        transition: none !important;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<main
+    class="mara-home">
+
+
+    <!-- WALLPAPER -->
+
+    <div
+        class="home-wallpaper">
+    </div>
+
+    <div
+        class="home-overlay">
+    </div>
+
+
+    <!-- STATUS BAR -->
+
+    <header
+        class="status-bar">
+
+        <span
+            id="home-time">
+
+            09:41
+
+        </span>
+
+
+        <div
+            class="status-right">
+
+            <span>
+                ◉
+            </span>
+
+            <span>
+                ◌
+            </span>
+
+            <span>
+                🔋
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN -->
+
+    <section
+        class="home-content">
+
+
+        <!-- WELCOME -->
+
+        <section
+            class="welcome-widget">
+
+            <div
+                class="welcome-small">
+
+                Selamat datang
+
+            </div>
+
+            <div
+                class="welcome-title">
+
+                MARA OS
+
+            </div>
+
+            <div
+                class="welcome-subtitle">
+
+                Sistem operasi untuk ekosistem digital kamu.
+
+            </div>
+
+        </section>
+
+
+        <!-- SEARCH -->
+
+        <div
+            class="home-search">
+
+            <span
+                class="search-icon">
+
+                ⌕
+
+            </span>
+
+            <input
+                id="app-search"
+                type="search"
+                placeholder="Cari aplikasi...">
+
+        </div>
+
+
+        <!-- SEARCH RESULTS -->
+
+        <div
+            id="search-results"
+            class="search-results">
+        </div>
+
+
+        <!-- FAVORITE APPS -->
+
+        <div
+            class="section-header">
+
+            <h2
+                class="section-title">
+
+                Aplikasi
+
+            </h2>
+
+            <button
+                id="all-apps"
+                class="section-action">
+
+                Semua
+
+            </button>
+
+        </div>
+
+
+        <div
+            id="app-grid"
+            class="app-grid">
+
+
+            <!-- RAMA -->
+
+            <div
+                class="app"
+                data-name="Rama">
+
+                <div
+                    class="app-icon" style="background:white;">
+
+          <img src="icon-svg/mara-browser.svg" style="width:50px; height:50px;">
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Rama
+
+                </div>
+
+            </div>
+
+
+            <!-- VEXACUT -->
+
+            <div
+                class="app"
+                data-name="VexaCut">
+
+                <div
+                    class="app-icon">
+
+                    ✂
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    VexaCut
+
+                </div>
+
+            </div>
+
+
+            <!-- MAPS -->
+
+            <div
+                class="app"
+                data-name="Maps">
+
+                <div
+                    class="app-icon" style="background:white;">
+
+                       <img src="icon-svg/maps.svg" style="width:50px; height:50px;">
+
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Maps
+
+                </div>
+
+            </div>
+
+
+            <!-- WEB -->
+
+            <div
+                class="app"
+                data-name="Web">
+
+                <div
+                    class="app-icon">
+
+                    ◎
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Web
+
+                </div>
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div
+                class="app"
+                data-name="Remail">
+
+                <div
+                    class="app-icon">
+
+                    ✉
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Remail
+
+                </div>
+
+            </div>
+
+
+            <!-- STORAGE -->
+
+            <div
+                class="app"
+                data-name="Storage">
+
+                <div
+                    class="app-icon">
+
+                    ▣
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Storage
+
+                </div>
+
+            </div>
+
+
+            <!-- NEWS -->
+
+            <div
+                class="app"
+                data-name="Berita">
+
+                <div
+                    class="app-icon">
+
+                    ▤
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Berita
+
+                </div>
+
+            </div>
+
+
+            <!-- STORY -->
+
+            <div
+                class="app"
+                data-name="Rama Story">
+
+                <div
+                    class="app-icon">
+
+                    ◇
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Rama Story
+
+                </div>
+
+            </div>
+
+
+            <!-- SCHOOL -->
+
+            <div
+                class="app"
+                data-name="Rama School">
+
+                <div
+                    class="app-icon">
+
+                    🎓
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Rama School
+
+                </div>
+
+            </div>
+
+
+            <!-- GAME STORE -->
+
+            <div
+                class="app"
+                data-name="Game Store">
+
+                <div
+                    class="app-icon">
+
+                    🎮
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Game Store
+
+                </div>
+
+            </div>
+
+
+            <!-- SETTINGS -->
+
+            <div
+                class="app"
+                data-name="Pengaturan">
+
+                <div
+                    class="app-icon">
+
+                    ⚙
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    Pengaturan
+
+                </div>
+
+            </div>
+
+
+            <!-- FILE MANAGER -->
+
+            <div
+                class="app"
+                data-name="File Manager">
+
+                <div
+                    class="app-icon">
+
+                    📁
+
+                </div>
+
+                <div
+                    class="app-name">
+
+                    File Manager
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- RECOMMENDED -->
+
+        <div
+            class="section-header">
+
+            <h2
+                class="section-title">
+
+                Untuk kamu
+
+            </h2>
+
+        </div>
+
+
+        <article
+            class="recommended-card">
+
+            <div
+                class="recommended-icon">
+
+                🎬
+
+            </div>
+
+
+            <div
+                class="recommended-info">
+
+                <div
+                    class="recommended-title">
+
+                    VexaCut
+
+                </div>
+
+                <div
+                    class="recommended-desc">
+
+                    Buat dan edit video kamu.
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="recommended-open"
+                onclick="openApp('VexaCut')">
+
+                Buka
+
+            </button>
+
+        </article>
+
+
+    </section>
+
+
+    <!-- =================================================
+         DOCK
+    ================================================== -->
+
+    <nav
+        class="home-dock">
+
+
+        <button
+            class="dock-app"
+            onclick="openApp('Phone')">
+
+            ☎
+
+        </button>
+
+
+        <button
+            class="dock-app"
+            onclick="openApp('Web')">
+
+            ◎
+
+        </button>
+
+
+        <button
+            class="dock-app drawer-button"
+            onclick="openDrawer()">
+
+            ⠿
+
+        </button>
+
+
+        <button
+            class="dock-app"
+            onclick="openApp('Remail')">
+
+            ✉
+
+        </button>
+
+
+        <button
+            class="dock-app"
+            onclick="openApp('Camera')">
+
+            📷
+
+        </button>
+
+
+    </nav>
+
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   MARA OS — HOME SCREEN JS
+===================================================== */
+
+
+/* =====================================================
+   CLOCK
+===================================================== */
+
+function updateHomeClock() {
+
+    const now =
+        new Date();
+
+    const hours =
+        String(
+            now.getHours()
+        ).padStart(
+            2,
+            "0"
+        );
+
+    const minutes =
+        String(
+            now.getMinutes()
+        ).padStart(
+            2,
+            "0"
+        );
+
+    document.getElementById(
+        "home-time"
+    ).textContent =
+        `${hours}:${minutes}`;
+}
+
+
+updateHomeClock();
+
+setInterval(
+    updateHomeClock,
+    1000
+);
+
+
+/* =====================================================
+   APP SEARCH
+===================================================== */
+
+const searchInput =
+    document.getElementById(
+        "app-search"
+    );
+
+const apps =
+    document.querySelectorAll(
+        ".app"
+    );
+
+const searchResults =
+    document.getElementById(
+        "search-results"
+    );
+
+
+searchInput.addEventListener(
+    "input",
+    function() {
+
+        const query =
+            this.value
+                .toLowerCase()
+                .trim();
+
+
+        if (!query) {
+
+            searchResults.classList.remove(
+                "active"
+            );
+
+            apps.forEach(
+                app => {
+
+                    app.style.display =
+                        "";
+
+                }
+            );
+
+            return;
+        }
+
+
+        searchResults.innerHTML =
+            "";
+
+
+        let found =
+            0;
+
+
+        apps.forEach(
+            app => {
+
+                const name =
+                    app.dataset.name
+                        .toLowerCase();
+
+
+                if (
+                    name.includes(query)
+                ) {
+
+                    app.style.display =
+                        "";
+
+                    found++;
+
+
+                    const result =
+                        document.createElement(
+                            "div"
+                        );
+
+                    result.className =
+                        "search-result";
+
+                    result.textContent =
+                        app.dataset.name;
+
+                    result.onclick =
+                        function() {
+
+                            openApp(
+                                app.dataset.name
+                            );
+
+                        };
+
+                    searchResults.appendChild(
+                        result
+                    );
+
+                } else {
+
+                    app.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+        if (!found) {
+
+            const empty =
+                document.createElement(
+                    "div"
+                );
+
+            empty.className =
+                "search-result";
+
+            empty.textContent =
+                "Aplikasi tidak ditemukan";
+
+            searchResults.appendChild(
+                empty
+            );
+
+        }
+
+
+        searchResults.classList.add(
+            "active"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   OPEN APP
+===================================================== */
+
+function openApp(
+    appName
+) {
+
+    console.log(
+        "Membuka aplikasi:",
+        appName
+    );
+
+    alert(
+        "Membuka " +
+        appName
+    );
+
+}
+
+
+/* =====================================================
+   APP DRAWER
+===================================================== */
+
+function openDrawer() {
+
+    alert(
+        "App Drawer MARA OS"
+    );
+
+}
+
+
+/* =====================================================
+   ALL APPS
+===================================================== */
+
+document
+    .getElementById(
+        "all-apps"
+    )
+    .addEventListener(
+        "click",
+        openDrawer
+    );
+
+
+/* =====================================================
+   TOUCH FEEDBACK
+===================================================== */
+
+document
+    .querySelectorAll(
+        ".app, .dock-app"
+    )
+    .forEach(
+        element => {
+
+            element.addEventListener(
+                "touchstart",
+                function() {
+
+                    this.style.transform =
+                        "scale(.96)";
+
+                },
+                {
+                    passive: true
+                }
+            );
+
+
+            element.addEventListener(
+                "touchend",
+                function() {
+
+                    this.style.transform =
+                        "";
+
+                },
+                {
+                    passive: true
+                }
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   PREVENT CONTEXT MENU
+===================================================== */
+
+document.addEventListener(
+    "contextmenu",
+    function(event) {
+
+        event.preventDefault();
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
