@@ -6,251 +6,216 @@ import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-public class MainActivity extends Activity {
+public class MainActivity {
 
-    private WebView webView;
+    private WebView webView;  
 
-    // =====================================================
-    // MARA OS — FULL SCREEN SYSTEM UI
-    // =====================================================
+    // =====================================================  
+    // MARA OS — HIDE SYSTEM UI  
+    // =====================================================  
 
-    private void setupFullscreen() {
+    private void hideSystemUI() {  
 
-        Window window = getWindow();
+        Window window = getWindow();  
 
-        // ==========================================
-        // WINDOW BACKGROUND
-        // ==========================================
+        window.setStatusBarColor(Color.TRANSPARENT);  
+        window.setNavigationBarColor(Color.TRANSPARENT);  
 
-        window.setBackgroundDrawableResource(
-                android.R.color.transparent
-        );
+        // Jangan biarkan layar mati saat MARA OS aktif  
+        window.addFlags(  
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON  
+        );  
 
-        window.setStatusBarColor(
-                Color.TRANSPARENT
-        );
+        int flags =  
+                View.SYSTEM_UI_FLAG_FULLSCREEN  
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION  
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY  
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN  
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION  
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;  
 
-        window.setNavigationBarColor(
-                Color.TRANSPARENT
-        );
-
-
-        // ==========================================
-        // KEEP SCREEN ON
-        // ==========================================
-
-        window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-        );
-
-
-        // ==========================================
-        // MARA OS FULLSCREEN FLAGS
-        // ==========================================
-
-        int flags =
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-
-
-        window.getDecorView()
-                .setSystemUiVisibility(flags);
+        window.getDecorView().setSystemUiVisibility(flags);  
     }
 
 
     // =====================================================
-    // ON CREATE
+    // TAMBAHAN — FORCE HIDE STATUS BAR
     // =====================================================
 
-    @Override
-    protected void onCreate(
-            Bundle savedInstanceState
-    ) {
+    private void forceHideStatusBar() {
 
-        super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
 
+            WindowInsetsController controller =
+                    getWindow().getInsetsController();
 
-        // ==========================================
-        // FULLSCREEN
-        // ==========================================
+            if (controller != null) {
 
-        setupFullscreen();
-
-
-        // ==========================================
-        // WEBVIEW
-        // ==========================================
-
-        webView = new WebView(this);
-
-
-        // ==========================================
-        // WEBVIEW LAYOUT
-        // ==========================================
-
-        webView.setLayoutParams(
-                new WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.MATCH_PARENT
-                )
-        );
-
-
-        // ==========================================
-        // WEBVIEW BACKGROUND
-        // ==========================================
-
-        webView.setBackgroundColor(
-                Color.TRANSPARENT
-        );
-
-
-        // ==========================================
-        // SETTINGS
-        // ==========================================
-
-        WebSettings settings =
-                webView.getSettings();
-
-        settings.setJavaScriptEnabled(true);
-
-        settings.setDomStorageEnabled(true);
-
-        settings.setAllowFileAccess(true);
-
-        settings.setAllowContentAccess(true);
-
-        settings.setLoadWithOverviewMode(false);
-
-        settings.setUseWideViewPort(false);
-
-
-        // ==========================================
-        // WEBVIEW CLIENT
-        // ==========================================
-
-        webView.setWebViewClient(
-                new WebViewClient()
-        );
-
-
-        // ==========================================
-        // LOAD MARA OS
-        // ==========================================
-
-        webView.loadUrl(
-                "file:///android_asset/index.html"
-        );
-
-
-        // ==========================================
-        // DISPLAY
-        // ==========================================
-
-        setContentView(webView);
-
-
-        // ==========================================
-        // APPLY FULLSCREEN LAGI
-        // ==========================================
-
-        webView.postDelayed(
-                new Runnable() {
-
-                    @Override
-                    public void run() {
-
-                        setupFullscreen();
-                    }
-
-                },
-                100
-        );
-    }
-
-
-    // =====================================================
-    // WINDOW FOCUS
-    // =====================================================
-
-    @Override
-    public void onWindowFocusChanged(
-            boolean hasFocus
-    ) {
-
-        super.onWindowFocusChanged(
-                hasFocus
-        );
-
-        if (hasFocus) {
-
-            setupFullscreen();
+                controller.hide(
+                        WindowInsets.Type.statusBars()
+                );
+            }
         }
     }
 
 
-    // =====================================================
-    // USER INTERACTION
-    // =====================================================
+    // =====================================================  
+    // ON CREATE  
+    // =====================================================  
 
-    @Override
-    public void onUserInteraction() {
+    @Override  
+    protected void onCreate(Bundle savedInstanceState) {  
 
-        super.onUserInteraction();
+        super.onCreate(savedInstanceState);  
 
-        setupFullscreen();
+        // ==========================================  
+        // MARA OS FULL SCREEN  
+        // ==========================================  
+
+        hideSystemUI();
+
+        // TAMBAHAN — HILANGKAN STATUS BAR ANDROID
+        forceHideStatusBar();
+
+
+        // ==========================================  
+        // WEBVIEW MARA OS  
+        // ==========================================  
+
+        webView = new WebView(this);  
+
+        WebSettings settings =  
+                webView.getSettings();  
+
+        settings.setJavaScriptEnabled(true);  
+
+        settings.setDomStorageEnabled(true);  
+
+        settings.setAllowFileAccess(true);  
+
+        settings.setAllowContentAccess(true);  
+
+        // ==========================================  
+        // WEBVIEW CLIENT  
+        // ==========================================  
+
+        webView.setWebViewClient(  
+                new WebViewClient()  
+        );  
+
+
+        // ==========================================  
+        // WEBVIEW BACKGROUND  
+        // ==========================================  
+
+        webView.setBackgroundColor(  
+                Color.TRANSPARENT  
+        );  
+
+
+        // ==========================================  
+        // LOAD MARA OS  
+        // ==========================================  
+
+        webView.loadUrl(  
+                "file:///android_asset/index.html"  
+        );  
+
+
+        // ==========================================  
+        // TAMPILKAN MARA OS  
+        // ==========================================  
+
+        setContentView(webView);  
+    }  
+
+
+    // =====================================================  
+    // WINDOW FOCUS  
+    // =====================================================  
+
+    @Override  
+    public void onWindowFocusChanged(  
+            boolean hasFocus  
+    ) {  
+
+        super.onWindowFocusChanged(hasFocus);  
+
+        if (hasFocus) {  
+
+            hideSystemUI();
+
+            // TAMBAHAN — PASTIKAN STATUS BAR TETAP HILANG
+            forceHideStatusBar();
+        }  
+    }  
+
+
+    // =====================================================  
+    // USER INTERACTION  
+    // =====================================================  
+
+    @Override  
+    public void onUserInteraction() {  
+
+        super.onUserInteraction();  
+
+        // Pastikan system UI tidak muncul kembali  
+        hideSystemUI();
+
+        // TAMBAHAN — PASTIKAN STATUS BAR TETAP HILANG
+        forceHideStatusBar();
+    }  
+
+
+    // =====================================================  
+    // BACK BUTTON  
+    // =====================================================  
+
+    @Override  
+    public void onBackPressed() {  
+
+        if (  
+                webView != null &&  
+                webView.canGoBack()  
+        ) {  
+
+            webView.goBack();  
+
+        } else {  
+
+            super.onBackPressed();  
+        }  
+    }  
+
+
+    // =====================================================  
+    // DESTROY  
+    // =====================================================  
+
+    @Override  
+    protected void onDestroy() {  
+
+        if (webView != null) {  
+
+            webView.loadUrl(  
+                    "about:blank"  
+            );  
+
+            webView.stopLoading();  
+
+            webView.destroy();  
+
+            webView = null;  
+        }  
+
+        super.onDestroy();  
     }
 
-
-    // =====================================================
-    // BACK
-    // =====================================================
-
-    @Override
-    public void onBackPressed() {
-
-        if (
-                webView != null &&
-                webView.canGoBack()
-        ) {
-
-            webView.goBack();
-
-        } else {
-
-            super.onBackPressed();
-        }
-    }
-
-
-    // =====================================================
-    // DESTROY
-    // =====================================================
-
-    @Override
-    protected void onDestroy() {
-
-        if (webView != null) {
-
-            webView.loadUrl(
-                    "about:blank"
-            );
-
-            webView.stopLoading();
-
-            webView.destroy();
-
-            webView = null;
-        }
-
-        super.onDestroy();
-    }
 }
