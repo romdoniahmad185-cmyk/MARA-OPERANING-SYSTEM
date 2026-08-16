@@ -6,8 +6,6 @@ import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.WindowInsets;
-import android.view.WindowInsetsController;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -45,22 +43,14 @@ public class MainActivity extends Activity {
 
 
     // =====================================================
-    // TAMBAHAN — FORCE HIDE STATUS BAR
+    // MARA OS — FULL CONTENT AREA
     // =====================================================
 
-    private void forceHideStatusBar() {
+    private void enableFullContentArea() {
 
         if (android.os.Build.VERSION.SDK_INT >= 30) {
 
-            WindowInsetsController controller =
-                    getWindow().getInsetsController();
-
-            if (controller != null) {
-
-                controller.hide(
-                        WindowInsets.Type.statusBars()
-                );
-            }
+            getWindow().setDecorFitsSystemWindows(false);
         }
     }
 
@@ -80,7 +70,9 @@ public class MainActivity extends Activity {
 
         hideSystemUI();
 
-        forceHideStatusBar();
+        // Membuat content MARA OS memenuhi
+        // seluruh area layar.
+        enableFullContentArea();
 
 
         // ==========================================
@@ -151,7 +143,7 @@ public class MainActivity extends Activity {
 
             hideSystemUI();
 
-            forceHideStatusBar();
+            enableFullContentArea();
         }
     }
 
@@ -168,7 +160,7 @@ public class MainActivity extends Activity {
         // Pastikan system UI tidak muncul kembali
         hideSystemUI();
 
-        forceHideStatusBar();
+        enableFullContentArea();
     }
 
 
