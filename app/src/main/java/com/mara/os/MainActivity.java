@@ -41,30 +41,39 @@ View.SYSTEM_UI_FLAG_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY  
     );  
 
-    // ==========================================  
-    // WEBVIEW  
-    // ==========================================  
+    // ==========================================
+// WEBVIEW — FULL WINDOW
+// ==========================================
 
-    webView = new WebView(this);  
+webView = new WebView(this);
 
-    WebSettings settings = webView.getSettings();  
+// Pastikan WebView memenuhi seluruh Window
+webView.setLayoutParams(
+        new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        )
+);
 
-    settings.setJavaScriptEnabled(true);  
-    settings.setDomStorageEnabled(true);  
-    settings.setAllowFileAccess(true);  
-    settings.setAllowContentAccess(true);  
+WebSettings settings = webView.getSettings();
 
-    webView.setWebViewClient(new WebViewClient());  
+settings.setJavaScriptEnabled(true);
+settings.setDomStorageEnabled(true);
+settings.setAllowFileAccess(true);
+settings.setAllowContentAccess(true);
 
-    webView.setBackgroundColor(Color.TRANSPARENT);  
+webView.setWebViewClient(new WebViewClient());
 
-    webView.loadUrl(  
-            "file:///android_asset/index.html"  
-    );  
+webView.setBackgroundColor(Color.TRANSPARENT);
 
-    setContentView(webView);  
-}  
+// Pastikan tidak ada padding dari WebView
+webView.setPadding(0, 0, 0, 0);
 
+webView.loadUrl(
+        "file:///android_asset/index.html"
+);
+
+setContentView(webView);
 @Override  
 public void onWindowFocusChanged(boolean hasFocus) {  
 
