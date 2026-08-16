@@ -8,6 +8,7 @@ import android.view.Window;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.WindowManager;
 
 public class MainActivity extends Activity {
 
@@ -26,6 +27,10 @@ protected void onCreate(Bundle savedInstanceState) {
     window.setStatusBarColor(Color.TRANSPARENT);  
     window.setNavigationBarColor(Color.TRANSPARENT);  
 
+window.setFlags(
+        WindowManager.LayoutParams.FLAG_FULLSCREEN,
+        WindowManager.LayoutParams.FLAG_FULLSCREEN
+);
     window.getDecorView().setSystemUiVisibility(  
 
 View.SYSTEM_UI_FLAG_FULLSCREEN
