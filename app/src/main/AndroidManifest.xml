@@ -5,6 +5,7 @@
     <application
         android:allowBackup="false"
         android:label="MARA"
+        android:icon="@mipmap/mara"
         android:supportsRtl="true"
         android:theme="@style/Theme.MARA">
 
