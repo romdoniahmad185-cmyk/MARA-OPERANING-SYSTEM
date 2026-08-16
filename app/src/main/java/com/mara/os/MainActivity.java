@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -21,17 +22,26 @@ public class MainActivity extends Activity {
         Window window = getWindow();
 
         // ==========================================
-        // MARA OS — STATUS BAR HIDDEN
+        // MARA OS — FULL SCREEN
         // ==========================================
 
-        window.setStatusBarColor(Color.TRANSPARENT);
+        // Hilangkan status bar Android
+        window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+        );
 
+        // WebView boleh memenuhi seluruh layar
         window.getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         );
+
+        window.setStatusBarColor(Color.TRANSPARENT);
+        window.setNavigationBarColor(Color.TRANSPARENT);
 
         // ==========================================
         // MARA WEB RUNTIME
@@ -51,6 +61,9 @@ public class MainActivity extends Activity {
 
         webView.setBackgroundColor(Color.TRANSPARENT);
 
+        // Pastikan WebView tidak mempunyai padding/margin
+        webView.setPadding(0, 0, 0, 0);
+
         // ==========================================
         // MARA OS
         // ==========================================
@@ -60,6 +73,23 @@ public class MainActivity extends Activity {
         );
 
         setContentView(webView);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+
+        super.onWindowFocusChanged(hasFocus);
+
+        if (hasFocus) {
+
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
+        }
     }
 
     @Override
