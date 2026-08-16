@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -14,167 +13,64 @@ public class MainActivity extends Activity {
 
     private WebView webView;
 
-    // =====================================================
-    // MARA OS — HIDE SYSTEM UI
-    // =====================================================
-
-    private void hideSystemUI() {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         Window window = getWindow();
 
+        // ==========================================
+        // MARA OS — EDGE TO EDGE
+        // ==========================================
+
+        // Status bar transparan
         window.setStatusBarColor(Color.TRANSPARENT);
+
+        // Navigation bar transparan
         window.setNavigationBarColor(Color.TRANSPARENT);
 
-        // Jangan biarkan layar mati saat MARA OS aktif
-        window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+        // MARA menggambar sampai ke belakang
+        // area system bar
+        window.getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
 
-        int flags =
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-
-        window.getDecorView().setSystemUiVisibility(flags);
-    }
-
-
-    // =====================================================
-    // MARA OS — FULL CONTENT AREA
-    // =====================================================
-
-    private void enableFullContentArea() {
-
-        if (android.os.Build.VERSION.SDK_INT >= 30) {
-
-            getWindow().setDecorFitsSystemWindows(false);
-        }
-    }
-
-
-    // =====================================================
-    // ON CREATE
-    // =====================================================
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-
         // ==========================================
-        // MARA OS FULL SCREEN
-        // ==========================================
-
-        hideSystemUI();
-
-        // Membuat content MARA OS memenuhi
-        // seluruh area layar.
-        enableFullContentArea();
-
-
-        // ==========================================
-        // WEBVIEW MARA OS
+        // WEBVIEW
         // ==========================================
 
         webView = new WebView(this);
 
-        WebSettings settings =
-                webView.getSettings();
+        WebSettings settings = webView.getSettings();
 
         settings.setJavaScriptEnabled(true);
-
         settings.setDomStorageEnabled(true);
-
         settings.setAllowFileAccess(true);
-
         settings.setAllowContentAccess(true);
 
+        webView.setWebViewClient(new WebViewClient());
+
+        // Background transparan agar HTML MARA
+        // menjadi tampilan utama
+        webView.setBackgroundColor(Color.TRANSPARENT);
 
         // ==========================================
-        // WEBVIEW CLIENT
-        // ==========================================
-
-        webView.setWebViewClient(
-                new WebViewClient()
-        );
-
-
-        // ==========================================
-        // WEBVIEW BACKGROUND
-        // ==========================================
-
-        webView.setBackgroundColor(
-                Color.TRANSPARENT
-        );
-
-
-        // ==========================================
-        // LOAD MARA OS
+        // MARA OS UI
         // ==========================================
 
         webView.loadUrl(
                 "file:///android_asset/index.html"
         );
 
-
-        // ==========================================
-        // TAMPILKAN MARA OS
-        // ==========================================
-
         setContentView(webView);
     }
-
-
-    // =====================================================
-    // WINDOW FOCUS
-    // =====================================================
-
-    @Override
-    public void onWindowFocusChanged(
-            boolean hasFocus
-    ) {
-
-        super.onWindowFocusChanged(hasFocus);
-
-        if (hasFocus) {
-
-            hideSystemUI();
-
-            enableFullContentArea();
-        }
-    }
-
-
-    // =====================================================
-    // USER INTERACTION
-    // =====================================================
-
-    @Override
-    public void onUserInteraction() {
-
-        super.onUserInteraction();
-
-        // Pastikan system UI tidak muncul kembali
-        hideSystemUI();
-
-        enableFullContentArea();
-    }
-
-
-    // =====================================================
-    // BACK BUTTON
-    // =====================================================
 
     @Override
     public void onBackPressed() {
 
-        if (
-                webView != null &&
-                webView.canGoBack()
-        ) {
+        if (webView != null && webView.canGoBack()) {
 
             webView.goBack();
 
@@ -184,25 +80,15 @@ public class MainActivity extends Activity {
         }
     }
 
-
-    // =====================================================
-    // DESTROY
-    // =====================================================
-
     @Override
     protected void onDestroy() {
 
         if (webView != null) {
 
-            webView.loadUrl(
-                    "about:blank"
-            );
-
+            webView.loadUrl("about:blank");
             webView.stopLoading();
-
             webView.destroy();
 
-            webView = null;
         }
 
         super.onDestroy();
