@@ -41,18 +41,17 @@ body {
     left: 0;
 
     width: 100%;
-
-    /* Jangan memotong iframe */
-    height: 32px;
+    height: 34px;
 
     padding-left: 12px;
     padding-right: 12px;
+
     box-sizing: border-box;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    /* TRANSPARAN */
     background: transparent;
 
     color: white;
@@ -61,7 +60,6 @@ body {
 
     pointer-events: auto;
 
-    /* Gesture vertikal */
     touch-action: pan-y;
 
     font-family: Arial, sans-serif;
@@ -69,12 +67,9 @@ body {
     font-size: 13px;
     font-weight: 600;
 
-    /* Supaya teks tetap terlihat */
     text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.7);
+        0 1px 3px rgba(0, 0, 0, .7);
 }
-
-
 /* =========================
    JAM
 ========================= */
