@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -20,22 +22,42 @@ public class MainActivity extends Activity {
         Window window = getWindow();
 
         // ==========================================
-        // MARA OS — FULL SCREEN
+        // MARA OS — EDGE TO EDGE
         // ==========================================
 
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.TRANSPARENT);
 
-        // Sembunyikan Status Bar + Navigation Bar Android
-        // dan biarkan MARA OS menggunakan seluruh layar.
-        window.getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        );
+        // Biarkan konten MARA OS menggambar
+        // sampai belakang status bar dan navigation bar.
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+
+            window.setDecorFitsSystemWindows(false);
+
+            WindowInsetsController controller =
+                    window.getInsetsController();
+
+            if (controller != null) {
+
+                controller.hide(
+                        WindowInsets.Type.navigationBars()
+                );
+
+                controller.setSystemBarsBehavior(
+                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                );
+            }
+
+        } else {
+
+            window.getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );
+        }
 
         // ==========================================
         // WEBVIEW MARA OS
@@ -43,20 +65,25 @@ public class MainActivity extends Activity {
 
         webView = new WebView(this);
 
-        WebSettings settings = webView.getSettings();
+        WebSettings settings =
+                webView.getSettings();
 
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(
+                new WebViewClient()
+        );
 
-        // WebView transparan agar UI MARA
-        // menjadi tampilan utama.
-        webView.setBackgroundColor(Color.TRANSPARENT);
+        webView.setBackgroundColor(
+                Color.TRANSPARENT
+        );
 
-        // Load MARA OS
+        // Pastikan WebView memenuhi seluruh window.
+        webView.setFitsSystemWindows(false);
+
         webView.loadUrl(
                 "file:///android_asset/index.html"
         );
@@ -65,29 +92,40 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
+    public void onWindowFocusChanged(
+            boolean hasFocus
+    ) {
+
         super.onWindowFocusChanged(hasFocus);
 
-        // Pastikan fullscreen MARA tetap aktif
-        // ketika aplikasi mendapatkan kembali fokus.
-        if (hasFocus) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            );
+        if (hasFocus &&
+                android.os.Build.VERSION.SDK_INT < 30) {
+
+            getWindow()
+                    .getDecorView()
+                    .setSystemUiVisibility(
+
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    );
         }
     }
 
     @Override
     public void onBackPressed() {
 
-        if (webView != null && webView.canGoBack()) {
+        if (
+                webView != null &&
+                webView.canGoBack()
+        ) {
+
             webView.goBack();
+
         } else {
+
             super.onBackPressed();
         }
     }
@@ -96,9 +134,11 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
 
         if (webView != null) {
+
             webView.loadUrl("about:blank");
             webView.stopLoading();
             webView.destroy();
+
         }
 
         super.onDestroy();
