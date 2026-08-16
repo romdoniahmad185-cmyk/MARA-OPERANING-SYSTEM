@@ -11,98 +11,99 @@ import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
 
-    private WebView webView;
+private WebView webView;  
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+@Override  
+protected void onCreate(Bundle savedInstanceState) {  
+    super.onCreate(savedInstanceState);  
 
-        Window window = getWindow();
+    Window window = getWindow();  
 
-        // ==========================================
-        // MARA OS — FULL SCREEN
-        // ==========================================
+    // ==========================================  
+    // MARA OS — FULL SCREEN  
+    // ==========================================  
 
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
+    window.setStatusBarColor(Color.TRANSPARENT);  
+    window.setNavigationBarColor(Color.TRANSPARENT);  
 
-        window.getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        );
+    window.getDecorView().setSystemUiVisibility(  
 
-        // ==========================================
-        // WEBVIEW
-        // ==========================================
+View.SYSTEM_UI_FLAG_FULLSCREEN
+                    |            View.SYSTEM_UI_FLAG_LAYOUT_STABLE  
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN  
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION  
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION  
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY  
+    );  
 
-        webView = new WebView(this);
+    // ==========================================  
+    // WEBVIEW  
+    // ==========================================  
 
-        WebSettings settings = webView.getSettings();
+    webView = new WebView(this);  
 
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setAllowFileAccess(true);
-        settings.setAllowContentAccess(true);
+    WebSettings settings = webView.getSettings();  
 
-        webView.setWebViewClient(new WebViewClient());
+    settings.setJavaScriptEnabled(true);  
+    settings.setDomStorageEnabled(true);  
+    settings.setAllowFileAccess(true);  
+    settings.setAllowContentAccess(true);  
 
-        webView.setBackgroundColor(Color.TRANSPARENT);
+    webView.setWebViewClient(new WebViewClient());  
 
-        webView.loadUrl(
-                "file:///android_asset/index.html"
-        );
+    webView.setBackgroundColor(Color.TRANSPARENT);  
 
-        setContentView(webView);
-    }
+    webView.loadUrl(  
+            "file:///android_asset/index.html"  
+    );  
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
+    setContentView(webView);  
+}  
 
-        super.onWindowFocusChanged(hasFocus);
+@Override  
+public void onWindowFocusChanged(boolean hasFocus) {  
 
-        if (hasFocus) {
+    super.onWindowFocusChanged(hasFocus);  
 
-            getWindow()
-                    .getDecorView()
-                    .setSystemUiVisibility(
-                            View.SYSTEM_UI_FLAG_FULLSCREEN
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    );
-        }
-    }
+    if (hasFocus) {  
 
-    @Override
-    public void onBackPressed() {
+        getWindow()  
+                .getDecorView()  
+                .setSystemUiVisibility(  
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE  
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN  
+                                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION  
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION  
+                                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY  
+                );  
+    }  
+}  
 
-        if (webView != null && webView.canGoBack()) {
+@Override  
+public void onBackPressed() {  
 
-            webView.goBack();
+    if (webView != null && webView.canGoBack()) {  
 
-        } else {
+        webView.goBack();  
 
-            super.onBackPressed();
-        }
-    }
+    } else {  
 
-    @Override
-    protected void onDestroy() {
+        super.onBackPressed();  
+    }  
+}  
 
-        if (webView != null) {
+@Override  
+protected void onDestroy() {  
 
-            webView.loadUrl("about:blank");
-            webView.stopLoading();
-            webView.destroy();
+    if (webView != null) {  
 
-        }
+        webView.loadUrl("about:blank");  
+        webView.stopLoading();  
+        webView.destroy();  
 
-        super.onDestroy();
-    }
+    }  
+
+    super.onDestroy();  
+}
+
 }
