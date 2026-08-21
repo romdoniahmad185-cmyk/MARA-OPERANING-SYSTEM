@@ -9,7 +9,50 @@
                user-scalable=no,
                viewport-fit=cover">
     <title>MARA Status Bar</title>
+<style>
+html,
+body {
+    width: 100%;
+    height: 100%;
 
+    margin: 0;
+    padding: 0;
+
+    overflow: hidden;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.mara-iframe {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+
+    display: block;
+
+    z-index: 1;
+}
+
+.mara-header {
+    top: 0;
+}
+</style>
     <link rel="stylesheet" href="style.css">
 </head>
 
