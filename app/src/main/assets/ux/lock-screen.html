@@ -2,9 +2,12 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="./manifest.json">
-
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no,
+               viewport-fit=cover">
 
 <title>MARA OS — Lock Screen</title>
 
@@ -42,23 +45,19 @@ body {
 
 .mara-lock-screen {
     position: fixed;
-    inset: 0;
 
-    display: flex;
-    flex-direction: column;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-    color: #fff;
+    width: 100vw;
+    height: 100vh;
 
-    overflow: hidden;
+    margin: 0;
+    padding: 0;
 
-    background:
-        linear-gradient(
-            180deg,
-            rgba(0,0,0,.15),
-            rgba(0,0,0,.45)
-        );
 }
-
 
 /* =====================================================
    WALLPAPER
@@ -159,6 +158,8 @@ body {
 
     flex: 1;
 
+    min-height: 0;
+
     display: flex;
     flex-direction: column;
 
@@ -167,12 +168,10 @@ body {
     text-align: center;
 
     padding:
-        7vh
+        3vh
         20px
         20px;
 }
-
-
 /* =====================================================
    CLOCK
 ===================================================== */
