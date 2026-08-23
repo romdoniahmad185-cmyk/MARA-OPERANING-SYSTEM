@@ -4,24 +4,93 @@
 
 window.MARARepositoryEngine = {
 
-    async fetchManifest(url) {
+    manifestURL:
+        "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/update-manifest.json",
 
-        if (!url) {
-            throw new Error("Repository URL tidak tersedia.");
+
+    /* =================================================
+       GET REPOSITORY MANIFEST
+    ================================================= */
+
+    async fetchManifest(url = null) {
+
+        const repositoryURL =
+            url || this.manifestURL;
+
+
+        if (!repositoryURL) {
+
+            throw new Error(
+                "URL repository MARA OS tidak tersedia."
+            );
+
         }
 
-        const response = await fetch(url, {
-            cache: "no-cache"
-        });
+
+        console.log(
+            "[MARA REPOSITORY] Mengakses:",
+            repositoryURL
+        );
+
+
+        const response =
+            await fetch(
+                repositoryURL,
+                {
+                    cache: "no-cache"
+                }
+            );
+
 
         if (!response.ok) {
+
             throw new Error(
-                "Repository manifest gagal diambil: " +
+                "Repository MARA OS gagal diakses: " +
                 response.status
             );
+
         }
 
-        return await response.json();
+
+        let manifest;
+
+
+        try {
+
+            manifest =
+                await response.json();
+
+        } catch (error) {
+
+            throw new Error(
+                "Repository manifest bukan JSON yang valid."
+            );
+
+        }
+
+
+        console.log(
+            "[MARA REPOSITORY] Manifest berhasil:",
+            manifest
+        );
+
+
+        return manifest;
+
     }
 
 };
+
+
+/* =====================================================
+   TEST
+===================================================== */
+
+console.log(
+    "[MARA REPOSITORY] ENGINE BERHASIL DIMUAT"
+);
+
+console.log(
+    "[MARA REPOSITORY] URL:",
+    MARARepositoryEngine.manifestURL
+);
