@@ -13,10 +13,10 @@ window.MARA_APPS = {
         version: "1.0.0",
 
         icon:
-            "/icon-svg/mara-browser.svg",
+            "../icon-svg/mara-browser.svg",
 
         manifest:
-            "/apps/rama/manifest.json"
+            "../apps/rama/manifest.json"
 
     }
 
