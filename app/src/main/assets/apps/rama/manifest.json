@@ -7,7 +7,7 @@
 
     "icon": "../icon-svg/mara-browser.svg",
 
-    "entry": "../apps/rama/index.html",
+    "entry": "index.html",
 
     "engine": {
         "type": "mara-web",
