@@ -16,11 +16,11 @@
 <title>MARA OS — Home Screen</title>
 
 
+
 <style>
 
 /* =====================================================
-   MARA OS — HOME SCREEN
-   HTML + CSS + JAVASCRIPT
+   MARA OS — GLOBAL
 ===================================================== */
 
 * {
@@ -32,8 +32,10 @@
 
 html,
 body {
+
     width: 100%;
     height: 100%;
+
     overflow: hidden;
 
     font-family:
@@ -41,28 +43,33 @@ body {
         Helvetica,
         sans-serif;
 
+    background: #07111f;
+
+    color: #fff;
+
     user-select: none;
+
+    overscroll-behavior: none;
+
 }
 
 
 /* =====================================================
-   HOME SCREEN
+   MARA OS ROOT
 ===================================================== */
 
-.mara-home {
-margin-top: 5;
+.mara-os {
+
     position: fixed;
 
     inset: 0;
 
+    width: 100%;
+    height: 100%;
+
     overflow: hidden;
 
-    background:
-        linear-gradient(
-            180deg,
-            #0b1b31,
-            #07111f
-        );
+    background: #07111f;
 
 }
 
@@ -73,131 +80,167 @@ margin-top: 5;
 
 .home-wallpaper {
 
-    position: absolute;
+    position: fixed;
 
     inset: 0;
-    background:url("wallpaper1.png");
-  background-size: cover;
-  background-position:center;
-  background-repeat: no-repeat;
 
+    width: 100%;
+    height: 100%;
 
-/*    background:
+    background-image:
+        url("/wallpaper1.png");
 
-        radial-gradient(
-            circle at 20% 20%,
-            rgba(59,130,246,.55),
-            transparent 32%
-        ),
+    background-size: cover;
 
-        radial-gradient(
-            circle at 80% 70%,
-            rgba(14,165,233,.25),
-            transparent 35%
-        ),
+    background-position: center;
 
-        linear-gradient(
-            145deg,
-            #0f2745,
-            #06101e
-        );*/
+    background-repeat: no-repeat;
 
     z-index: 0;
 
 }
 
 
+/* =====================================================
+   WALLPAPER OVERLAY
+===================================================== */
+
 .home-overlay {
 
-    position: absolute;
+    position: fixed;
 
     inset: 0;
+
+    width: 100%;
+    height: 100%;
 
     background:
         rgba(0,0,0,.12);
 
     z-index: 1;
 
-}
-
-
-/* =====================================================
-   STATUS BAR
-===================================================== */
-
-.status-bar {
-
-    position: relative;
-
-    z-index: 20;
-
-    height: 34px;
-
-    padding:
-        8px 18px 0;
-
-    display: none;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    font-size: 12px;
-
-}
-
-
-.status-right {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 9px;
+    pointer-events: none;
 
 }
 
 
 /* =====================================================
-   MAIN CONTENT
+   SLIDER VIEWPORT
 ===================================================== */
 
-.home-content {
+.home-viewport {
 
-    position: relative;
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
 
     z-index: 5;
 
-    height:
-        calc(100% - 34px);
-
-    padding:
-        12px 18px 100px;
-
-    overflow-y: auto;
-
-    scrollbar-width: none;
-
-}
-
-.home-content::-webkit-scrollbar {
-    display: none;
 }
 
 
 /* =====================================================
-   WIDGET AREA
+   SLIDER
+===================================================== */
+
+.home-slider {
+
+    display: flex;
+
+    width: 300%;
+
+    height: 100%;
+
+    transform:
+        translate3d(0,0,0);
+
+    transition:
+        transform
+        380ms
+        cubic-bezier(.22,.8,.2,1);
+
+    will-change: transform;
+
+    touch-action: pan-y;
+
+}
+
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+.home-page {
+
+    position: relative;
+
+    flex:
+        0 0 33.333333%;
+
+    width:
+        33.333333%;
+
+    height: 100%;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+}
+
+
+/* =====================================================
+   PAGE CONTENT
+===================================================== */
+
+.page-scroll {
+
+    width: 100%;
+
+    height: 100%;
+
+    padding:
+        15px
+        18px
+        105px;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    scrollbar-width: none;
+
+    -webkit-overflow-scrolling:
+        touch;
+
+    overscroll-behavior-y:
+        contain;
+
+}
+
+.page-scroll::-webkit-scrollbar {
+
+    display: none;
+
+}
+
+
+/* =====================================================
+   WELCOME
 ===================================================== */
 
 .welcome-widget {
 
-    margin-top: 10px;
+    margin-top: 25px;
 
-    padding:
-        18px;
+    padding: 18px;
 
-    border-radius:
-        24px;
+    border-radius: 24px;
 
     background:
         rgba(255,255,255,.10);
@@ -209,12 +252,19 @@ margin-top: 5;
     backdrop-filter:
         blur(20px);
 
+    -webkit-backdrop-filter:
+        blur(20px);
+
     box-shadow:
         0 15px 40px
         rgba(0,0,0,.18);
 
 }
 
+
+/* =====================================================
+   WELCOME TEXT
+===================================================== */
 
 .welcome-small {
 
@@ -253,7 +303,7 @@ margin-top: 5;
 
 .home-search {
 
-    margin-top: 15px;
+    margin-top: 55px;
 
     width: 100%;
 
@@ -267,17 +317,21 @@ margin-top: 5;
 
     gap: 10px;
 
-    padding:
-        0 15px;
+    padding: 0 15px;
 
-    background:
-        rgba(255,255,255,.11);
+  background: #ffffff66;
+
+   /* background:
+        rgba(255,255,255,.11);*/
 
     border:
         1px solid
         rgba(255,255,255,.12);
 
     backdrop-filter:
+        blur(18px);
+
+    -webkit-backdrop-filter:
         blur(18px);
 
 }
@@ -295,6 +349,8 @@ margin-top: 5;
 .home-search input {
 
     flex: 1;
+
+    width: 100%;
 
     height: 100%;
 
@@ -320,7 +376,7 @@ margin-top: 5;
 
 
 /* =====================================================
-   SECTION HEADER
+   SECTION
 ===================================================== */
 
 .section-header {
@@ -366,20 +422,42 @@ margin-top: 5;
 
 .app-grid {
 
-    display: grid;
+
+  display: grid;
+
+    grid-template-columns: repeat(5, 1fr);
+
+    gap: 18px 12px;
+
+    width: 100%;
+
+   /* display: grid;
 
     grid-template-columns:
         repeat(4, 1fr);
 
     gap:
-        18px 12px;
+        18px 12px;*/
 
 }
 
 
+/* =====================================================
+   APP
+===================================================== */
+
 .app {
+  width: 100%;
 
     display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    /*display: flex;
 
     flex-direction: column;
 
@@ -387,7 +465,7 @@ margin-top: 5;
 
     gap: 7px;
 
-    cursor: pointer;
+    cursor: pointer;*/
 
 }
 
@@ -416,6 +494,9 @@ margin-top: 5;
         rgba(255,255,255,.12);
 
     backdrop-filter:
+        blur(15px);
+
+    -webkit-backdrop-filter:
         blur(15px);
 
     box-shadow:
@@ -460,30 +541,41 @@ margin-top: 5;
 
 
 /* =====================================================
-   FEATURED APP
+   SEARCH RESULTS
 ===================================================== */
 
-.featured {
+.search-results {
 
-    grid-column:
-        span 2;
+    display: none;
+
+    margin-top: 15px;
 
 }
 
 
-.featured .app-icon {
+.search-results.active {
 
-    width: 100%;
+    display: block;
 
-    height: 80px;
+}
 
-    border-radius: 20px;
+
+.search-result {
+
+    padding: 14px;
+
+    border-radius: 16px;
+
+    margin-bottom: 8px;
+
+    background:
+        rgba(255,255,255,.09);
 
 }
 
 
 /* =====================================================
-   RECENT / RECOMMENDED
+   RECOMMENDED
 ===================================================== */
 
 .recommended-card {
@@ -494,11 +586,9 @@ margin-top: 5;
 
     gap: 13px;
 
-    padding:
-        13px;
+    padding: 13px;
 
-    border-radius:
-        18px;
+    border-radius: 18px;
 
     background:
         rgba(255,255,255,.09);
@@ -565,8 +655,7 @@ margin-top: 5;
 
     border-radius: 12px;
 
-    padding:
-        9px 13px;
+    padding: 9px 13px;
 
     background:
         rgba(255,255,255,.13);
@@ -584,14 +673,17 @@ margin-top: 5;
 
 .home-dock {
 
-    position: absolute;
+    position: fixed;
 
-    z-index: 30;
+    z-index: 50;
 
     left: 50%;
 
     bottom:
-        max(12px, env(safe-area-inset-bottom));
+        max(
+            12px,
+            env(safe-area-inset-bottom)
+        );
 
     transform:
         translateX(-50%);
@@ -606,8 +698,7 @@ margin-top: 5;
     padding:
         8px 12px;
 
-    border-radius:
-        25px;
+    border-radius: 25px;
 
     display: flex;
 
@@ -623,6 +714,9 @@ margin-top: 5;
         rgba(255,255,255,.12);
 
     backdrop-filter:
+        blur(25px);
+
+    -webkit-backdrop-filter:
         blur(25px);
 
     box-shadow:
@@ -642,8 +736,7 @@ margin-top: 5;
 
     border: none;
 
-    background:
-        transparent;
+    background: transparent;
 
     color: #fff;
 
@@ -656,10 +749,6 @@ margin-top: 5;
     justify-content: center;
 
     cursor: pointer;
-
-    transition:
-        transform .12s ease,
-        background .15s ease;
 
 }
 
@@ -676,66 +765,29 @@ margin-top: 5;
 
 
 /* =====================================================
-   APP DRAWER BUTTON
+   EMPTY SLIDE
 ===================================================== */
 
-.drawer-button {
+.empty-page {
 
-    background:
-        rgba(255,255,255,.12);
+    width: 100%;
+
+    height: 100%;
 
 }
 
 
 /* =====================================================
-   SEARCH RESULTS
-===================================================== */
-
-.search-results {
-
-    display: none;
-
-    margin-top: 15px;
-
-}
-
-
-.search-results.active {
-
-    display: block;
-
-}
-
-
-.search-result {
-
-    padding:
-        14px;
-
-    border-radius:
-        16px;
-
-    margin-bottom: 8px;
-
-    background:
-        rgba(255,255,255,.09);
-
-}
-
-
-/* =====================================================
-   RESPONSIVE
+   TABLET / DESKTOP
 ===================================================== */
 
 @media (min-width: 600px) {
 
-    .home-content {
+    .page-scroll {
 
-        max-width:
-            850px;
+        max-width: 850px;
 
-        margin:
-            0 auto;
+        margin: 0 auto;
 
     }
 
@@ -751,10 +803,9 @@ margin-top: 5;
 
 @media (min-width: 1000px) {
 
-    .home-content {
+    .page-scroll {
 
-        max-width:
-            1100px;
+        max-width: 1100px;
 
     }
 
@@ -774,10 +825,9 @@ margin-top: 5;
 
 @media (orientation: landscape) {
 
-    .home-content {
+    .page-scroll {
 
-        padding-bottom:
-            85px;
+        padding-bottom: 90px;
 
     }
 
@@ -797,16 +847,189 @@ margin-top: 5;
 
 @media (prefers-reduced-motion: reduce) {
 
-    * {
+    .home-slider {
 
-        animation: none !important;
-
-        transition: none !important;
+        transition: none;
 
     }
 
 }
 
+
+/* =====================================================
+   CONTEXT MENU
+===================================================== */
+
+body {
+
+    -webkit-touch-callout: none;
+
+}
+
+
+/* =====================================================
+   MARA OS — RAMA SEARCH
+===================================================== */
+
+.rama-search-box {
+
+    width: 100%;
+    height: 48px;
+
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 0 15px;
+
+  
+
+    background: transparent;
+    
+
+  
+}
+
+ .search-icon {
+
+    flex-shrink: 0;
+
+    font-size: 19px;
+
+    color:
+        rgba(255,255,255,.75);
+
+}
+
+
+/* =====================================================
+   INPUT AREA
+===================================================== */
+
+.rama-search-input {
+
+    position: relative;
+
+    flex: 1;
+
+    height: 100%;
+
+}
+
+
+/* =====================================================
+   CUSTOM PLACEHOLDER
+===================================================== */
+
+.rama-placeholder {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    display: flex;
+
+    align-items: center;
+
+    pointer-events: none;
+
+    font-size: 14px;
+
+    transition:
+        opacity .15s ease;
+
+}
+
+
+.search-text {
+
+    color:
+        rgba(255,255,255,.55);
+
+}
+.rama-name {
+
+    margin-left: 4px;
+
+    background: linear-gradient(
+        90deg,
+        #2563EB 0%,
+        #0EA5E9 25%,
+        #22D3EE 45%,
+        #6366F1 70%,
+        #A855F7 100%
+    );
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+
+    font-weight: 700;
+
+}
+.search-dots {
+
+    color:
+        rgba(255,255,255,.55);
+
+}
+
+
+/* =====================================================
+   REAL INPUT
+===================================================== */
+
+#app-search {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    width: 100%;
+    height: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #fff;
+
+    font-size: 14px;
+
+}
+
+
+/* =====================================================
+   HIDE CUSTOM PLACEHOLDER
+===================================================== */
+
+.rama-placeholder.hidden {
+
+    opacity: 0;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+  
 </style>
 
 </head>
@@ -815,256 +1038,824 @@ margin-top: 5;
 <body>
 
 
-<main
-    class="mara-home">
+<!-- =====================================================
+     MARA OS
+===================================================== -->
+
+<main class="mara-os">
 
 
-    <!-- WALLPAPER -->
+    <!-- =================================================
+         WALLPAPER
+    ================================================== -->
 
     <div
         class="home-wallpaper">
     </div>
+
 
     <div
         class="home-overlay">
     </div>
 
 
-    <!-- STATUS BAR -->
+    <!-- =================================================
+         SLIDER VIEWPORT
+    ================================================== -->
 
-    <header
-        class="status-bar">
-
-        <span
-            id="home-time">
-
-            09:41
-
-        </span>
+    <div class="home-viewport">
 
 
         <div
-            class="status-right">
+            class="home-slider"
+            id="home-slider">
 
-            <span>
-                ◉
+
+            <!-- =========================================
+                 SLIDE 1
+            ========================================== -->
+
+            <section
+                class="home-page"
+                data-page="0">
+
+
+                <div
+                    class="page-scroll">
+
+
+                  
+
+
+                    <!-- SEARCH -->
+
+                    <div
+                        class="home-search">
+
+                        <span
+                            class="search-icon">
+
+            <img src="/icon-svg/mara-browser.svg" style="width:30px; height:30px;">
+
+                        </span>
+
+
+                     <div class="rama-search-box">
+
+    
+
+    <div class="rama-search-input" style="display : flex;">
+
+        <div
+            id="rama-placeholder"
+            class="rama-placeholder">
+
+            <span class="search-text">
+                Cari di
             </span>
 
-            <span>
-                ◌
+            <span class="rama-name">
+                RAMA
             </span>
 
-            <span>
-                🔋
+            <span class="search-dots">
+                ...
             </span>
 
         </div>
 
-    </header>
+        <input
+            id="app-search"
+            type="search"
+            autocomplete="off">
+
+    </div>
+    
+
+</div>
+<span class="search-icon">⌕</span>
+                    </div>
 
 
-    <!-- MAIN -->
+                    <!-- SEARCH RESULTS -->
 
-    <section
-        class="home-content">
-
-
-        <!-- WELCOME -->
-
-        <section
-            class="welcome-widget">
-
-            <div
-                class="welcome-small">
-
-                Selamat datang
-
-            </div>
-
-            <div
-                class="welcome-title">
-
-                MARA OS
-
-            </div>
-
-            <div
-                class="welcome-subtitle">
-
-                Sistem operasi untuk ekosistem digital kamu.
-
-            </div>
-
-        </section>
+                  
 
 
-        <!-- SEARCH -->
-
-        <div
-            class="home-search">
-
-            <span
-                class="search-icon">
-
-                ⌕
-
-            </span>
-
-            <input
-                id="app-search"
-                type="search"
-                placeholder="Cari aplikasi...">
-
-        </div>
-
-
-        <!-- SEARCH RESULTS -->
-
-        <div
-            id="search-results"
-            class="search-results">
-        </div>
-
-
-        <!-- FAVORITE APPS -->
-
-        <div
-            class="section-header">
-
-            <h2
-                class="section-title">
-
-                Aplikasi
-
-            </h2>
-
-            <button
-                id="all-apps"
-                class="section-action">
-
-                Semua
-
-            </button>
-
-        </div>
-
-
-        <div
-            id="app-grid"
-            class="app-grid">
+        <div class="app-grid " style="margin-top: 100%;">
 
 
             <!-- RAMA -->
 
             <div
                 class="app"
-                data-name="Rama">
+                data-name="Rama"
+                onclick="openApp('mara.app.rama')"">
 
                 <div
-                    class="app-icon" style="background:white;">
+                    class="app-icon"
+                    style="background:white;">
 
-          <img src="icon-svg/mara-browser.svg" style="width:50px; height:50px;">
+                    <img
+                        src="/icon-svg/mara-browser.svg"
+                        style="width:50px;height:50px;">
 
                 </div>
 
-                <div
-                    class="app-name">
-
+                <div class="app-name">
                     Rama
-
                 </div>
 
             </div>
+
+
+          
+            <!-- MAPS -->
+
+            <div
+                class="app"
+                data-name="Maps"
+                onclick="openApp('Maps')">
+
+                <div
+                    class="app-icon"
+                    style="background:white;">
+
+                    <img
+                        src="/icon-svg/maps.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                    Maps
+                </div>
+
+            </div>
+
+
+            <!-- REMAIL -->
+
+            <div
+                class="app"
+                
+                data-name="Remail"
+                onclick="openApp('Remail')">
+
+                <div class="app-icon"
+
+                  style="background:white;"
+                  >
+         <img
+                        src="/icon-svg/mara-email.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                    Remail
+                </div>
+
+            </div>
+
+
+            <!-- BERITA -->
+
+            <div
+                class="app"
+                data-name="Berita"
+                onclick="openApp('game')">
+
+                <div class="app-icon"
+                  style="background:white;"
+                  >
+                 <img
+                        src="/icon-svg/mara-game.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                  ramgames
+                </div>
+
+            </div>
+ <div
+                class="app"
+                data-name="Berita"
+                onclick="openApp('foto')">
+
+                <div class="app-icon"
+                  style="background:white;"
+                  >
+                 <img
+                        src="/icon-svg/mara-foto.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                  foto
+                </div>
+
+            </div>
+
+
+        </div>
+   <div class="app-grid " style="margin-top:9%;">
+
+
+            <!-- RAMA -->
+
+            <div
+                class="app"
+                data-name="Rama"
+                onclick="openApp('sona')">
+
+                <div
+                    class="app-icon"
+                    style="background:black;">
+
+                    <img
+                        src="/icon-svg/sona.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                    sona
+                </div>
+
+            </div>
+
+
+          
+            <!-- MAPS -->
+
+            <div
+                class="app"
+                data-name="Maps"
+                onclick="openApp('luma')">
+
+                <div
+                    class="app-icon"
+                    style="
+  background: linear-gradient(
+        45deg,
+        #FF2D55 0%,
+        #FF375F 30%,
+        #D946EF 55%,
+        #8B5CF6 78%,
+        #FF9F0A 100%
+    );
+      
+        ">
+
+        <img
+                        src="/icon-svg/luma.svg"
+                        style="width:70px;height:70px;">
+      
+    
+                      
+                
+          
+                        
+
+                </div>
+
+                <div class="app-name">
+                    luma
+                </div>
+
+            </div>
+
+
+            <!-- REMAIL -->
+
+            <div
+                class="app"
+                
+                data-name="Remail"
+                onclick="openApp('ziva')">
+
+                <div class="app-icon"
+
+                  style="background:black;"
+                  >
+         <img
+                        src="/icon-svg/ziva.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                    ziva
+                </div>
+
+            </div>
+
+
+            <!-- BERITA -->
+
+            <div
+                class="app"
+                data-name="Berita"
+                onclick="openApp('vista')">
+
+                <div class="app-icon"
+                  style="background:white;"
+                  >
+                 <img
+                        src="/icon-svg/vista.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                  ramgames
+                </div>
+
+            </div>
+ <div
+                class="app"
+                data-name="Berita"
+                onclick="openApp('meetup')">
+
+                <div class="app-icon"
+                  style="
+                
+    background: linear-gradient(
+        135deg,
+        #0B8F55 0%,
+        #16B364 50%,
+        #25D366 100%
+    );
+                  "
+                  >
+                 <img
+                        src="/icon-svg/meetup.svg"
+                        style="width:50px;height:50px;">
+
+                </div>
+
+                <div class="app-name">
+                  meetUP
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+                 
+
+
+                    <!-- RECOMMENDED -->
+
+                 
+                </div>
+
+            </section>
+
+
+            <!-- =========================================
+                 SLIDE 2 — KOSONG
+            ========================================== -->
+
+         <!-- =========================================
+     SLIDE 2 — KREATIVITAS & PRODUKTIVITAS
+========================================== -->
+
+<section
+    class="home-page"
+    data-page="1">
+
+    <div class="page-scroll">
+
+
+        <!-- HEADER -->
+
+        <section class="welcome-widget">
+
+            <div class="welcome-small">
+                Ruang produktif
+            </div>
+
+            <div class="welcome-title">
+                Kreativitas MARA
+            </div>
+
+            <div class="welcome-subtitle">
+                Buat, belajar, dan kembangkan ide kamu.
+            </div>
+
+        </section>
+
+
+        <!-- KATEGORI -->
+
+        <div class="section-header">
+
+            <h2 class="section-title">
+                Kreativitas
+            </h2>
+
+        </div>
+
+
+        <!-- APP GRID -->
+
+        <div class="app-grid">
 
 
             <!-- VEXACUT -->
 
             <div
                 class="app"
-                data-name="VexaCut">
+                data-name="VexaCut"
+                onclick="openApp('VexaCut')">
 
-                <div
-                    class="app-icon">
-
+                <div class="app-icon">
                     ✂
-
                 </div>
 
-                <div
-                    class="app-name">
-
+                <div class="app-name">
                     VexaCut
-
                 </div>
 
             </div>
 
 
-            <!-- MAPS -->
+            <!-- MARA DRAW -->
 
             <div
                 class="app"
-                data-name="Maps">
+                data-name="MARA Draw"
+                onclick="openApp('MARA Draw')">
 
-                <div
-                    class="app-icon" style="background:white;">
-
-                       <img src="icon-svg/maps.svg" style="width:50px; height:50px;">
-
-
+                <div class="app-icon">
+                    🎨
                 </div>
 
-                <div
-                    class="app-name">
-
-                    Maps
-
+                <div class="app-name">
+                    MARA Draw
                 </div>
 
             </div>
 
 
-            <!-- WEB -->
+            <!-- MARA IMAGE -->
 
             <div
                 class="app"
-                data-name="Web">
+                data-name="MARA Image"
+                onclick="openApp('MARA Image')">
 
-                <div
-                    class="app-icon">
-
-                    ◎
-
+                <div class="app-icon">
+                    🖼️
                 </div>
 
-                <div
-                    class="app-name">
-
-                    Web
-
+                <div class="app-name">
+                    MARA Image
                 </div>
 
             </div>
 
 
-            <!-- EMAIL -->
+            <!-- MARA MUSIC -->
 
             <div
                 class="app"
-                data-name="Remail">
+                data-name="MARA Music"
+                onclick="openApp('MARA Music')">
 
-                <div
-                    class="app-icon">
-
-                    ✉
-
+                <div class="app-icon">
+                    🎵
                 </div>
 
-                <div
-                    class="app-name">
+                <div class="app-name">
+                    MARA Music
+                </div>
 
-                    Remail
+            </div>
 
+
+            <!-- MARA WRITE -->
+
+            <div
+                class="app"
+                data-name="MARA Write"
+                onclick="openApp('MARA Write')">
+
+                <div class="app-icon">
+                    📝
+                </div>
+
+                <div class="app-name">
+                    MARA Write
+                </div>
+
+            </div>
+
+
+            <!-- MARA OFFICE -->
+
+            <div
+                class="app"
+                data-name="MARA Office"
+                onclick="openApp('MARA Office')">
+
+                <div class="app-icon">
+                    📊
+                </div>
+
+                <div class="app-name">
+                    MARA Office
+                </div>
+
+            </div>
+
+
+            <!-- MARA IDEAS -->
+
+            <div
+                class="app"
+                data-name="MARA Ideas"
+                onclick="openApp('MARA Ideas')">
+
+                <div class="app-icon">
+                    💡
+                </div>
+
+                <div class="app-name">
+                    MARA Ideas
+                </div>
+
+            </div>
+
+
+            <!-- MARA LEARN -->
+
+            <div
+                class="app"
+                data-name="MARA Learn"
+                onclick="openApp('MARA Learn')">
+
+                <div class="app-icon">
+                    📚
+                </div>
+
+                <div class="app-name">
+                    MARA Learn
+                </div>
+
+            </div>
+
+
+            <!-- MARA AI -->
+
+            <div
+                class="app"
+                data-name="MARA AI"
+                onclick="openApp('MARA AI')">
+
+                <div class="app-icon">
+                    🧠
+                </div>
+
+                <div class="app-name">
+                    MARA AI
+                </div>
+
+            </div>
+
+
+            <!-- PROJECT -->
+
+            <div
+                class="app"
+                data-name="Project"
+                onclick="openApp('Project')">
+
+                <div class="app-icon">
+                    📁
+                </div>
+
+                <div class="app-name">
+                    Project
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- PRODUKTIVITAS -->
+
+        <div class="section-header">
+
+            <h2 class="section-title">
+                Produktivitas
+            </h2>
+
+        </div>
+
+
+        <!-- PRODUCTIVITY CARD -->
+
+        <article class="recommended-card">
+
+
+            <div class="recommended-icon">
+                🚀
+            </div>
+
+
+            <div class="recommended-info">
+
+                <div class="recommended-title">
+                    Mulai berkarya
+                </div>
+
+                <div class="recommended-desc">
+                    Gunakan aplikasi MARA untuk
+                    membuat proyek baru.
+                </div>
+
+            </div>
+
+
+            <button
+                class="recommended-open"
+                onclick="openApp('Project')">
+
+                Mulai
+
+            </button>
+
+
+        </article>
+
+
+    </div>
+
+</section>
+
+            <!-- =========================================
+                 SLIDE 3 — KOSONG
+            ========================================== -->
+
+            <!-- =========================================
+     SLIDE 3 — LAYANAN & SISTEM MARA
+========================================== -->
+
+<section
+    class="home-page"
+    data-page="2">
+
+    <div class="page-scroll">
+
+
+        <!-- HEADER -->
+
+        <section class="welcome-widget">
+
+            <div class="welcome-small">
+                Ekosistem MARA
+            </div>
+
+            <div class="welcome-title">
+                Layanan MARA
+            </div>
+
+            <div class="welcome-subtitle">
+                Semua layanan dan sistem MARA OS
+                dalam satu tempat.
+            </div>
+
+        </section>
+
+
+
+
+        <!-- KEAMANAN & KELUARGA -->
+
+        <div class="section-header">
+
+            <h2 class="section-title">
+                Keamanan & keluarga
+            </h2>
+
+        </div>
+
+
+        <div class="app-grid">
+
+
+            <!-- MARA FAMILY -->
+
+            <div
+                class="app"
+                data-name="MARA Family"
+                onclick="openApp('MARA Family')">
+
+                <div class="app-icon">
+                    👨‍👩‍👧
+                </div>
+
+                <div class="app-name">
+                    MARA Family
+                </div>
+
+            </div>
+
+
+            <!-- MARA SECURITY -->
+
+            <div
+                class="app"
+                data-name="MARA Security"
+                onclick="openApp('MARA Security')">
+
+                <div class="app-icon">
+                    🔐
+                </div>
+
+                <div class="app-name">
+                    MARA Security
+                </div>
+
+            </div>
+
+
+            <!-- MARA PERMISSION -->
+
+            <div
+                class="app"
+                data-name="MARA Permission"
+                onclick="openApp('MARA Permission')">
+
+                <div class="app-icon">
+                    🛡️
+                </div>
+
+                <div class="app-name">
+                    Permission
+                </div>
+
+            </div>
+
+
+            <!-- MARA NETWORK -->
+
+            <div
+                class="app"
+                data-name="MARA Network"
+                onclick="openApp('MARA Network')">
+
+                <div class="app-icon">
+                    🌐
+                </div>
+
+                <div class="app-name">
+                    Network
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- SISTEM -->
+
+        <div class="section-header">
+
+            <h2 class="section-title">
+                Sistem
+            </h2>
+
+        </div>
+
+
+        <div class="app-grid">
+
+
+            <!-- PENGATURAN -->
+
+            <div
+                class="app"
+                data-name="Pengaturan"
+                onclick="openApp('Pengaturan')">
+
+                <div class="app-icon">
+                    ⚙
+                </div>
+
+                <div class="app-name">
+                    Pengaturan
                 </div>
 
             </div>
@@ -1074,135 +1865,15 @@ margin-top: 5;
 
             <div
                 class="app"
-                data-name="Storage">
+                data-name="Storage"
+                onclick="openApp('Storage')">
 
-                <div
-                    class="app-icon">
-
+                <div class="app-icon">
                     ▣
-
                 </div>
 
-                <div
-                    class="app-name">
-
+                <div class="app-name">
                     Storage
-
-                </div>
-
-            </div>
-
-
-            <!-- NEWS -->
-
-            <div
-                class="app"
-                data-name="Berita">
-
-                <div
-                    class="app-icon">
-
-                    ▤
-
-                </div>
-
-                <div
-                    class="app-name">
-
-                    Berita
-
-                </div>
-
-            </div>
-
-
-            <!-- STORY -->
-
-            <div
-                class="app"
-                data-name="Rama Story">
-
-                <div
-                    class="app-icon">
-
-                    ◇
-
-                </div>
-
-                <div
-                    class="app-name">
-
-                    Rama Story
-
-                </div>
-
-            </div>
-
-
-            <!-- SCHOOL -->
-
-            <div
-                class="app"
-                data-name="Rama School">
-
-                <div
-                    class="app-icon">
-
-                    🎓
-
-                </div>
-
-                <div
-                    class="app-name">
-
-                    Rama School
-
-                </div>
-
-            </div>
-
-
-            <!-- GAME STORE -->
-
-            <div
-                class="app"
-                data-name="Game Store">
-
-                <div
-                    class="app-icon">
-
-                    🎮
-
-                </div>
-
-                <div
-                    class="app-name">
-
-                    Game Store
-
-                </div>
-
-            </div>
-
-
-            <!-- SETTINGS -->
-
-            <div
-                class="app"
-                data-name="Pengaturan">
-
-                <div
-                    class="app-icon">
-
-                    ⚙
-
-                </div>
-
-                <div
-                    class="app-name">
-
-                    Pengaturan
-
                 </div>
 
             </div>
@@ -1212,20 +1883,33 @@ margin-top: 5;
 
             <div
                 class="app"
-                data-name="File Manager">
+                data-name="File Manager"
+                onclick="openApp('File Manager')">
 
-                <div
-                    class="app-icon">
-
+                <div class="app-icon">
                     📁
-
                 </div>
 
-                <div
-                    class="app-name">
-
+                <div class="app-name">
                     File Manager
+                </div>
 
+            </div>
+
+
+            <!-- MARA UPDATE -->
+
+            <div
+                class="app"
+                data-name="MARA Update"
+                onclick="openApp('MARA Update')">
+
+                <div class="app-icon">
+                    🔄
+                </div>
+
+                <div class="app-name">
+                    MARA Update
                 </div>
 
             </div>
@@ -1234,47 +1918,33 @@ margin-top: 5;
         </div>
 
 
-        <!-- RECOMMENDED -->
+        <!-- STATUS SISTEM -->
 
-        <div
-            class="section-header">
+        <div class="section-header">
 
-            <h2
-                class="section-title">
-
-                Untuk kamu
-
+            <h2 class="section-title">
+                Sistem MARA
             </h2>
 
         </div>
 
 
-        <article
-            class="recommended-card">
+        <article class="recommended-card">
 
-            <div
-                class="recommended-icon">
 
-                🎬
-
+            <div class="recommended-icon">
+                🛡️
             </div>
 
 
-            <div
-                class="recommended-info">
+            <div class="recommended-info">
 
-                <div
-                    class="recommended-title">
-
-                    VexaCut
-
+                <div class="recommended-title">
+                    MARA OS aktif
                 </div>
 
-                <div
-                    class="recommended-desc">
-
-                    Buat dan edit video kamu.
-
+                <div class="recommended-desc">
+                    Layanan sistem siap digunakan.
                 </div>
 
             </div>
@@ -1282,16 +1952,22 @@ margin-top: 5;
 
             <button
                 class="recommended-open"
-                onclick="openApp('VexaCut')">
+                onclick="openApp('Pengaturan')">
 
-                Buka
+                Kelola
 
             </button>
+
 
         </article>
 
 
-    </section>
+    </div>
+
+</section>
+        </div>
+
+    </div>
 
 
     <!-- =================================================
@@ -1321,7 +1997,7 @@ margin-top: 5;
 
 
         <button
-            class="dock-app drawer-button"
+            class="dock-app"
             onclick="openDrawer()">
 
             ⠿
@@ -1352,210 +2028,312 @@ margin-top: 5;
 
 </main>
 
-
 <script>
 
 /* =====================================================
-   MARA OS — HOME SCREEN JS
+   MARA OS — HOME ENGINE
 ===================================================== */
+
+const homeSlider =
+    document.getElementById("home-slider");
+
+const homePages =
+    document.querySelectorAll(".home-page");
+
+let currentPage = 0;
+
+let startX = 0;
+let startY = 0;
+
+let dragging = false;
 
 
 /* =====================================================
-   CLOCK
+   UPDATE SLIDER
 ===================================================== */
 
-function updateHomeClock() {
+function updateHomeSlider(animate = true) {
 
-    const now =
-        new Date();
+    homeSlider.style.transition = animate
+        ? "transform 380ms cubic-bezier(.22,.8,.2,1)"
+        : "none";
 
-    const hours =
-        String(
-            now.getHours()
-        ).padStart(
-            2,
-            "0"
-        );
-
-    const minutes =
-        String(
-            now.getMinutes()
-        ).padStart(
-            2,
-            "0"
-        );
-
-    document.getElementById(
-        "home-time"
-    ).textContent =
-        `${hours}:${minutes}`;
+    homeSlider.style.transform =
+        `translate3d(-${currentPage * 33.333333}%,0,0)`;
 }
 
 
-updateHomeClock();
-
-setInterval(
-    updateHomeClock,
-    1000
-);
-
-
 /* =====================================================
-   APP SEARCH
+   TOUCH START
 ===================================================== */
 
-const searchInput =
-    document.getElementById(
-        "app-search"
-    );
+homeSlider.addEventListener(
+    "touchstart",
+    function(event) {
 
-const apps =
-    document.querySelectorAll(
-        ".app"
-    );
+        const touch = event.touches[0];
 
-const searchResults =
-    document.getElementById(
-        "search-results"
-    );
+        startX = touch.clientX;
+        startY = touch.clientY;
 
-
-searchInput.addEventListener(
-    "input",
-    function() {
-
-        const query =
-            this.value
-                .toLowerCase()
-                .trim();
-
-
-        if (!query) {
-
-            searchResults.classList.remove(
-                "active"
-            );
-
-            apps.forEach(
-                app => {
-
-                    app.style.display =
-                        "";
-
-                }
-            );
-
-            return;
-        }
-
-
-        searchResults.innerHTML =
-            "";
-
-
-        let found =
-            0;
-
-
-        apps.forEach(
-            app => {
-
-                const name =
-                    app.dataset.name
-                        .toLowerCase();
-
-
-                if (
-                    name.includes(query)
-                ) {
-
-                    app.style.display =
-                        "";
-
-                    found++;
-
-
-                    const result =
-                        document.createElement(
-                            "div"
-                        );
-
-                    result.className =
-                        "search-result";
-
-                    result.textContent =
-                        app.dataset.name;
-
-                    result.onclick =
-                        function() {
-
-                            openApp(
-                                app.dataset.name
-                            );
-
-                        };
-
-                    searchResults.appendChild(
-                        result
-                    );
-
-                } else {
-
-                    app.style.display =
-                        "none";
-
-                }
-
-            }
-        );
-
-
-        if (!found) {
-
-            const empty =
-                document.createElement(
-                    "div"
-                );
-
-            empty.className =
-                "search-result";
-
-            empty.textContent =
-                "Aplikasi tidak ditemukan";
-
-            searchResults.appendChild(
-                empty
-            );
-
-        }
-
-
-        searchResults.classList.add(
-            "active"
-        );
-
+        dragging = true;
+    },
+    {
+        passive: true
     }
 );
 
 
 /* =====================================================
-   OPEN APP
+   TOUCH END
 ===================================================== */
 
-function openApp(
-    appName
+homeSlider.addEventListener(
+    "touchend",
+    function(event) {
+
+        if (!dragging) return;
+
+        dragging = false;
+
+        const touch =
+            event.changedTouches[0];
+
+        const deltaX =
+            touch.clientX - startX;
+
+        const deltaY =
+            touch.clientY - startY;
+
+
+        if (
+            Math.abs(deltaY) >
+            Math.abs(deltaX)
+        ) {
+            return;
+        }
+
+
+        if (Math.abs(deltaX) < 45) {
+            return;
+        }
+
+
+        if (deltaX < 0) {
+
+            if (
+                currentPage <
+                homePages.length - 1
+            ) {
+                currentPage++;
+            }
+
+        } else {
+
+            if (currentPage > 0) {
+                currentPage--;
+            }
+        }
+
+
+        updateHomeSlider();
+    },
+    {
+        passive: true
+    }
+);
+
+
+/* =====================================================
+   DESKTOP MOUSE
+===================================================== */
+
+let mouseStartX = 0;
+let mouseDragging = false;
+
+
+homeSlider.addEventListener(
+    "mousedown",
+    function(event) {
+
+        mouseStartX =
+            event.clientX;
+
+        mouseDragging = true;
+    }
+);
+
+
+window.addEventListener(
+    "mouseup",
+    function(event) {
+
+        if (!mouseDragging) return;
+
+        mouseDragging = false;
+
+        const deltaX =
+            event.clientX - mouseStartX;
+
+
+        if (Math.abs(deltaX) < 50) {
+            return;
+        }
+
+
+        if (deltaX < 0) {
+
+            if (
+                currentPage <
+                homePages.length - 1
+            ) {
+                currentPage++;
+            }
+
+        } else {
+
+            if (currentPage > 0) {
+                currentPage--;
+            }
+        }
+
+
+        updateHomeSlider();
+    }
+);
+
+
+/* =====================================================
+   INITIAL SLIDE
+===================================================== */
+
+updateHomeSlider(false);
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+const searchInput =
+    document.getElementById("app-search");
+
+const apps =
+    document.querySelectorAll(".app");
+
+
+if (searchInput) {
+
+    searchInput.addEventListener(
+        "input",
+        function() {
+
+            const query =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            apps.forEach(function(app) {
+
+                const name =
+                    (
+                        app.dataset.name ||
+                        ""
+                    ).toLowerCase();
+
+
+                if (!query) {
+
+                    app.style.display = "";
+
+                    return;
+                }
+
+
+                app.style.display =
+                    name.includes(query)
+                        ? ""
+                        : "none";
+
+            });
+        }
+    );
+}
+
+
+/* =====================================================
+   RAMA SEARCH PLACEHOLDER
+===================================================== */
+
+const ramaSearchInput =
+    document.getElementById("app-search");
+
+const ramaPlaceholder =
+    document.getElementById("rama-placeholder");
+
+
+if (
+    ramaSearchInput &&
+    ramaPlaceholder
 ) {
 
+    ramaSearchInput.addEventListener(
+        "input",
+        function() {
+
+            if (
+                this.value.trim() !== ""
+            ) {
+
+                ramaPlaceholder.classList.add(
+                    "hidden"
+                );
+
+            } else {
+
+                ramaPlaceholder.classList.remove(
+                    "hidden"
+                );
+            }
+        }
+    );
+}
+
+
+/* =====================================================
+   MARA APP ROUTER
+===================================================== */
+
+function openApp(appId) {
+
     console.log(
-        "Membuka aplikasi:",
-        appName
+        "[MARA OS] Opening app:",
+        appId
     );
 
-    alert(
-        "Membuka " +
-        appName
+
+    /*
+     * Semua aplikasi masuk melalui
+     * satu container.
+     */
+
+    const container =
+        "/app/app-container.html";
+
+
+    const url =
+        container +
+        "?id=" +
+        encodeURIComponent(appId);
+
+
+    console.log(
+        "[MARA OS] URL:",
+        url
     );
 
+
+    window.location.assign(url);
 }
 
 
@@ -1565,25 +2343,19 @@ function openApp(
 
 function openDrawer() {
 
+    console.log(
+        "[MARA OS] App Drawer"
+    );
+
+    /*
+     * Untuk sementara jangan redirect
+     * ke halaman yang belum ada.
+     */
+
     alert(
         "App Drawer MARA OS"
     );
-
 }
-
-
-/* =====================================================
-   ALL APPS
-===================================================== */
-
-document
-    .getElementById(
-        "all-apps"
-    )
-    .addEventListener(
-        "click",
-        openDrawer
-    );
 
 
 /* =====================================================
@@ -1603,7 +2375,6 @@ document
 
                     this.style.transform =
                         "scale(.96)";
-
                 },
                 {
                     passive: true
@@ -1617,13 +2388,11 @@ document
 
                     this.style.transform =
                         "";
-
                 },
                 {
                     passive: true
                 }
             );
-
         }
     );
 
@@ -1641,7 +2410,13 @@ document.addEventListener(
     }
 );
 
-</script>
+</script>  
+    <script src="/js/mara-apps.js"></script>
+
+    <script src="/js/mara-manifest.js"></script>
+
+  
+
 
 
 </body>
