@@ -32,11 +32,12 @@ body {
     height: 100%;
     overflow: hidden;
     font-family: Arial, Helvetica, sans-serif;
-    background: #000;
+
 }
 
 body {
     user-select: none;
+  
 }
 
 
@@ -50,17 +51,11 @@ body {
 
     display: flex;
     flex-direction: column;
-
     color: #fff;
 
     overflow: hidden;
 
-    background:
-        linear-gradient(
-            180deg,
-            rgba(0,0,0,.15),
-            rgba(0,0,0,.45)
-        );
+    
 }
 
 
@@ -73,16 +68,10 @@ body {
     inset: 0;
 
     z-index: 0;
-
-    background:
-        radial-gradient(
-            circle at 50% 20%,
-            #3b82f6 0%,
-            #172554 35%,
-            #020617 75%,
-            #000 100%
-        );
-
+background-image: url("/img2.jpg");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
     transform: scale(1.05);
 
     transition:
@@ -160,7 +149,7 @@ body {
     position: relative;
 
     z-index: 5;
-
+background-image: url("wallpaper1.png");
     flex: 1;
 
     display: flex;
@@ -219,7 +208,7 @@ body {
 ===================================================== */
 
 .lock-weather {
-    margin-top: 18px;
+    margin-top: 38px;
 
     display: flex;
 
@@ -308,6 +297,7 @@ body {
 }
 
 .lock-notification {
+  margin-top: 20%;
     display: flex;
 
     align-items: center;
@@ -497,7 +487,7 @@ body {
 .unlock-panel {
     position: absolute;
 
-    inset: 0;
+  inset:0;
 
     z-index: 50;
 
@@ -509,8 +499,8 @@ body {
 
     padding: 0;
 
-    background:
-        rgba(0,0,0,.45);
+    
+      
 
     backdrop-filter:
         blur(8px);
@@ -534,54 +524,44 @@ body {
 
     max-width: 500px;
 
-    min-height: 55%;
+    min-height: 50%;
 
-    padding:
+   /* padding:
         28px
         22px
-        max(28px, env(safe-area-inset-bottom));
+        max(28px, env(safe-area-inset-bottom));*/
 
-    border-radius:
-        30px
-        30px
-        0
-        0;
+  
+      
 
-    background:
-        rgba(20,20,25,.92);
-
-    border-top:
-        1px solid
-        rgba(255,255,255,.12);
-
+  
     display: flex;
 
     flex-direction: column;
 
     align-items: center;
 
-    transform:
-        translateY(100%);
+   /* transform:
+        translateY(100%);*/
 
-    transition:
-        transform .3s cubic-bezier(.2,.8,.2,1);
+  
 }
 
 .unlock-panel.active
 .unlock-panel-content {
-    transform:
-        translateY(0);
+    /*transform:
+        translateY(0);*/
 }
 
 .unlock-panel-title {
     font-size: 20px;
-
+     display:none;
     font-weight: 600;
 }
 
 .unlock-panel-subtitle {
     margin-top: 7px;
-
+  display:none;
     font-size: 13px;
 
     opacity: .6;
@@ -643,18 +623,18 @@ body {
 }
 
 .pin-keypad button {
-    height: 58px;
-
+    height: 50px;
+    
     border: none;
 
-    border-radius: 18px;
+    
 
     color: #fff;
 
-    background:
-        rgba(255,255,255,.1);
+  
+background : transparent;
 
-    font-size: 20px;
+    font-size: 30px;
 
     cursor: pointer;
 
@@ -780,8 +760,9 @@ body {
     id="mara-lock-screen"
     class="mara-lock-screen">
 
-
+<img src="img1.jpg">
     <!-- WALLPAPER -->
+  
 
     <div
         class="mara-wallpaper">
@@ -880,40 +861,7 @@ body {
         </div>
 
 
-        <!-- PROFILE -->
-
-        <div
-            class="mara-profile">
-
-            <div
-                class="profile-avatar">
-
-                <div
-                    style="
-                    width:100%;
-                    height:100%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    font-size:25px;
-                    ">
-
-                    👤
-
-                </div>
-
-            </div>
-
-            <div
-                class="profile-name">
-
-                Pengguna MARA
-
-            </div>
-
-        </div>
-
-
+       
         <!-- NOTIFICATION -->
 
         <div
