@@ -1,0 +1,293 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- GRADIENT FILEX -->
+        <linearGradient
+            id="filexGradient"
+            x1="80"
+            y1="430"
+            x2="430"
+            y2="80"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#0878E8"/>
+            <stop offset="45%" stop-color="#1599F5"/>
+            <stop offset="75%" stop-color="#27C4F5"/>
+            <stop offset="100%" stop-color="#67E8F9"/>
+        </linearGradient>
+
+        <!-- FOLDER LIGHT -->
+        <linearGradient
+            id="filexLight"
+            x1="150"
+            y1="130"
+            x2="350"
+            y2="390"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#DDF7FF"/>
+        </linearGradient>
+
+        <!-- SHADOW -->
+        <filter
+            id="filexShadow"
+            x="-40%"
+            y="-40%"
+            width="180%"
+            height="180%"
+        >
+            <feDropShadow
+                dx="0"
+                dy="10"
+                stdDeviation="12"
+                flood-color="#0066CC"
+                flood-opacity=".25"
+            />
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
+
+    <rect
+        x="42"
+        y="42"
+        width="428"
+        height="428"
+        rx="105"
+        fill="#071A2C"
+    />
+
+
+    <!-- =========================================
+         SOFT GLOW
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="265"
+        r="170"
+        fill="#0794F5"
+        opacity=".10"
+    />
+
+
+    <!-- =========================================
+         FILE / FOLDER BODY
+    ========================================== -->
+
+    <path
+        d="
+            M91 171
+
+            C91 150
+             108 133
+             129 133
+
+            H218
+
+            L250 169
+
+            H383
+
+            C405 169
+             421 186
+             421 208
+
+            V348
+
+            C421 371
+             404 389
+             382 389
+
+            H130
+
+            C108 389
+             91 371
+             91 348
+
+            Z
+        "
+
+        fill="url(#filexGradient)"
+
+        filter="url(#filexShadow)"
+    />
+
+
+    <!-- =========================================
+         FOLDER FRONT
+    ========================================== -->
+
+    <path
+        d="
+            M91 211
+
+            H421
+
+            V348
+
+            C421 371
+             404 389
+             382 389
+
+            H130
+
+            C108 389
+             91 371
+             91 348
+
+            Z
+        "
+
+        fill="url(#filexLight)"
+    />
+
+
+    <!-- =========================================
+         FILE SYMBOL
+    ========================================== -->
+
+    <path
+        d="
+            M185 236
+            H296
+
+            L327 267
+
+            V337
+
+            H185
+
+            Z
+        "
+
+        fill="#FFFFFF"
+        stroke="#1599F5"
+        stroke-width="10"
+        stroke-linejoin="round"
+    />
+
+
+    <!-- =========================================
+         FILE FOLD
+    ========================================== -->
+
+    <path
+        d="
+            M296 236
+            V267
+            H327
+        "
+
+        stroke="#1599F5"
+        stroke-width="10"
+        stroke-linejoin="round"
+
+        fill="none"
+    />
+
+
+    <!-- =========================================
+         FILEX LINES
+    ========================================== -->
+
+    <path
+        d="
+            M211 286
+            H299
+        "
+
+        stroke="#1599F5"
+        stroke-width="9"
+        stroke-linecap="round"
+    />
+
+    <path
+        d="
+            M211 312
+            H280
+        "
+
+        stroke="#27C4F5"
+        stroke-width="9"
+        stroke-linecap="round"
+    />
+
+
+    <!-- =========================================
+         CHECK MARK
+    ========================================== -->
+
+    <circle
+        cx="315"
+        cy="325"
+        r="24"
+        fill="#16C784"
+    />
+
+    <path
+        d="
+            M304 325
+            L312 333
+            L327 316
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    />
+
+
+    <!-- =========================================
+         FOLDER HIGHLIGHT
+    ========================================== -->
+
+    <path
+        d="
+            M117 190
+            H210
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="9"
+        stroke-linecap="round"
+
+        opacity=".35"
+    />
+
+
+    <!-- =========================================
+         SPARKLE
+    ========================================== -->
+
+    <path
+        d="
+            M384 105
+            L391 122
+            L408 129
+            L391 136
+            L384 153
+            L377 136
+            L360 129
+            L377 122
+            Z
+        "
+
+        fill="#FFFFFF"
+        opacity=".85"
+    />
+
+</svg>

@@ -1,0 +1,208 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- GRADIENT VISTA -->
+        <linearGradient
+            id="vistaGradient"
+            x1="90"
+            y1="430"
+            x2="420"
+            y2="70"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#2563EB"/>
+            <stop offset="35%" stop-color="#06B6D4"/>
+            <stop offset="65%" stop-color="#6366F1"/>
+            <stop offset="100%" stop-color="#A855F7"/>
+        </linearGradient>
+
+        <!-- LIGHT -->
+        <linearGradient
+            id="vistaLight"
+            x1="150"
+            y1="150"
+            x2="360"
+            y2="360"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#DCEBFF"/>
+        </linearGradient>
+
+        <!-- GLOW -->
+        <filter
+            id="vistaGlow"
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+        >
+            <feGaussianBlur
+                stdDeviation="8"
+                result="blur"
+            />
+
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
+
+    <rect
+        x="42"
+        y="42"
+        width="428"
+        height="428"
+        rx="105"
+        fill="url(#vistaGradient)"
+    />
+
+
+    <!-- =========================================
+         INNER GLASS
+    ========================================== -->
+
+    <rect
+        x="70"
+        y="70"
+        width="372"
+        height="372"
+        rx="88"
+        fill="#FFFFFF"
+        opacity=".08"
+    />
+
+
+    <!-- =========================================
+         VISTA V
+    ========================================== -->
+
+    <path
+        d="
+            M125 145
+            L218 345
+            C224 359 244 359 250 345
+            L350 145
+        "
+
+        stroke="url(#vistaLight)"
+        stroke-width="48"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+
+        filter="url(#vistaGlow)"
+    />
+
+
+    <!-- =========================================
+         INNER V
+    ========================================== -->
+
+    <path
+        d="
+            M175 160
+            L230 292
+            L300 160
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="13"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+
+        opacity=".35"
+    />
+
+
+    <!-- =========================================
+         VISUAL LENS
+    ========================================== -->
+
+    <circle
+        cx="350"
+        cy="145"
+        r="38"
+        fill="#FFFFFF"
+        opacity=".16"
+    />
+
+    <circle
+        cx="350"
+        cy="145"
+        r="19"
+        fill="#FFFFFF"
+        opacity=".75"
+    />
+
+
+    <!-- =========================================
+         LIGHT REFLECTION
+    ========================================== -->
+
+    <path
+        d="
+            M105 130
+            C155 85 220 75 275 85
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="8"
+        stroke-linecap="round"
+
+        opacity=".25"
+    />
+
+
+    <!-- =========================================
+         SPARKLE
+    ========================================== -->
+
+    <path
+        d="
+            M382 250
+            L389 269
+            L408 276
+            L389 283
+            L382 302
+            L375 283
+            L356 276
+            L375 269
+            Z
+        "
+
+        fill="#FFFFFF"
+        opacity=".85"
+    />
+
+
+    <circle
+        cx="135"
+        cy="330"
+        r="5"
+        fill="#FFFFFF"
+        opacity=".7"
+    />
+
+    <circle
+        cx="395"
+        cy="355"
+        r="4"
+        fill="#FFFFFF"
+        opacity=".6"
+    />
+
+</svg>

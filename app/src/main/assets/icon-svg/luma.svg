@@ -1,0 +1,158 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- GRADIENT LUMA -->
+        <linearGradient
+            id="lumaGradient"
+            x1="80"
+            y1="430"
+            x2="430"
+            y2="70"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FF2D55"/>
+            <stop offset="30%" stop-color="#FF375F"/>
+            <stop offset="55%" stop-color="#D946EF"/>
+            <stop offset="78%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#FF9F0A"/>
+        </linearGradient>
+
+        <!-- HIGHLIGHT -->
+        <linearGradient
+            id="lumaHighlight"
+            x1="100"
+            y1="100"
+            x2="400"
+            y2="400"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#FFFFFF"
+                stop-opacity=".65"/>
+        </linearGradient>
+
+        <!-- GLOW -->
+        <filter
+            id="lumaGlow"
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+        >
+
+            <feGaussianBlur
+                stdDeviation="8"
+                result="blur"
+            />
+
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+
+        </filter>
+
+    </defs>
+
+
+   
+
+    <!-- =========================================
+         SOFT LIGHT
+    ========================================== 
+-->
+    <circle
+        cx="125"
+        cy="115"
+        r="115"
+        fill="#FFFFFF"
+        opacity=".10"
+    />
+
+    <!-- =========================================
+         CAMERA BODY
+    ========================================== -->
+
+    <rect
+        x="125"
+        y="125"
+        width="262"
+        height="262"
+        rx="72"
+
+        stroke="#FFFFFF"
+        stroke-width="28"
+
+        fill="none"
+    />
+
+
+    <!-- =========================================
+         LUMA LENS
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="256"
+        r="70"
+
+        stroke="#FFFFFF"
+        stroke-width="26"
+
+        fill="none"
+    />
+
+
+    <!-- =========================================
+         LUMA CENTER
+    ========================================== -->
+
+    <path
+        d="
+            M235 214
+            V292
+            H280
+        "
+
+        stroke="url(#lumaHighlight)"
+        stroke-width="20"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+
+        filter="url(#lumaGlow)"
+    />
+
+
+    <!-- =========================================
+         CAMERA FLASH / DOT
+    ========================================== -->
+
+    <circle
+        cx="342"
+        cy="171"
+        r="20"
+        fill="#FFFFFF"
+    />
+
+
+    <!-- =========================================
+         LENS HIGHLIGHT
+    ========================================== -->
+
+    <circle
+        cx="235"
+        cy="232"
+        r="10"
+        fill="#FFFFFF"
+        opacity=".85"
+    />
+
+
+</svg>

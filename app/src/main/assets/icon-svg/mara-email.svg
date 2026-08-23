@@ -1,0 +1,140 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- GRADIENT EMAIL -->
+        <linearGradient
+            id="emailGradient"
+            x1="90"
+            y1="420"
+            x2="420"
+            y2="90"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#1769E0"/>
+            <stop offset="45%" stop-color="#1689F5"/>
+            <stop offset="75%" stop-color="#29B6F6"/>
+            <stop offset="100%" stop-color="#6DD5FF"/>
+        </linearGradient>
+
+        <!-- SHADOW -->
+        <filter
+            id="emailShadow"
+            x="-40%"
+            y="-40%"
+            width="180%"
+            height="180%"
+        >
+            <feDropShadow
+                dx="0"
+                dy="10"
+                stdDeviation="12"
+                flood-color="#0057B8"
+                flood-opacity=".25"
+            />
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         ICON EMAIL
+         TANPA BACKGROUND
+    ========================================== -->
+
+    <g filter="url(#emailShadow)">
+
+        <!-- BADAN ICON -->
+        <path
+            d="
+                M105 173
+                L256 292
+                L407 173
+                V335
+                C407 358 388 377 365 377
+                H147
+                C124 377 105 358 105 335
+                Z
+            "
+            fill="url(#emailGradient)"
+        />
+
+
+        <!-- BAGIAN ATAS -->
+        <path
+            d="
+                M105 170
+                L256 290
+                L407 170
+            "
+            stroke="url(#emailGradient)"
+            stroke-width="20"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            fill="none"
+        />
+
+
+        <!-- LIPATAN KIRI -->
+        <path
+            d="
+                M105 335
+                L213 245
+            "
+            stroke="#1689F5"
+            stroke-width="14"
+            stroke-linecap="round"
+            opacity=".9"
+        />
+
+
+        <!-- LIPATAN KANAN -->
+        <path
+            d="
+                M407 335
+                L299 245
+            "
+            stroke="#29B6F6"
+            stroke-width="14"
+            stroke-linecap="round"
+            opacity=".9"
+        />
+
+
+        <!-- MARA DOT -->
+        <circle
+            cx="370"
+            cy="145"
+            r="17"
+            fill="#1769E0"
+        />
+
+        <circle
+            cx="370"
+            cy="145"
+            r="7"
+            fill="#FFFFFF"
+        />
+
+
+        <!-- HIGHLIGHT -->
+        <path
+            d="
+                M145 155
+                H235
+            "
+            stroke="#FFFFFF"
+            stroke-width="8"
+            stroke-linecap="round"
+            opacity=".8"
+        />
+
+    </g>
+
+</svg>

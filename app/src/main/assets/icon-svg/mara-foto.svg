@@ -1,0 +1,289 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- =========================================
+             GRADIENT BIRU
+        ========================================== -->
+
+        <linearGradient
+            id="photoBlue"
+            x1="120"
+            y1="100"
+            x2="250"
+            y2="280"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#42A5FF"/>
+            <stop offset="100%" stop-color="#1976E8"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT MERAH
+        ========================================== -->
+
+        <linearGradient
+            id="photoRed"
+            x1="390"
+            y1="100"
+            x2="260"
+            y2="280"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FF5B6E"/>
+            <stop offset="100%" stop-color="#E53950"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT KUNING
+        ========================================== -->
+
+        <linearGradient
+            id="photoYellow"
+            x1="390"
+            y1="410"
+            x2="260"
+            y2="270"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FFD54F"/>
+            <stop offset="100%" stop-color="#F6B900"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT HIJAU
+        ========================================== -->
+
+        <linearGradient
+            id="photoGreen"
+            x1="120"
+            y1="410"
+            x2="250"
+            y2="270"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#35D07F"/>
+            <stop offset="100%" stop-color="#19A95B"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             SOFT SHADOW
+        ========================================== -->
+
+        <filter
+            id="photoShadow"
+            x="-40%"
+            y="-40%"
+            width="180%"
+            height="180%"
+        >
+
+            <feDropShadow
+                dx="0"
+                dy="8"
+                stdDeviation="10"
+                flood-color="#000000"
+                flood-opacity=".20"
+            />
+
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
+
+    <rect
+        x="42"
+        y="42"
+        width="428"
+        height="428"
+        rx="105"
+        fill="#FFFFFF"
+    />
+
+
+    <!-- =========================================
+         BLUE PETAL
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C206 238 151 198 128 143
+
+            C112 104 140 72 179 82
+
+            C229 95 263 149 256 256
+
+            Z
+        "
+
+        fill="url(#photoBlue)"
+        filter="url(#photoShadow)"
+    />
+
+
+    <!-- =========================================
+         RED PETAL
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C274 206 314 151 369 128
+
+            C408 112 440 140 430 179
+
+            C417 229 363 263 256 256
+
+            Z
+        "
+
+        fill="url(#photoRed)"
+        filter="url(#photoShadow)"
+    />
+
+
+    <!-- =========================================
+         YELLOW PETAL
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C306 274 361 314 384 369
+
+            C400 408 372 440 333 430
+
+            C283 417 249 363 256 256
+
+            Z
+        "
+
+        fill="url(#photoYellow)"
+        filter="url(#photoShadow)"
+    />
+
+
+    <!-- =========================================
+         GREEN PETAL
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C238 306 198 361 143 384
+
+            C104 400 72 372 82 333
+
+            C95 283 149 249 256 256
+
+            Z
+        "
+
+        fill="url(#photoGreen)"
+        filter="url(#photoShadow)"
+    />
+
+
+    <!-- =========================================
+         TENGAH LOGO
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="256"
+        r="72"
+        fill="#FFFFFF"
+    />
+
+
+    <!-- =========================================
+         LINGKARAN DALAM
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="256"
+        r="54"
+        fill="#F5F7FA"
+    />
+
+
+    <!-- =========================================
+         LENS CAMERA
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="256"
+        r="35"
+        fill="url(#photoBlue)"
+    />
+
+
+    <circle
+        cx="256"
+        cy="256"
+        r="21"
+        fill="#FFFFFF"
+        opacity=".92"
+    />
+
+
+    <circle
+        cx="256"
+        cy="256"
+        r="12"
+        fill="#5AA9FF"
+    />
+
+
+    <!-- =========================================
+         LENS HIGHLIGHT
+    ========================================== -->
+
+    <circle
+        cx="246"
+        cy="246"
+        r="6"
+        fill="#FFFFFF"
+        opacity=".9"
+    />
+
+
+    <!-- =========================================
+         HIGHLIGHT PETAL
+    ========================================== -->
+
+    <path
+        d="
+            M145 125
+            C165 105 190 101 210 112
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="8"
+        stroke-linecap="round"
+
+        opacity=".35"
+    />
+
+</svg>

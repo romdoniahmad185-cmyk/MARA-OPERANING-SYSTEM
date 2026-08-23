@@ -1,0 +1,79 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <!-- =========================================
+         MEETUP — ROUND CHAT BUBBLE
+         TRANSPARENT BACKGROUND
+    ========================================== -->
+
+    <path
+        d="
+            M256 62
+
+            C145 62
+             62 145
+             62 256
+
+            C62 367
+             145 450
+             256 450
+
+            C291 450
+             325 441
+             354 425
+
+            L414 450
+
+            L399 389
+
+            C431 353
+             450 307
+             450 256
+
+            C450 145
+             367 62
+             256 62
+
+            Z
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="26"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+
+        fill="none"
+    />
+
+
+    <!-- =========================================
+         CHAT DOTS
+    ========================================== -->
+
+    <circle
+        cx="175"
+        cy="256"
+        r="15"
+        fill="#FFFFFF"
+    />
+
+    <circle
+        cx="256"
+        cy="256"
+        r="15"
+        fill="#FFFFFF"
+    />
+
+    <circle
+        cx="337"
+        cy="256"
+        r="15"
+        fill="#FFFFFF"
+    />
+
+</svg>

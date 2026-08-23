@@ -1,0 +1,317 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- BIRU -->
+        <linearGradient
+            id="assistantBlue"
+            x1="100"
+            y1="80"
+            x2="260"
+            y2="260"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#42A5FF"/>
+            <stop offset="100%" stop-color="#1976F3"/>
+        </linearGradient>
+
+        <!-- UNGU -->
+        <linearGradient
+            id="assistantPurple"
+            x1="420"
+            y1="80"
+            x2="260"
+            y2="260"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#A855F7"/>
+            <stop offset="100%" stop-color="#6366F1"/>
+        </linearGradient>
+
+        <!-- PINK -->
+        <linearGradient
+            id="assistantPink"
+            x1="420"
+            y1="430"
+            x2="260"
+            y2="260"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FF4D8D"/>
+            <stop offset="100%" stop-color="#E11D8D"/>
+        </linearGradient>
+
+        <!-- CYAN -->
+        <linearGradient
+            id="assistantCyan"
+            x1="80"
+            y1="430"
+            x2="260"
+            y2="260"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#00D9FF"/>
+            <stop offset="100%" stop-color="#06B6D4"/>
+        </linearGradient>
+
+        <!-- GLOW -->
+        <filter
+            id="assistantGlow"
+            x="-60%"
+            y="-60%"
+            width="220%"
+            height="220%"
+        >
+
+            <feGaussianBlur
+                stdDeviation="8"
+                result="blur"
+            />
+
+            <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
+
+    <rect
+        x="42"
+        y="42"
+        width="428"
+        height="428"
+        rx="105"
+        fill="#07111F"
+    />
+
+
+    <!-- =========================================
+         BLUE SHAPE
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C215 220 160 172 128 116
+
+            C108 82 126 62 160 72
+
+            C222 91 260 143 256 256
+
+            Z
+        "
+
+        fill="url(#assistantBlue)"
+
+        filter="url(#assistantGlow)"
+    />
+
+
+    <!-- =========================================
+         PURPLE SHAPE
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C292 215 340 160 396 128
+
+            C430 108 450 126 440 160
+
+            C421 222 369 260 256 256
+
+            Z
+        "
+
+        fill="url(#assistantPurple)"
+
+        filter="url(#assistantGlow)"
+    />
+
+
+    <!-- =========================================
+         PINK SHAPE
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C297 292 345 340 377 396
+
+            C397 430 379 450 345 440
+
+            C283 421 245 369 256 256
+
+            Z
+        "
+
+        fill="url(#assistantPink)"
+
+        filter="url(#assistantGlow)"
+    />
+
+
+    <!-- =========================================
+         CYAN SHAPE
+    ========================================== -->
+
+    <path
+        d="
+            M256 256
+
+            C220 297 172 345 116 377
+
+            C82 397 62 379 72 345
+
+            C91 283 143 245 256 256
+
+            Z
+        "
+
+        fill="url(#assistantCyan)"
+
+        filter="url(#assistantGlow)"
+    />
+
+
+    <!-- =========================================
+         AI CORE
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="256"
+        r="72"
+        fill="#FFFFFF"
+    />
+
+
+    <circle
+        cx="256"
+        cy="256"
+        r="52"
+        fill="#F5F9FF"
+    />
+
+
+    <!-- =========================================
+         MARA AI CORE
+    ========================================== -->
+
+    <path
+        d="
+            M225 285
+            V227
+
+            C225 214 236 204 249 204
+
+            C262 204 273 214 273 227
+
+            V285
+        "
+
+        stroke="url(#assistantBlue)"
+        stroke-width="14"
+        stroke-linecap="round"
+    />
+
+
+    <path
+        d="
+            M225 256
+            H273
+        "
+
+        stroke="url(#assistantPurple)"
+        stroke-width="12"
+        stroke-linecap="round"
+    />
+
+
+    <!-- =========================================
+         AI CORE DOT
+    ========================================== -->
+
+    <circle
+        cx="256"
+        cy="302"
+        r="9"
+        fill="#6366F1"
+    />
+
+
+    <!-- =========================================
+         SMALL AI PARTICLES
+    ========================================== -->
+
+    <circle
+        cx="125"
+        cy="210"
+        r="6"
+        fill="#FFFFFF"
+        opacity=".75"
+    />
+
+    <circle
+        cx="387"
+        cy="210"
+        r="5"
+        fill="#FFFFFF"
+        opacity=".7"
+    />
+
+    <circle
+        cx="390"
+        cy="330"
+        r="4"
+        fill="#FFFFFF"
+        opacity=".6"
+    />
+
+    <circle
+        cx="122"
+        cy="330"
+        r="4"
+        fill="#FFFFFF"
+        opacity=".6"
+    />
+
+
+    <!-- =========================================
+         SPARKLE
+    ========================================== -->
+
+    <path
+        d="
+            M384 112
+            L391 130
+            L409 137
+            L391 144
+            L384 162
+            L377 144
+            L359 137
+            L377 130
+            Z
+        "
+
+        fill="#FFFFFF"
+        opacity=".9"
+    />
+
+</svg>

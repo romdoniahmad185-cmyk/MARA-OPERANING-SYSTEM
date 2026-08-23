@@ -1,0 +1,201 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- Gradient kiri -->
+        <linearGradient
+            id="maraBlue"
+            x1="70"
+            y1="80"
+            x2="250"
+            y2="430"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0" stop-color="#2563EB"/>
+            <stop offset="0.5" stop-color="#0EA5E9"/>
+            <stop offset="1" stop-color="#06D6F2"/>
+        </linearGradient>
+
+
+        <!-- Gradient kanan -->
+        <linearGradient
+            id="maraPurple"
+            x1="250"
+            y1="80"
+            x2="450"
+            y2="430"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0" stop-color="#60A5FA"/>
+            <stop offset="0.5" stop-color="#6366F1"/>
+            <stop offset="1" stop-color="#A855F7"/>
+        </linearGradient>
+
+
+        <!-- Gradient bagian tengah -->
+        <linearGradient
+            id="maraCenter"
+            x1="180"
+            y1="100"
+            x2="330"
+            y2="430"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0" stop-color="#22D3EE"/>
+            <stop offset="0.5" stop-color="#38BDF8"/>
+            <stop offset="1" stop-color="#06B6D4"/>
+        </linearGradient>
+
+
+        <!-- Shadow -->
+        <filter
+            id="maraShadow"
+            x="-30%"
+            y="-30%"
+            width="160%"
+            height="160%"
+        >
+
+            <feDropShadow
+                dx="0"
+                dy="10"
+                stdDeviation="12"
+                flood-color="#2563EB"
+                flood-opacity=".25"
+            />
+
+        </filter>
+
+    </defs>
+
+
+    <!-- ==================================================
+         MARA LOGO
+    ================================================== -->
+
+    <g filter="url(#maraShadow)">
+
+        <!-- PANEL KIRI LUAR -->
+
+        <path
+            d="
+                M72 82
+                L72 282
+                L158 350
+                L158 158
+                Z
+            "
+            fill="url(#maraBlue)"
+        />
+
+
+        <!-- PANEL KIRI DALAM -->
+
+        <path
+            d="
+                M72 82
+                L158 158
+                L256 424
+                L158 350
+                Z
+            "
+            fill="#1559D6"
+        />
+
+
+        <!-- PANEL KIRI CYAN -->
+
+        <path
+            d="
+                M72 82
+                L256 230
+                L256 424
+                L158 158
+                Z
+            "
+            fill="url(#maraCenter)"
+        />
+
+
+        <!-- PANEL TENGAH -->
+
+        <path
+            d="
+                M256 230
+                L256 424
+                L354 350
+                L354 158
+                Z
+            "
+            fill="url(#maraCenter)"
+        />
+
+
+        <!-- PANEL KANAN DALAM -->
+
+        <path
+            d="
+                M256 230
+                L354 158
+                L256 424
+                L354 350
+                Z
+            "
+            fill="#4F46E5"
+            opacity=".75"
+        />
+
+
+        <!-- PANEL KANAN LUAR -->
+
+        <path
+            d="
+                M440 82
+                L440 282
+                L354 350
+                L354 158
+                Z
+            "
+            fill="url(#maraPurple)"
+        />
+
+
+        <!-- PANEL KANAN ATAS -->
+
+        <path
+            d="
+                M440 82
+                L256 230
+                L354 158
+                Z
+            "
+            fill="#8B5CF6"
+        />
+
+    </g>
+
+
+    <!-- ==================================================
+         HIGHLIGHT
+    ================================================== -->
+
+    <path
+        d="
+            M72 82
+            L256 230
+            L440 82
+        "
+        stroke="rgba(255,255,255,.18)"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity=".45"
+    />
+
+</svg>

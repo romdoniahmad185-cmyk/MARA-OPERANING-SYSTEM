@@ -1,0 +1,186 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- MARA OS FLOW GRADIENT -->
+        <linearGradient
+            id="maraFlow"
+            x1="90"
+            y1="390"
+            x2="420"
+            y2="110"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop
+                offset="0%"
+                stop-color="#00E5FF"
+            />
+
+            <stop
+                offset="35%"
+                stop-color="#00C9A7"
+            />
+
+            <stop
+                offset="70%"
+                stop-color="#00A8A8"
+            />
+
+            <stop
+                offset="100%"
+                stop-color="#7CFFCB"
+            />
+        </linearGradient>
+
+
+        <!-- SOFT HIGHLIGHT -->
+        <linearGradient
+            id="maraFlowHighlight"
+            x1="180"
+            y1="220"
+            x2="330"
+            y2="300"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop
+                offset="0%"
+                stop-color="#FFFFFF"
+                stop-opacity=".95"
+            />
+
+            <stop
+                offset="100%"
+                stop-color="#FFFFFF"
+                stop-opacity=".25"
+            />
+        </linearGradient>
+
+    </defs>
+
+
+    <!-- =========================================
+         MAIN FLOW
+    ========================================== -->
+
+    <path
+        d="
+            M116 174
+
+            C166 112
+            242 104
+            306 139
+
+            C361 169
+            382 214
+            358 256
+
+            C334 299
+            273 313
+            224 288
+
+            C181 266
+            164 228
+            181 194
+
+            C199 158
+            250 148
+            291 169
+
+            C326 187
+            340 218
+            326 244
+        "
+
+        stroke="url(#maraFlow)"
+
+        stroke-width="48"
+
+        stroke-linecap="round"
+
+        stroke-linejoin="round"
+    />
+
+
+    <!-- =========================================
+         SECOND FLOW
+    ========================================== -->
+
+    <path
+        d="
+            M396 338
+
+            C346 400
+            270 408
+            206 373
+
+            C151 343
+            130 298
+            154 256
+
+            C178 213
+            239 199
+            288 224
+
+            C331 246
+            348 284
+            331 318
+
+            C313 354
+            262 364
+            221 343
+
+            C186 325
+            172 294
+            186 268
+        "
+
+        stroke="url(#maraFlow)"
+
+        stroke-width="48"
+
+        stroke-linecap="round"
+
+        stroke-linejoin="round"
+    />
+
+
+    <!-- =========================================
+         CENTRAL CONNECTION
+    ========================================== -->
+
+    <path
+        d="
+            M181 256
+
+            C207 237
+            243 230
+            276 241
+        "
+
+        stroke="url(#maraFlowHighlight)"
+
+        stroke-width="9"
+
+        stroke-linecap="round"
+
+        opacity=".8"
+    />
+
+
+    <!-- =========================================
+         SMALL FLOW POINT
+    ========================================== -->
+
+    <circle
+        cx="276"
+        cy="241"
+        r="7"
+        fill="#FFFFFF"
+        opacity=".9"
+    />
+
+</svg>

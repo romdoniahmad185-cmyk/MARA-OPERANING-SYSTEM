@@ -1,0 +1,433 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    width="512"
+    height="512"
+    fill="none"
+>
+
+    <defs>
+
+        <!-- =========================================
+             GRADIENT UTAMA
+        ========================================== -->
+
+        <linearGradient
+            id="zivaGradient"
+            x1="80"
+            y1="120"
+            x2="430"
+            y2="400"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#00E5FF"/>
+            <stop offset="28%" stop-color="#008CFF"/>
+            <stop offset="58%" stop-color="#4F46E5"/>
+            <stop offset="82%" stop-color="#C026D3"/>
+            <stop offset="100%" stop-color="#FF00B8"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT HURUF Z
+        ========================================== -->
+
+        <linearGradient
+            id="zLetter"
+            x1="170"
+            y1="170"
+            x2="350"
+            y2="350"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="55%" stop-color="#F8FAFC"/>
+            <stop offset="78%" stop-color="#C4F1FF"/>
+            <stop offset="100%" stop-color="#FFB7F5"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT CYAN
+        ========================================== -->
+
+        <linearGradient
+            id="cyanGlow"
+            x1="100"
+            y1="300"
+            x2="280"
+            y2="180"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#0066FF"/>
+            <stop offset="45%" stop-color="#00BFFF"/>
+            <stop offset="100%" stop-color="#00FFFF"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GRADIENT MAGENTA
+        ========================================== -->
+
+        <linearGradient
+            id="pinkGlow"
+            x1="280"
+            y1="180"
+            x2="430"
+            y2="320"
+            gradientUnits="userSpaceOnUse"
+        >
+            <stop offset="0%" stop-color="#635BFF"/>
+            <stop offset="50%" stop-color="#D000FF"/>
+            <stop offset="100%" stop-color="#FF0099"/>
+        </linearGradient>
+
+
+        <!-- =========================================
+             GLOW
+        ========================================== -->
+
+        <filter
+            id="glow"
+            x="-100%"
+            y="-100%"
+            width="300%"
+            height="300%"
+        >
+
+            <feGaussianBlur
+                stdDeviation="10"
+                result="blur"
+            />
+
+            <feMerge>
+
+                <feMergeNode in="blur"/>
+
+                <feMergeNode in="SourceGraphic"/>
+
+            </feMerge>
+
+        </filter>
+
+
+        <!-- =========================================
+             SOFT GLOW
+        ========================================== -->
+
+        <filter
+            id="softGlow"
+            x="-100%"
+            y="-100%"
+            width="300%"
+            height="300%"
+        >
+
+            <feGaussianBlur
+                stdDeviation="22"
+            />
+
+        </filter>
+
+    </defs>
+
+
+    <!-- =========================================
+         BACKGROUND GLOW
+         TRANSPARAN
+    ========================================== -->
+
+    <ellipse
+        cx="165"
+        cy="300"
+        rx="115"
+        ry="90"
+        fill="#00A8FF"
+        opacity=".16"
+        filter="url(#softGlow)"
+    />
+
+    <ellipse
+        cx="365"
+        cy="285"
+        rx="115"
+        ry="95"
+        fill="#E000FF"
+        opacity=".18"
+        filter="url(#softGlow)"
+    />
+
+
+    <!-- =========================================
+         MUSICAL RIBBON / NOTE
+    ========================================== -->
+
+    <path
+        d="
+            M105 300
+
+            C80 265 95 225 135 198
+
+            C185 163 250 148 330 140
+
+            C370 136 403 147 420 168
+
+            C445 199 435 240 405 267
+
+            C370 298 328 316 292 335
+        "
+
+        stroke="url(#zivaGradient)"
+        stroke-width="18"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+
+        opacity=".95"
+
+        filter="url(#glow)"
+    />
+
+
+    <!-- =========================================
+         INNER RIBBON
+    ========================================== -->
+
+    <path
+        d="
+            M110 300
+
+            C95 270 108 238 143 215
+
+            C190 183 250 168 325 160
+        "
+
+        stroke="#00E5FF"
+        stroke-width="5"
+        stroke-linecap="round"
+
+        opacity=".85"
+    />
+
+
+    <path
+        d="
+            M325 160
+
+            C378 154 410 174 413 205
+
+            C416 234 393 257 360 276
+        "
+
+        stroke="#FF22D6"
+        stroke-width="5"
+        stroke-linecap="round"
+
+        opacity=".9"
+    />
+
+
+    <!-- =========================================
+         Z - BAGIAN ATAS
+    ========================================== -->
+
+    <path
+        d="
+            M170 170
+
+            L350 170
+
+            L300 225
+
+            L210 225
+
+            Z
+        "
+
+        fill="url(#zLetter)"
+
+        stroke="#FFFFFF"
+        stroke-width="3"
+    />
+
+
+    <!-- =========================================
+         Z - DIAGONAL
+    ========================================== -->
+
+    <path
+        d="
+            M300 225
+
+            L210 350
+
+            L150 350
+
+            L245 225
+
+            Z
+        "
+
+        fill="url(#zLetter)"
+
+        stroke="#FFFFFF"
+        stroke-width="3"
+    />
+
+
+    <!-- =========================================
+         Z - BAGIAN BAWAH
+    ========================================== -->
+
+    <path
+        d="
+            M210 300
+
+            L350 300
+
+            L315 350
+
+            L175 350
+
+            Z
+        "
+
+        fill="url(#zLetter)"
+
+        stroke="#FFFFFF"
+        stroke-width="3"
+    />
+
+
+    <!-- =========================================
+         Z INNER SHADOW
+    ========================================== -->
+
+    <path
+        d="
+            M245 225
+            L300 225
+            L210 350
+            L175 350
+            Z
+        "
+
+        fill="#00BFFF"
+        opacity=".32"
+    />
+
+
+    <!-- =========================================
+         MUSICAL NOTE HEAD
+    ========================================== -->
+
+    <ellipse
+        cx="365"
+        cy="150"
+        rx="28"
+        ry="18"
+
+        fill="url(#pinkGlow)"
+
+        transform="
+            rotate(-20 365 150)
+        "
+
+        filter="url(#glow)"
+    />
+
+
+    <!-- =========================================
+         MUSICAL NOTE STEM
+    ========================================== -->
+
+    <path
+        d="
+            M383 145
+            L390 90
+            C392 76 405 70 416 78
+            L430 90
+        "
+
+        stroke="url(#zivaGradient)"
+        stroke-width="15"
+        stroke-linecap="round"
+
+        filter="url(#glow)"
+    />
+
+
+    <!-- =========================================
+         HIGHLIGHT
+    ========================================== -->
+
+    <path
+        d="
+            M170 170
+            L350 170
+        "
+
+        stroke="#FFFFFF"
+        stroke-width="4"
+        stroke-linecap="round"
+
+        opacity=".85"
+    />
+
+
+    <!-- =========================================
+         SPARKLES
+    ========================================== -->
+
+    <g fill="#FFFFFF">
+
+        <path
+            d="
+                M110 175
+                L114 188
+                L127 192
+                L114 196
+                L110 209
+                L106 196
+                L93 192
+                L106 188
+                Z
+            "
+            opacity=".9"
+        />
+
+        <circle
+            cx="145"
+            cy="155"
+            r="4"
+        />
+
+        <circle
+            cx="420"
+            cy="220"
+            r="3"
+        />
+
+        <path
+            d="
+                M410 280
+                L414 291
+                L425 295
+                L414 299
+                L410 310
+                L406 299
+                L395 295
+                L406 291
+                Z
+            "
+            opacity=".8"
+        />
+
+        <circle
+            cx="350"
+            cy="110"
+            r="3"
+        />
+
+    </g>
+
+</svg>
