@@ -1,5 +1,6 @@
 /* =====================================================
    MARA OS — MANIFEST SYSTEM
+   Automatic Path Resolver
 ===================================================== */
 
 window.MARA_MANIFEST_CACHE =
@@ -7,10 +8,59 @@ window.MARA_MANIFEST_CACHE =
 
 
 /* =====================================================
+   GET BASE URL
+===================================================== */
+
+function getMaraAppContainerBaseURL() {
+
+    return new URL(
+        "./",
+        window.location.href
+    );
+
+}
+
+
+/* =====================================================
+   RESOLVE MANIFEST URL
+===================================================== */
+
+function resolveManifestURL(
+    manifestPath
+) {
+
+    if (!manifestPath) {
+
+        throw new Error(
+            "Manifest URL tidak tersedia."
+        );
+
+    }
+
+
+    const baseURL =
+        getMaraAppContainerBaseURL();
+
+
+    const manifestURL =
+        new URL(
+            manifestPath,
+            baseURL
+        );
+
+
+    return manifestURL.href;
+
+}
+
+
+/* =====================================================
    LOAD MANIFEST
 ===================================================== */
 
-async function loadAppManifest(appId) {
+async function loadAppManifest(
+    appId
+) {
 
     console.log(
         "[MARA MANIFEST] Memuat:",
@@ -19,7 +69,7 @@ async function loadAppManifest(appId) {
 
 
     /* -------------------------------------------------
-       CEK REGISTRY
+       CEK MARA APPS
     ------------------------------------------------- */
 
     if (
@@ -28,8 +78,8 @@ async function loadAppManifest(appId) {
 
         throw new Error(
             "MARA_APPS tidak ditemukan. " +
-            "Pastikan /js/mara-apps.js dimuat sebelum " +
-            "/js/mara-manifest.js."
+            "Pastikan mara-apps.js dimuat sebelum " +
+            "mara-manifest.js."
         );
 
     }
@@ -54,7 +104,7 @@ async function loadAppManifest(appId) {
 
 
     /* -------------------------------------------------
-       CEK MANIFEST URL
+       CEK MANIFEST PATH
     ------------------------------------------------- */
 
     if (
@@ -67,6 +117,22 @@ async function loadAppManifest(appId) {
         );
 
     }
+
+
+    /* -------------------------------------------------
+       RESOLVE MANIFEST
+    ------------------------------------------------- */
+
+    const manifestURL =
+        resolveManifestURL(
+            registeredApp.manifest
+        );
+
+
+    console.log(
+        "[MARA MANIFEST] URL:",
+        manifestURL
+    );
 
 
     /* -------------------------------------------------
@@ -90,23 +156,40 @@ async function loadAppManifest(appId) {
 
 
     /* -------------------------------------------------
-       FETCH MANIFEST
+       FETCH
     ------------------------------------------------- */
 
-    const response =
-        await fetch(
-            registeredApp.manifest,
-            {
-                cache: "no-cache"
-            }
+    let response;
+
+    try {
+
+        response =
+            await fetch(
+                manifestURL,
+                {
+                    cache: "no-cache"
+                }
+            );
+
+    } catch (error) {
+
+        throw new Error(
+            "Gagal mengambil manifest: " +
+            manifestURL
         );
 
+    }
+
+
+    /* -------------------------------------------------
+       HTTP ERROR
+    ------------------------------------------------- */
 
     if (!response.ok) {
 
         throw new Error(
             "Manifest tidak ditemukan: " +
-            registeredApp.manifest +
+            manifestURL +
             " (" +
             response.status +
             ")"
@@ -130,7 +213,7 @@ async function loadAppManifest(appId) {
 
         throw new Error(
             "Manifest bukan JSON yang valid: " +
-            registeredApp.manifest
+            manifestURL
         );
 
     }
@@ -172,7 +255,7 @@ async function loadAppManifest(appId) {
 
 
     /* -------------------------------------------------
-       CACHE
+       SIMPAN CACHE
     ------------------------------------------------- */
 
     window.MARA_MANIFEST_CACHE[appId] =
@@ -191,7 +274,7 @@ async function loadAppManifest(appId) {
 
 
 /* =====================================================
-   RESOLVE ENTRY
+   RESOLVE APP ENTRY
 ===================================================== */
 
 function resolveAppEntry(
@@ -217,23 +300,22 @@ function resolveAppEntry(
     }
 
 
-    const manifestAbsoluteURL =
-        new URL(
-            manifestURL,
-            window.location.origin
+    const absoluteManifestURL =
+        resolveManifestURL(
+            manifestURL
         );
 
 
     const entryAbsoluteURL =
         new URL(
             entry,
-            manifestAbsoluteURL
+            absoluteManifestURL
         );
 
 
-    return entryAbsoluteURL.pathname +
-           entryAbsoluteURL.search +
-           entryAbsoluteURL.hash;
+    return (
+        entryAbsoluteURL.href
+    );
 
 }
 
@@ -274,3 +356,6 @@ window.resolveAppEntry =
 
 window.clearManifestCache =
     clearManifestCache;
+
+window.resolveManifestURL =
+    resolveManifestURL;
