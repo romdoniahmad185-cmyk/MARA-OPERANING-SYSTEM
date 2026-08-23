@@ -1,0 +1,29 @@
+{
+    "id": "mara.app.rama",
+    "name": "Rama",
+    "version": "1.0.0",
+
+    "description": "Layanan digital utama MARA OS.",
+
+    "icon": "/icon-svg/mara-browser.svg",
+
+    "entry": "index.html",
+
+    "engine": {
+        "type": "mara-web",
+        "version": "1.0.0"
+    },
+
+    "permissions": [
+        "network",
+        "storage"
+    ],
+
+    "requirements": {
+        "maraOS": "1.0.0"
+    },
+
+    "update": {
+        "enabled": true
+    }
+}
