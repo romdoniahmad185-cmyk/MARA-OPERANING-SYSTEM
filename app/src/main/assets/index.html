@@ -93,8 +93,78 @@ body {
     </iframe>
 
 </div>
+<script>
+
+/* =====================================================
+   MARA OS — BUILD LOADER
+===================================================== */
+
+const MARABuildLoader = {
+
+    async getActiveBuild() {
+
+        /*
+         * Untuk prototype awal,
+         * sementara kita gunakan ID build.
+         *
+         * Nanti bagian ini membaca IndexedDB.
+         */
+
+        return "102";
+
+    },
+
+
+    async loadLockScreen() {
+
+        const build =
+            await this.getActiveBuild();
+
+        const frame =
+            document.getElementById(
+                "mara-screen-frame"
+            );
+
+        if (!frame) {
+
+            console.error(
+                "[MARA BUILD] iframe tidak ditemukan."
+            );
+
+            return;
+
+        }
+
+        frame.src =
+            `../ux/build/${build}/lock-screen.html`;
+
+
+        console.log(
+            "[MARA BUILD] Lock Screen:",
+            build
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   START
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        MARABuildLoader.loadLockScreen();
+
+    }
+);
+</script>
   <!-- CONTROL CENTER OVERLAY -->
   <script src="script.js"></script>
+   <script src="./engine-single.js"></script>
 
 </body>
 </html>
