@@ -1,122 +1,150 @@
 /* =========================================================
    MARA OS
    ENGINE SINGLE
-   STAGE 1 — COMPLETE BOOT ENGINE
-   =========================================================
+   STAGE 1 — COMPLETE BUILD / UPDATE ENGINE
 
-   PIPELINE:
+   PIPELINE
 
-   index.html
-        ↓
-   engine-single.js
-        ↓
-   engine-single.json
-        ↓
-   IndexedDB
-        ↓
-   Detect Intro
-        ↓
-   Detect Main Iframe
-        ↓
-   ENGINE READY
-        ↓
-   Intro menerima status
-        ↓
-   Main UI siap
+   START
+      ↓
+   OPEN INDEXEDDB
+      ↓
+   LOAD ACTIVE BUILD
+      ↓
+   CHECK NETWORK
+      ↓
+   FETCH MANIFEST
+      ↓
+   COMPARE BUILD
+      ↓
+   DOWNLOAD BUILD
+      ↓
+   TEMPORARY STORAGE
+      ↓
+   VERIFY FILES
+      ↓
+   INSTALL BUILD
+      ↓
+   MARK READY
+      ↓
+   ACTIVATE BUILD
+      ↓
+   VERIFY ACTIVE BUILD
+      ↓
+   CLEAN OLD BUILD
+      ↓
+   LOAD UI
+      ↓
+   MARA OS READY
 
-   STAGE 1:
-   - Boot engine
-   - Config loader
-   - Config validator
-   - IndexedDB
-   - Engine storage
-   - Build metadata
-   - Intro communication
-   - Main iframe controller
-   - Online / offline
-   - Repository checker
-   - Global API
-   - Error handling
+   FEATURES
 
-   BELUM:
-   - Automatic download
-   - Automatic extraction
-   - Automatic installation
-   - Automatic activation
-   - Automatic deletion old build
+   ✓ IndexedDB
+   ✓ Temporary build
+   ✓ Permanent build
+   ✓ Active build
+   ✓ Manifest validation
+   ✓ SHA-256 verification
+   ✓ Download progress
+   ✓ Install progress
+   ✓ Rollback protection
+   ✓ Offline mode
+   ✓ Online recovery
+   ✓ Update lock
+   ✓ Object URL management
+   ✓ iframe loader
+   ✓ postMessage bridge
+   ✓ Intro communication
+   ✓ Global API
+   ✓ Error recovery
+   ✓ Build cleanup
+   ✓ Cache busting
+   ✓ Safe path validation
 
-   Bagian tersebut akan masuk tahap berikutnya.
 ========================================================= */
 
 
 /* =========================================================
-   ENGINE CONSTANT
+   CONFIGURATION
 ========================================================= */
 
-const MARA_ENGINE = {
+const MARA_ENGINE_CONFIG = {
 
-    NAME:
-        "MARA ENGINE SINGLE",
-
-    ID:
-        "mara-engine-single",
-
-    VERSION:
-        "1.0.0",
-
-    STAGE:
-        1,
-
-    CONFIG_FILE:
-        "engine-single.json",
-
-    DATABASE:
+    databaseName:
         "MARA_OS_STORAGE",
 
-    DATABASE_VERSION:
+    databaseVersion:
+        3,
+
+    stores: {
+
+        builds:
+            "builds",
+
+        files:
+            "files",
+
+        active:
+            "active",
+
+        temporary:
+            "temporary",
+
+        settings:
+            "settings"
+
+    },
+
+    repository:
+        "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/update-manifest.json",
+
+    requestTimeout:
+        30000,
+
+    verifyContent:
+        true,
+
+    keepOldBuild:
+        false,
+
+    autoUpdate:
+        true,
+
+    autoUpdateDelay:
+        1500,
+
+    retryCount:
         2,
 
-    INTRO_FRAME:
-        "mara-intro-frame",
+    retryDelay:
+        1000,
 
-    INTRO_OVERLAY:
-        "mara-intro-overlay",
+    maxFileSize:
+        50 * 1024 * 1024,
 
-    MAIN_FRAME:
-        "mara-main-frame",
-
-    REQUEST_TIMEOUT:
-        30000
+    messageTarget:
+        "*"
 
 };
 
 
 /* =========================================================
-   MARA ENGINE OBJECT
+   ENGINE
 ========================================================= */
 
 window.MARAEngineSingle = {
 
-    initialized:
-        false,
-
-    booted:
-        false,
-
-    config:
-        null,
-
     db:
         null,
 
-    introFrame:
-        null,
+    initialized:
+        false,
 
-    introOverlay:
-        null,
+    updating:
+        false,
 
-    mainFrame:
-        null,
+    objectURLs:
+        new Map(),
 
     events:
         {},
@@ -126,26 +154,32 @@ window.MARAEngineSingle = {
         status:
             "IDLE",
 
-        engine:
-            false,
+        activeBuild:
+            null,
 
-        config:
-            false,
+        activeVersion:
+            null,
 
-        database:
-            false,
+        remoteBuild:
+            null,
 
-        intro:
-            false,
+        remoteVersion:
+            null,
 
-        mainFrame:
-            false,
+        installingBuild:
+            null,
 
-        ready:
-            false,
+        progress:
+            0,
 
-        online:
-            navigator.onLine,
+        totalFiles:
+            0,
+
+        completedFiles:
+            0,
+
+        currentFile:
+            null,
 
         error:
             null,
@@ -153,48 +187,8 @@ window.MARAEngineSingle = {
         startedAt:
             null,
 
-        readyAt:
+        completedAt:
             null
-
-    },
-
-
-    /* =====================================================
-       LOG
-    ===================================================== */
-
-    log(
-        ...args
-    ) {
-
-        console.log(
-            "[MARA ENGINE]",
-            ...args
-        );
-
-    },
-
-
-    warn(
-        ...args
-    ) {
-
-        console.warn(
-            "[MARA ENGINE]",
-            ...args
-        );
-
-    },
-
-
-    error(
-        ...args
-    ) {
-
-        console.error(
-            "[MARA ENGINE]",
-            ...args
-        );
 
     },
 
@@ -209,24 +203,12 @@ window.MARAEngineSingle = {
     ) {
 
         if (
-            typeof callback !==
-            "function"
-        ) {
-
-            return;
-
-        }
-
-
-        if (
             !this.events[event]
         ) {
 
-            this.events[event] =
-                [];
+            this.events[event] = [];
 
         }
-
 
         this.events[event].push(
             callback
@@ -248,14 +230,11 @@ window.MARAEngineSingle = {
 
         }
 
-
         this.events[event] =
-            this.events[event]
-                .filter(
-                    item =>
-                        item !==
-                        callback
-                );
+            this.events[event].filter(
+                item =>
+                    item !== callback
+            );
 
     },
 
@@ -266,9 +245,7 @@ window.MARAEngineSingle = {
     ) {
 
         const listeners =
-            this.events[event] ||
-            [];
-
+            this.events[event] || [];
 
         listeners.forEach(
             callback => {
@@ -283,8 +260,8 @@ window.MARAEngineSingle = {
                     error
                 ) {
 
-                    this.error(
-                        "EVENT ERROR:",
+                    console.error(
+                        "[MARA ENGINE] EVENT ERROR",
                         error
                     );
 
@@ -292,6 +269,54 @@ window.MARAEngineSingle = {
 
             }
         );
+
+        this.broadcast(
+            event,
+            data
+        );
+
+    },
+
+
+    /* =====================================================
+       BROADCAST TO IFRAMES
+    ===================================================== */
+
+    broadcast(
+        event,
+        data = {}
+    ) {
+
+        try {
+
+            window.postMessage(
+                {
+
+                    source:
+                        "MARA_ENGINE_SINGLE",
+
+                    event,
+
+                    data,
+
+                    timestamp:
+                        Date.now()
+
+                },
+
+                MARA_ENGINE_CONFIG.messageTarget
+            );
+
+        } catch (
+            error
+        ) {
+
+            console.warn(
+                "[MARA ENGINE] Broadcast gagal:",
+                error
+            );
+
+        }
 
     },
 
@@ -308,276 +333,93 @@ window.MARAEngineSingle = {
         this.state.status =
             status;
 
-
-        this.emit(
-            "status",
-            {
-
-                status,
-
-                ...extra
-
-            }
-        );
-
-
-        this.notifyIntro(
-            "MARA_ENGINE_STATUS",
-            {
-
-                status,
-
-                ...extra
-
-            }
-        );
-
-
-        this.log(
-            "STATUS:",
-            status,
+        Object.assign(
+            this.state,
             extra
         );
 
+        this.emit(
+            "state",
+            {
+                ...this.state
+            }
+        );
+
     },
 
 
     /* =====================================================
-       FETCH WITH TIMEOUT
+       INIT
     ===================================================== */
 
-    async fetchURL(
-        url
-    ) {
+    async init() {
 
-        const controller =
-            new AbortController();
+        if (
+            this.initialized &&
+            this.db
+        ) {
 
-
-        const timeout =
-            setTimeout(
-                () => {
-
-                    controller.abort();
-
-                },
-                MARA_ENGINE.REQUEST_TIMEOUT
-            );
-
-
-        try {
-
-            const response =
-                await fetch(
-                    url,
-                    {
-
-                        method:
-                            "GET",
-
-                        cache:
-                            "no-store",
-
-                        signal:
-                            controller.signal
-
-                    }
-                );
-
-
-            if (
-                !response.ok
-            ) {
-
-                throw new Error(
-                    `HTTP ${response.status}: ${url}`
-                );
-
-            }
-
-
-            return response;
-
-        } finally {
-
-            clearTimeout(
-                timeout
-            );
+            return this.db;
 
         }
-
-    },
-
-
-    /* =====================================================
-       LOAD JSON CONFIG
-    ===================================================== */
-
-    async loadConfig() {
 
         this.setStatus(
-            "LOADING_CONFIG"
+            "INITIALIZING"
         );
 
+        this.db =
+            await this.openDatabase();
 
-        this.emit(
-            "config:start"
-        );
-
-
-        const response =
-            await this.fetchURL(
-                MARA_ENGINE.CONFIG_FILE
-            );
-
-
-        let config;
-
-
-        try {
-
-            config =
-                await response.json();
-
-        } catch (
-            error
-        ) {
-
-            throw new Error(
-                "engine-single.json bukan JSON yang valid."
-            );
-
-        }
-
-
-        this.validateConfig(
-            config
-        );
-
-
-        this.config =
-            config;
-
-
-        this.state.config =
+        this.initialized =
             true;
 
+        const active =
+            await this.readActiveRecord();
+
+        if (
+            active
+        ) {
+
+            this.state.activeBuild =
+                Number(
+                    active.build
+                );
+
+            this.state.activeVersion =
+                active.version ||
+                null;
+
+        }
+
+        this.setStatus(
+            "READY"
+        );
 
         this.emit(
-            "config:ready",
-            {
-                config
-            }
-        );
-
-
-        this.notifyIntro(
-            "MARA_CONFIG_READY",
+            "ready",
             {
 
-                version:
-                    config.engine?.version,
+                activeBuild:
+                    this.state.activeBuild,
 
-                stage:
-                    config.engine?.stage
+                activeVersion:
+                    this.state.activeVersion
 
             }
         );
 
-
-        this.log(
-            "engine-single.json berhasil dimuat."
+        console.log(
+            "[MARA ENGINE] READY",
+            this.state
         );
 
-
-        return config;
+        return this.db;
 
     },
 
 
     /* =====================================================
-       VALIDATE CONFIG
-    ===================================================== */
-
-    validateConfig(
-        config
-    ) {
-
-        if (
-            !config ||
-            typeof config !==
-            "object"
-        ) {
-
-            throw new Error(
-                "Konfigurasi MARA tidak valid."
-            );
-
-        }
-
-
-        if (
-            !config.engine
-        ) {
-
-            throw new Error(
-                "Bagian engine tidak ditemukan."
-            );
-
-        }
-
-
-        if (
-            !config.engine.name
-        ) {
-
-            throw new Error(
-                "engine.name tidak ditemukan."
-            );
-
-        }
-
-
-        if (
-            !config.engine.version
-        ) {
-
-            throw new Error(
-                "engine.version tidak ditemukan."
-            );
-
-        }
-
-
-        if (
-            !config.app
-        ) {
-
-            throw new Error(
-                "Bagian app tidak ditemukan."
-            );
-
-        }
-
-
-        if (
-            !config.paths
-        ) {
-
-            throw new Error(
-                "Bagian paths tidak ditemukan."
-            );
-
-        }
-
-
-        return true;
-
-    },
-
-
-    /* =====================================================
-       OPEN INDEXEDDB
+       OPEN DATABASE
     ===================================================== */
 
     openDatabase() {
@@ -588,25 +430,10 @@ window.MARAEngineSingle = {
                 reject
             ) => {
 
-                if (
-                    !window.indexedDB
-                ) {
-
-                    reject(
-                        new Error(
-                            "IndexedDB tidak tersedia pada perangkat ini."
-                        )
-                    );
-
-                    return;
-
-                }
-
-
                 const request =
                     indexedDB.open(
-                        MARA_ENGINE.DATABASE,
-                        MARA_ENGINE.DATABASE_VERSION
+                        MARA_ENGINE_CONFIG.databaseName,
+                        MARA_ENGINE_CONFIG.databaseVersion
                     );
 
 
@@ -617,185 +444,138 @@ window.MARAEngineSingle = {
                             event.target.result;
 
 
-                        /* ===============================
-                           SETTINGS
-                        =============================== */
-
-                        if (
-                            !db.objectStoreNames.contains(
-                                "settings"
-                            )
-                        ) {
-
-                            db.createObjectStore(
-                                "settings",
-                                {
-
-                                    keyPath:
-                                        "id"
-
-                                }
-                            );
-
-                        }
-
-
-                        /* ===============================
-                           ENGINE
-                        =============================== */
-
-                        if (
-                            !db.objectStoreNames.contains(
-                                "engine"
-                            )
-                        ) {
-
-                            db.createObjectStore(
-                                "engine",
-                                {
-
-                                    keyPath:
-                                        "id"
-
-                                }
-                            );
-
-                        }
-
-
-                        /* ===============================
+                        /* =========================
                            BUILDS
-                        =============================== */
+                        ========================= */
 
                         if (
                             !db.objectStoreNames.contains(
-                                "builds"
+                                MARA_ENGINE_CONFIG.stores.builds
                             )
                         ) {
 
                             db.createObjectStore(
-                                "builds",
+                                MARA_ENGINE_CONFIG.stores.builds,
                                 {
-
                                     keyPath:
                                         "build"
-
                                 }
                             );
 
                         }
 
 
-                        /* ===============================
+                        /* =========================
                            FILES
-                        =============================== */
+                        ========================= */
 
                         if (
                             !db.objectStoreNames.contains(
-                                "files"
+                                MARA_ENGINE_CONFIG.stores.files
                             )
                         ) {
 
-                            const files =
+                            const store =
                                 db.createObjectStore(
-                                    "files",
+                                    MARA_ENGINE_CONFIG.stores.files,
                                     {
-
                                         keyPath:
                                             "id"
-
                                     }
                                 );
 
-
-                            files.createIndex(
+                            store.createIndex(
                                 "build",
                                 "build",
                                 {
-
                                     unique:
                                         false
-
                                 }
                             );
 
-
-                            files.createIndex(
+                            store.createIndex(
                                 "path",
                                 "path",
                                 {
-
                                     unique:
                                         false
-
                                 }
                             );
 
                         }
 
 
-                        /* ===============================
+                        /* =========================
                            ACTIVE
-                        =============================== */
+                        ========================= */
 
                         if (
                             !db.objectStoreNames.contains(
-                                "active"
+                                MARA_ENGINE_CONFIG.stores.active
                             )
                         ) {
 
                             db.createObjectStore(
-                                "active",
+                                MARA_ENGINE_CONFIG.stores.active,
                                 {
-
                                     keyPath:
                                         "id"
-
                                 }
                             );
 
                         }
 
 
-                        /* ===============================
+                        /* =========================
                            TEMPORARY
-                        =============================== */
+                        ========================= */
 
                         if (
                             !db.objectStoreNames.contains(
-                                "temporary"
+                                MARA_ENGINE_CONFIG.stores.temporary
                             )
                         ) {
 
-                            const temporary =
+                            const store =
                                 db.createObjectStore(
-                                    "temporary",
+                                    MARA_ENGINE_CONFIG.stores.temporary,
                                     {
-
                                         keyPath:
                                             "id"
-
                                     }
                                 );
 
-
-                            temporary.createIndex(
+                            store.createIndex(
                                 "build",
                                 "build",
                                 {
-
                                     unique:
                                         false
-
                                 }
                             );
 
                         }
 
 
-                        this.log(
-                            "IndexedDB schema berhasil dibuat/di-upgrade."
-                        );
+                        /* =========================
+                           SETTINGS
+                        ========================= */
+
+                        if (
+                            !db.objectStoreNames.contains(
+                                MARA_ENGINE_CONFIG.stores.settings
+                            )
+                        ) {
+
+                            db.createObjectStore(
+                                MARA_ENGINE_CONFIG.stores.settings,
+                                {
+                                    keyPath:
+                                        "id"
+                                }
+                            );
+
+                        }
 
                     };
 
@@ -806,14 +586,18 @@ window.MARAEngineSingle = {
                         const db =
                             event.target.result;
 
-
                         db.onversionchange =
                             () => {
 
                                 db.close();
 
-                            };
+                                this.db =
+                                    null;
 
+                                this.initialized =
+                                    false;
+
+                            };
 
                         resolve(
                             db
@@ -828,7 +612,7 @@ window.MARAEngineSingle = {
                         reject(
                             request.error ||
                             new Error(
-                                "Gagal membuka IndexedDB."
+                                "IndexedDB gagal dibuka."
                             )
                         );
 
@@ -841,57 +625,11 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       INIT DATABASE
+       STORE
     ===================================================== */
 
-    async initDatabase() {
-
-        this.setStatus(
-            "INITIALIZING_DATABASE"
-        );
-
-
-        this.db =
-            await this.openDatabase();
-
-
-        this.state.database =
-            true;
-
-
-        this.emit(
-            "database:ready"
-        );
-
-
-        this.notifyIntro(
-            "MARA_DATABASE_READY",
-            {
-
-                database:
-                    MARA_ENGINE.DATABASE
-
-            }
-        );
-
-
-        this.log(
-            "IndexedDB READY:",
-            MARA_ENGINE.DATABASE
-        );
-
-
-        return this.db;
-
-    },
-
-
-    /* =====================================================
-       DATABASE TRANSACTION
-    ===================================================== */
-
-    transaction(
-        storeName,
+    store(
+        name,
         mode = "readonly"
     ) {
 
@@ -900,26 +638,25 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Database belum siap."
+                "Database belum diinisialisasi."
             );
 
         }
 
-
         return this.db
             .transaction(
-                storeName,
+                name,
                 mode
             )
             .objectStore(
-                storeName
+                name
             );
 
     },
 
 
     /* =====================================================
-       DATABASE REQUEST
+       REQUEST HELPER
     ===================================================== */
 
     request(
@@ -941,7 +678,6 @@ window.MARAEngineSingle = {
 
                     };
 
-
                 request.onerror =
                     () => {
 
@@ -958,62 +694,463 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       SAVE ENGINE INFORMATION
+       READ ACTIVE RECORD
     ===================================================== */
 
-    async saveEngineInfo() {
+    async readActiveRecord() {
+
+        await this.initDatabaseOnly();
+
+        return this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.active
+            ).get(
+                "active"
+            )
+        );
+
+    },
+
+
+    /* =====================================================
+       INIT DATABASE ONLY
+    ===================================================== */
+
+    async initDatabaseOnly() {
 
         if (
-            !this.config
+            this.db
+        ) {
+
+            return this.db;
+
+        }
+
+        this.db =
+            await this.openDatabase();
+
+        return this.db;
+
+    },
+
+
+    /* =====================================================
+       FETCH URL
+    ===================================================== */
+
+    async fetchURL(
+        url,
+        options = {}
+    ) {
+
+        let lastError =
+            null;
+
+        for (
+            let attempt = 0;
+            attempt <=
+            MARA_ENGINE_CONFIG.retryCount;
+            attempt++
+        ) {
+
+            const controller =
+                new AbortController();
+
+            const timer =
+                setTimeout(
+                    () => {
+
+                        controller.abort();
+
+                    },
+                    MARA_ENGINE_CONFIG.requestTimeout
+                );
+
+            try {
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+
+                            ...options,
+
+                            cache:
+                                "no-store",
+
+                            signal:
+                                controller.signal
+
+                        }
+                    );
+
+                clearTimeout(
+                    timer
+                );
+
+                if (
+                    !response.ok
+                ) {
+
+                    throw new Error(
+                        `HTTP ${response.status}: ${url}`
+                    );
+
+                }
+
+                return response;
+
+            } catch (
+                error
+            ) {
+
+                clearTimeout(
+                    timer
+                );
+
+                lastError =
+                    error;
+
+                if (
+                    attempt <
+                    MARA_ENGINE_CONFIG.retryCount
+                ) {
+
+                    await this.sleep(
+                        MARA_ENGINE_CONFIG.retryDelay
+                    );
+
+                }
+
+            }
+
+        }
+
+        throw lastError ||
+            new Error(
+                `Gagal mengambil ${url}`
+            );
+
+    },
+
+
+    /* =====================================================
+       FETCH JSON
+    ===================================================== */
+
+    async fetchJSON(
+        url
+    ) {
+
+        const response =
+            await this.fetchURL(
+                url
+            );
+
+        return response.json();
+
+    },
+
+
+    /* =====================================================
+       FETCH MANIFEST
+    ===================================================== */
+
+    async fetchManifest() {
+
+        this.setStatus(
+            "FETCHING_MANIFEST"
+        );
+
+        this.emit(
+            "manifest:start"
+        );
+
+        const separator =
+            MARA_ENGINE_CONFIG.repository
+                .includes("?")
+                ? "&"
+                : "?";
+
+        const url =
+            `${MARA_ENGINE_CONFIG.repository}${separator}_=${Date.now()}`;
+
+        const manifest =
+            await this.fetchJSON(
+                url
+            );
+
+        this.validateManifest(
+            manifest
+        );
+
+        this.state.remoteBuild =
+            Number(
+                manifest.build
+            );
+
+        this.state.remoteVersion =
+            String(
+                manifest.version
+            );
+
+        this.emit(
+            "manifest:ready",
+            {
+                manifest
+            }
+        );
+
+        return manifest;
+
+    },
+
+
+    /* =====================================================
+       MANIFEST VALIDATOR
+    ===================================================== */
+
+    validateManifest(
+        manifest
+    ) {
+
+        if (
+            !manifest ||
+            typeof manifest !==
+                "object"
         ) {
 
             throw new Error(
-                "Config belum tersedia."
+                "Manifest tidak valid."
             );
 
         }
 
+        if (
+            !manifest.version
+        ) {
+
+            throw new Error(
+                "Manifest tidak memiliki version."
+            );
+
+        }
+
+        if (
+            manifest.build ===
+            undefined
+        ) {
+
+            throw new Error(
+                "Manifest tidak memiliki build."
+            );
+
+        }
+
+        if (
+            !Array.isArray(
+                manifest.files
+            )
+        ) {
+
+            throw new Error(
+                "Manifest harus memiliki files[]."
+            );
+
+        }
+
+        if (
+            Number(
+                manifest.build
+            ) < 1
+        ) {
+
+            throw new Error(
+                "Nomor build tidak valid."
+            );
+
+        }
+
+        const paths =
+            new Set();
+
+        manifest.files.forEach(
+            file => {
+
+                if (
+                    !file ||
+                    typeof file !==
+                        "object"
+                ) {
+
+                    throw new Error(
+                        "Entry file manifest tidak valid."
+                    );
+
+                }
+
+                if (
+                    !file.path
+                ) {
+
+                    throw new Error(
+                        "File manifest tidak memiliki path."
+                    );
+
+                }
+
+                if (
+                    !file.url
+                ) {
+
+                    throw new Error(
+                        `URL tidak ada: ${file.path}`
+                    );
+
+                }
+
+                if (
+                    paths.has(
+                        file.path
+                    )
+                ) {
+
+                    throw new Error(
+                        `Path duplikat: ${file.path}`
+                    );
+
+                }
+
+                paths.add(
+                    file.path
+                );
+
+                if (
+                    file.size !==
+                    undefined
+                ) {
+
+                    const size =
+                        Number(
+                            file.size
+                        );
+
+                    if (
+                        !Number.isFinite(
+                            size
+                        ) ||
+                        size < 0
+                    ) {
+
+                        throw new Error(
+                            `Ukuran file tidak valid: ${file.path}`
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       BUILD COMPARISON
+    ===================================================== */
+
+    isNewerBuild(
+        remoteBuild,
+        localBuild
+    ) {
+
+        return Number(
+            remoteBuild
+        ) >
+        Number(
+            localBuild || 0
+        );
+
+    },
+
+
+    /* =====================================================
+       GET ACTIVE BUILD
+    ===================================================== */
+
+    async getActiveBuild() {
+
+        const record =
+            await this.readActiveRecord();
+
+        if (
+            !record
+        ) {
+
+            return null;
+
+        }
+
+        return Number(
+            record.build
+        );
+
+    },
+
+
+    /* =====================================================
+       SET ACTIVE BUILD
+    ===================================================== */
+
+    async setActiveBuild(
+        build,
+        version = null
+    ) {
+
+        await this.init();
 
         const data = {
 
             id:
-                "current",
+                "active",
 
-            engine:
-                this.config.engine,
+            build:
+                Number(build),
 
-            app:
-                this.config.app,
+            version:
+                version
+                    ? String(version)
+                    : null,
 
-            stage:
-                MARA_ENGINE.STAGE,
-
-            loadedAt:
+            activatedAt:
                 Date.now()
 
         };
 
-
         await this.request(
-            this.transaction(
-                "engine",
+            this.store(
+                MARA_ENGINE_CONFIG.stores.active,
                 "readwrite"
             ).put(
                 data
             )
         );
 
+        this.state.activeBuild =
+            Number(build);
+
+        this.state.activeVersion =
+            version
+                ? String(version)
+                : null;
 
         this.emit(
-            "engine:saved",
+            "build:active",
             data
         );
-
-
-        this.log(
-            "Informasi engine tersimpan."
-        );
-
 
         return data;
 
@@ -1021,49 +1158,79 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       SAVE SETTING
+       SAVE TEMPORARY FILE
     ===================================================== */
 
-    async setSetting(
-        id,
-        value
+    async saveTemporaryFile(
+        build,
+        path,
+        blob,
+        type
     ) {
 
+        await this.init();
+
+        const id =
+            `${build}:${path}`;
+
+        const data = {
+
+            id,
+
+            build:
+                Number(build),
+
+            path,
+
+            type:
+                type ||
+                blob.type ||
+                "application/octet-stream",
+
+            content:
+                blob,
+
+            size:
+                blob.size,
+
+            savedAt:
+                Date.now()
+
+        };
+
         await this.request(
-            this.transaction(
-                "settings",
+            this.store(
+                MARA_ENGINE_CONFIG.stores.temporary,
                 "readwrite"
-            ).put({
-
-                id,
-
-                value,
-
-                updatedAt:
-                    Date.now()
-
-            })
+            ).put(
+                data
+            )
         );
 
-
-        return true;
+        return data;
 
     },
 
 
     /* =====================================================
-       GET SETTING
+       GET TEMPORARY FILES
     ===================================================== */
 
-    async getSetting(
-        id
+    async getTemporaryFiles(
+        build
     ) {
 
+        await this.init();
+
         return this.request(
-            this.transaction(
-                "settings"
-            ).get(
-                id
+            this.store(
+                MARA_ENGINE_CONFIG.stores.temporary
+            )
+            .index(
+                "build"
+            )
+            .getAll(
+                Number(build)
             )
         );
 
@@ -1071,380 +1238,169 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       DETECT IFRAMES
+       DOWNLOAD FILE
     ===================================================== */
 
-    detectFrames() {
-
-        this.introFrame =
-            document.getElementById(
-                MARA_ENGINE.INTRO_FRAME
-            );
-
-
-        this.introOverlay =
-            document.getElementById(
-                MARA_ENGINE.INTRO_OVERLAY
-            );
-
-
-        this.mainFrame =
-            document.getElementById(
-                MARA_ENGINE.MAIN_FRAME
-            );
-
-
-        /* ===============================
-           INTRO
-        =============================== */
-
-        if (
-            this.introFrame
-        ) {
-
-            this.state.intro =
-                true;
-
-
-            this.emit(
-                "intro:ready",
-                {
-
-                    iframe:
-                        this.introFrame
-
-                }
-            );
-
-
-            this.log(
-                "Intro iframe ditemukan."
-            );
-
-        } else {
-
-            this.warn(
-                "Intro iframe tidak ditemukan."
-            );
-
-        }
-
-
-        /* ===============================
-           MAIN FRAME
-        =============================== */
-
-        if (
-            this.mainFrame
-        ) {
-
-            this.state.mainFrame =
-                true;
-
-
-            this.emit(
-                "mainframe:ready",
-                {
-
-                    iframe:
-                        this.mainFrame
-
-                }
-            );
-
-
-            this.log(
-                "mara-main-frame ditemukan."
-            );
-
-        } else {
-
-            this.warn(
-                "mara-main-frame tidak ditemukan."
-            );
-
-        }
-
-
-        return {
-
-            intro:
-                Boolean(
-                    this.introFrame
-                ),
-
-            main:
-                Boolean(
-                    this.mainFrame
-                )
-
-        };
-
-    },
-
-
-    /* =====================================================
-       INTRO MESSAGE
-    ===================================================== */
-
-    notifyIntro(
-        type,
-        data = {}
+    async downloadFile(
+        build,
+        file,
+        index,
+        total
     ) {
 
-        if (
-            !this.introFrame
-        ) {
+        this.state.currentFile =
+            file.path;
 
-            return false;
-
-        }
-
-
-        if (
-            !this.introFrame.contentWindow
-        ) {
-
-            return false;
-
-        }
-
-
-        try {
-
-            this.introFrame.contentWindow.postMessage(
-                {
-
-                    type,
-
-                    timestamp:
-                        Date.now(),
-
-                    engine:
-                        MARA_ENGINE.NAME,
-
-                    engineVersion:
-                        MARA_ENGINE.VERSION,
-
-                    stage:
-                        MARA_ENGINE.STAGE,
-
-                    ...data
-
-                },
-                "*"
+        const response =
+            await this.fetchURL(
+                file.url
             );
 
+        const blob =
+            await response.blob();
 
-            return true;
-
-        } catch (
-            error
+        if (
+            blob.size >
+            MARA_ENGINE_CONFIG.maxFileSize
         ) {
 
-            this.error(
-                "Gagal mengirim pesan ke intro:",
-                error
+            throw new Error(
+                `File terlalu besar: ${file.path}`
             );
-
-
-            return false;
 
         }
 
-    },
+        if (
+            file.size !==
+            undefined &&
+            Number(file.size) !==
+            blob.size
+        ) {
 
+            throw new Error(
+                `Ukuran file tidak cocok: ${file.path}`
+            );
 
-    /* =====================================================
-       INTRO MESSAGE LISTENER
-    ===================================================== */
+        }
 
-    setupIntroListener() {
-
-        window.addEventListener(
-            "message",
-            event => {
-
-                if (
-                    !this.introFrame
-                ) {
-
-                    return;
-
-                }
-
-
-                if (
-                    event.source !==
-                    this.introFrame.contentWindow
-                ) {
-
-                    return;
-
-                }
-
-
-                const data =
-                    event.data;
-
-
-                if (
-                    !data ||
-                    typeof data !==
-                    "object"
-                ) {
-
-                    return;
-
-                }
-
-
-                this.emit(
-                    "intro:message",
-                    data
-                );
-
-
-                switch (
-                    data.type
-                ) {
-
-                    case "MARA_INTRO_READY":
-
-                        this.log(
-                            "Intro READY."
-                        );
-
-                        this.notifyIntro(
-                            "MARA_ENGINE_STATUS",
-                            {
-
-                                status:
-                                    this.state.status
-
-                            }
-                        );
-
-                        break;
-
-
-                    case "MARA_INTRO_FINISHED":
-
-                        this.log(
-                            "Intro FINISHED."
-                        );
-
-                        this.emit(
-                            "intro:finished"
-                        );
-
-                        break;
-
-
-                    default:
-
-                        break;
-
-                }
-
-            }
+        await this.saveTemporaryFile(
+            build,
+            file.path,
+            blob,
+            file.type
         );
 
-    },
+        this.state.completedFiles =
+            index + 1;
 
+        this.state.totalFiles =
+            total;
 
-    /* =====================================================
-       MAIN FRAME LOAD
-    ===================================================== */
-
-    loadMainUI(
-        path
-    ) {
-
-        if (
-            !this.mainFrame
-        ) {
-
-            throw new Error(
-                "mara-main-frame tidak ditemukan."
+        this.state.progress =
+            Math.round(
+                (
+                    (index + 1) /
+                    total
+                ) * 100
             );
 
-        }
-
-
-        if (
-            !path
-        ) {
-
-            throw new Error(
-                "Path UI kosong."
-            );
-
-        }
-
-
-        this.setStatus(
-            "LOADING_UI",
+        this.emit(
+            "download:progress",
             {
 
-                path
+                build,
+
+                path:
+                    file.path,
+
+                index:
+                    index + 1,
+
+                total,
+
+                progress:
+                    this.state.progress
 
             }
         );
 
+        return blob;
 
-        this.mainFrame.onload =
-            () => {
-
-                this.setStatus(
-                    "UI_READY",
-                    {
-
-                        path
-
-                    }
-                );
+    },
 
 
-                this.emit(
-                    "ui:ready",
-                    {
+    /* =====================================================
+       DOWNLOAD BUILD
+    ===================================================== */
 
-                        path,
+    async downloadBuild(
+        manifest
+    ) {
 
-                        iframe:
-                            this.mainFrame
+        const build =
+            Number(
+                manifest.build
+            );
 
-                    }
-                );
+        const files =
+            manifest.files;
 
+        this.setStatus(
+            "DOWNLOADING",
+            {
 
-                this.log(
-                    "UI berhasil dimuat:",
-                    path
-                );
+                installingBuild:
+                    build,
 
-            };
+                progress:
+                    0,
 
+                completedFiles:
+                    0,
 
-        this.mainFrame.onerror =
-            () => {
+                totalFiles:
+                    files.length
 
-                this.setStatus(
-                    "UI_ERROR",
-                    {
+            }
+        );
 
-                        path
+        await this.deleteTemporaryBuild(
+            build
+        );
 
-                    }
-                );
+        this.emit(
+            "download:start",
+            {
 
-            };
+                build,
 
+                total:
+                    files.length
 
-        this.mainFrame.src =
-            path;
+            }
+        );
 
+        for (
+            let i = 0;
+            i < files.length;
+            i++
+        ) {
+
+            await this.downloadFile(
+                build,
+                files[i],
+                i,
+                files.length
+            );
+
+        }
+
+        this.emit(
+            "download:complete",
+            {
+                build
+            }
+        );
 
         return true;
 
@@ -1452,252 +1408,900 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       CLEAR MAIN FRAME
+       VERIFY BUILD
     ===================================================== */
 
-    clearMainUI() {
+    async verifyBuild(
+        manifest
+    ) {
+
+        const build =
+            Number(
+                manifest.build
+            );
+
+        this.setStatus(
+            "VERIFYING",
+            {
+                progress:
+                    0
+            }
+        );
+
+        const files =
+            await this.getTemporaryFiles(
+                build
+            );
 
         if (
-            !this.mainFrame
+            files.length !==
+            manifest.files.length
+        ) {
+
+            throw new Error(
+                `Jumlah file tidak cocok. Expected ${manifest.files.length}, received ${files.length}`
+            );
+
+        }
+
+        for (
+            let i = 0;
+            i <
+            manifest.files.length;
+            i++
+        ) {
+
+            const expected =
+                manifest.files[i];
+
+            const actual =
+                files.find(
+                    file =>
+                        file.path ===
+                        expected.path
+                );
+
+            if (
+                !actual
+            ) {
+
+                throw new Error(
+                    `File hilang: ${expected.path}`
+                );
+
+            }
+
+            if (
+                expected.size !==
+                undefined &&
+                Number(expected.size) !==
+                Number(actual.size)
+            ) {
+
+                throw new Error(
+                    `Ukuran tidak cocok: ${expected.path}`
+                );
+
+            }
+
+            if (
+                expected.sha256 &&
+                MARA_ENGINE_CONFIG.verifyContent
+            ) {
+
+                const hash =
+                    await this.sha256(
+                        actual.content
+                    );
+
+                if (
+                    hash.toLowerCase() !==
+                    String(
+                        expected.sha256
+                    ).toLowerCase()
+                ) {
+
+                    throw new Error(
+                        `SHA-256 tidak cocok: ${expected.path}`
+                    );
+
+                }
+
+            }
+
+            this.state.progress =
+                Math.round(
+                    (
+                        (i + 1) /
+                        manifest.files.length
+                    ) * 100
+                );
+
+            this.emit(
+                "verify:progress",
+                {
+
+                    build,
+
+                    path:
+                        expected.path,
+
+                    progress:
+                        this.state.progress
+
+                }
+            );
+
+        }
+
+        this.emit(
+            "verify:success",
+            {
+                build
+            }
+        );
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       SHA256
+    ===================================================== */
+
+    async sha256(
+        blob
+    ) {
+
+        const buffer =
+            await blob.arrayBuffer();
+
+        const hashBuffer =
+            await crypto.subtle.digest(
+                "SHA-256",
+                buffer
+            );
+
+        const bytes =
+            new Uint8Array(
+                hashBuffer
+            );
+
+        return Array
+            .from(
+                bytes
+            )
+            .map(
+                byte =>
+                    byte
+                        .toString(16)
+                        .padStart(
+                            2,
+                            "0"
+                        )
+            )
+            .join("");
+
+    },
+
+
+    /* =====================================================
+       INSTALL BUILD
+    ===================================================== */
+
+    async installBuild(
+        manifest
+    ) {
+
+        const build =
+            Number(
+                manifest.build
+            );
+
+        this.setStatus(
+            "INSTALLING",
+            {
+                installingBuild:
+                    build,
+
+                progress:
+                    0
+            }
+        );
+
+        const temporaryFiles =
+            await this.getTemporaryFiles(
+                build
+            );
+
+        if (
+            temporaryFiles.length !==
+            manifest.files.length
+        ) {
+
+            throw new Error(
+                "Temporary build tidak lengkap."
+            );
+
+        }
+
+        /* =================================================
+           BUILD METADATA — INSTALLING
+        ================================================= */
+
+        await this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.builds,
+                "readwrite"
+            ).put({
+
+                build,
+
+                version:
+                    String(
+                        manifest.version
+                    ),
+
+                installedAt:
+                    Date.now(),
+
+                status:
+                    "INSTALLING",
+
+                fileCount:
+                    temporaryFiles.length
+
+            })
+        );
+
+
+        /* =================================================
+           COPY TEMP → PERMANENT
+        ================================================= */
+
+        for (
+            let i = 0;
+            i <
+            temporaryFiles.length;
+            i++
+        ) {
+
+            const file =
+                temporaryFiles[i];
+
+            await this.request(
+                this.store(
+                    MARA_ENGINE_CONFIG.stores.files,
+                    "readwrite"
+                ).put({
+
+                    id:
+                        `${build}:${file.path}`,
+
+                    build,
+
+                    path:
+                        file.path,
+
+                    type:
+                        file.type,
+
+                    content:
+                        file.content,
+
+                    size:
+                        file.size,
+
+                    installedAt:
+                        Date.now()
+
+                })
+            );
+
+            this.state.progress =
+                Math.round(
+                    (
+                        (i + 1) /
+                        temporaryFiles.length
+                    ) * 100
+                );
+
+            this.emit(
+                "install:progress",
+                {
+
+                    build,
+
+                    path:
+                        file.path,
+
+                    progress:
+                        this.state.progress
+
+                }
+            );
+
+        }
+
+
+        /* =================================================
+           BUILD READY
+        ================================================= */
+
+        await this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.builds,
+                "readwrite"
+            ).put({
+
+                build,
+
+                version:
+                    String(
+                        manifest.version
+                    ),
+
+                installedAt:
+                    Date.now(),
+
+                status:
+                    "READY",
+
+                fileCount:
+                    temporaryFiles.length
+
+            })
+        );
+
+
+        /* =================================================
+           TEMP CLEANUP
+        ================================================= */
+
+        await this.deleteTemporaryBuild(
+            build
+        );
+
+
+        this.emit(
+            "install:complete",
+            {
+                build
+            }
+        );
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       ACTIVATE BUILD
+    ===================================================== */
+
+    async activateBuild(
+        build,
+        version = null
+    ) {
+
+        const exists =
+            await this.hasBuild(
+                build
+            );
+
+        if (
+            !exists
+        ) {
+
+            throw new Error(
+                `Build ${build} tidak tersedia.`
+            );
+
+        }
+
+        await this.setActiveBuild(
+            build,
+            version
+        );
+
+        this.emit(
+            "activate:complete",
+            {
+
+                build,
+
+                version
+
+            }
+        );
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       VERIFY ACTIVE BUILD
+    ===================================================== */
+
+    async verifyActiveBuild(
+        build
+    ) {
+
+        const metadata =
+            await this.getBuild(
+                build
+            );
+
+        if (
+            !metadata ||
+            metadata.status !==
+                "READY"
+        ) {
+
+            throw new Error(
+                `Build ${build} tidak READY.`
+            );
+
+        }
+
+        const files =
+            await this.getBuildFiles(
+                build
+            );
+
+        if (
+            !files.length
+        ) {
+
+            throw new Error(
+                `Build ${build} tidak memiliki file.`
+            );
+
+        }
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       DELETE BUILD
+    ===================================================== */
+
+    async deleteBuild(
+        build
+    ) {
+
+        if (
+            build ===
+            null ||
+            build ===
+            undefined
         ) {
 
             return;
 
         }
 
+        const numericBuild =
+            Number(build);
 
-        this.mainFrame.src =
-            "about:blank";
+        const active =
+            await this.getActiveBuild();
 
+        /*
+         * Jangan pernah menghapus build aktif.
+         */
 
-        this.log(
-            "Main iframe dikosongkan."
+        if (
+            active !== null &&
+            numericBuild ===
+            Number(active)
+        ) {
+
+            console.warn(
+                "[MARA ENGINE] Penghapusan dibatalkan: build masih aktif."
+            );
+
+            return;
+
+        }
+
+        const files =
+            await this.getBuildFiles(
+                numericBuild
+            );
+
+        for (
+            const file
+            of files
+        ) {
+
+            await this.request(
+                this.store(
+                    MARA_ENGINE_CONFIG.stores.files,
+                    "readwrite"
+                ).delete(
+                    file.id
+                )
+            );
+
+        }
+
+        await this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.builds,
+                "readwrite"
+            ).delete(
+                numericBuild
+            )
+        );
+
+        this.revokeBuildURLs(
+            numericBuild
+        );
+
+        this.emit(
+            "build:deleted",
+            {
+                build:
+                    numericBuild
+            }
         );
 
     },
 
 
     /* =====================================================
-       CHECK REPOSITORY
-       
-       Hanya pemeriksaan.
-       Belum download/install.
+       DELETE TEMP BUILD
     ===================================================== */
 
-    async checkRepository() {
+    async deleteTemporaryBuild(
+        build
+    ) {
 
-        if (
-            !navigator.onLine
+        await this.init();
+
+        const files =
+            await this.getTemporaryFiles(
+                build
+            );
+
+        for (
+            const file
+            of files
         ) {
 
-            return {
-
-                online:
-                    false,
-
-                available:
-                    false,
-
-                reason:
-                    "OFFLINE"
-
-            };
+            await this.request(
+                this.store(
+                    MARA_ENGINE_CONFIG.stores.temporary,
+                    "readwrite"
+                ).delete(
+                    file.id
+                )
+            );
 
         }
 
+    },
+
+
+    /* =====================================================
+       GET BUILD FILES
+    ===================================================== */
+
+    async getBuildFiles(
+        build
+    ) {
+
+        await this.init();
+
+        return this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.files
+            )
+            .index(
+                "build"
+            )
+            .getAll(
+                Number(build)
+            )
+        );
+
+    },
+
+
+    /* =====================================================
+       HAS BUILD
+    ===================================================== */
+
+    async hasBuild(
+        build
+    ) {
+
+        await this.init();
+
+        const result =
+            await this.request(
+                this.store(
+                    MARA_ENGINE_CONFIG.stores.builds
+                ).get(
+                    Number(build)
+                )
+            );
+
+        return Boolean(
+            result &&
+            result.status ===
+                "READY"
+        );
+
+    },
+
+
+    /* =====================================================
+       GET BUILD
+    ===================================================== */
+
+    async getBuild(
+        build
+    ) {
+
+        await this.init();
+
+        return this.request(
+            this.store(
+                MARA_ENGINE_CONFIG.stores.builds
+            ).get(
+                Number(build)
+            )
+        );
+
+    },
+
+
+    /* =====================================================
+       CREATE FILE URL
+    ===================================================== */
+
+    async createFileURL(
+        build,
+        path
+    ) {
+
+        const file =
+            await this.request(
+                this.store(
+                    MARA_ENGINE_CONFIG.stores.files
+                ).get(
+                    `${Number(build)}:${path}`
+                )
+            );
 
         if (
-            !this.config
+            !file
         ) {
 
             throw new Error(
-                "Config belum siap."
+                `File tidak ditemukan: ${path}`
             );
 
         }
 
-
-        const repository =
-            this.config.repository;
-
+        const key =
+            `${Number(build)}:${path}`;
 
         if (
-            !repository ||
-            repository.enabled !==
-            true
+            this.objectURLs.has(
+                key
+            )
         ) {
 
-            return {
-
-                online:
-                    true,
-
-                available:
-                    false,
-
-                enabled:
-                    false
-
-            };
+            return this.objectURLs.get(
+                key
+            );
 
         }
 
-
-        if (
-            !repository.manifest
-        ) {
-
-            return {
-
-                online:
-                    true,
-
-                available:
-                    false,
-
-                enabled:
-                    true,
-
-                reason:
-                    "MANIFEST_NOT_CONFIGURED"
-
-            };
-
-        }
-
-
-        this.setStatus(
-            "CHECKING_REPOSITORY"
-        );
-
-
-        try {
-
-            const response =
-                await this.fetchURL(
-                    repository.manifest
+        const blob =
+            file.content instanceof Blob
+                ? file.content
+                : new Blob(
+                    [
+                        file.content
+                    ],
+                    {
+                        type:
+                            file.type ||
+                            "application/octet-stream"
+                    }
                 );
 
-
-            const manifest =
-                await response.json();
-
-
-            this.emit(
-                "repository:ready",
-                {
-
-                    manifest
-
-                }
+        const url =
+            URL.createObjectURL(
+                blob
             );
 
+        this.objectURLs.set(
+            key,
+            url
+        );
 
-            this.notifyIntro(
-                "MARA_REPOSITORY_READY",
-                {
-
-                    manifest
-
-                }
-            );
-
-
-            this.log(
-                "Repository manifest berhasil dibaca."
-            );
-
-
-            return {
-
-                online:
-                    true,
-
-                available:
-                    true,
-
-                manifest
-
-            };
-
-        } catch (
-            error
-        ) {
-
-            this.warn(
-                "Repository tidak tersedia:",
-                error
-            );
-
-
-            return {
-
-                online:
-                    true,
-
-                available:
-                    false,
-
-                error:
-                    error.message
-
-            };
-
-        }
+        return url;
 
     },
 
 
     /* =====================================================
-       GET ENGINE STATUS
+       LOAD ACTIVE FILE
     ===================================================== */
 
-    getStatus() {
+    async loadActiveFile(
+        path
+    ) {
+
+        const build =
+            await this.getActiveBuild();
+
+        if (
+            build ===
+            null
+        ) {
+
+            throw new Error(
+                "Tidak ada ACTIVE BUILD."
+            );
+
+        }
+
+        return this.createFileURL(
+            build,
+            path
+        );
+
+    },
+
+
+    /* =====================================================
+       LOAD INTO IFRAME
+    ===================================================== */
+
+    async loadIntoIframe(
+        iframe,
+        path
+    ) {
+
+        if (
+            !iframe
+        ) {
+
+            throw new Error(
+                "Iframe tidak ditemukan."
+            );
+
+        }
+
+        const url =
+            await this.loadActiveFile(
+                path
+            );
+
+        iframe.src =
+            url;
+
+        return url;
+
+    },
+
+
+    /* =====================================================
+       LOCK SCREEN
+    ===================================================== */
+
+    async loadLockScreen(
+        iframe
+    ) {
+
+        return this.loadIntoIframe(
+            iframe,
+            "lock-screen.html"
+        );
+
+    },
+
+
+    /* =====================================================
+       HOME SCREEN
+    ===================================================== */
+
+    async loadHomeScreen(
+        iframe
+    ) {
+
+        return this.loadIntoIframe(
+            iframe,
+            "home-screen.html"
+        );
+
+    },
+
+
+    /* =====================================================
+       MAIN FRAME
+    ===================================================== */
+
+    async loadMainFrame(
+        iframe
+    ) {
+
+        return this.loadHomeScreen(
+            iframe
+        );
+
+    },
+
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    async getStatus() {
+
+        const active =
+            await this.getActiveBuild();
+
+        const files =
+            active !== null
+                ? await this.getBuildFiles(
+                    active
+                )
+                : [];
 
         return {
 
-            engine:
-                {
+            status:
+                this.state.status,
 
-                    name:
-                        MARA_ENGINE.NAME,
+            activeBuild:
+                active,
 
-                    id:
-                        MARA_ENGINE.ID,
+            activeVersion:
+                this.state.activeVersion,
 
-                    version:
-                        MARA_ENGINE.VERSION,
+            remoteBuild:
+                this.state.remoteBuild,
 
-                    stage:
-                        MARA_ENGINE.STAGE
+            remoteVersion:
+                this.state.remoteVersion,
 
-                },
+            installingBuild:
+                this.state.installingBuild,
 
-            state:
-                {
+            progress:
+                this.state.progress,
 
-                    ...this.state
+            completedFiles:
+                this.state.completedFiles,
 
-                },
+            totalFiles:
+                this.state.totalFiles,
 
-            config:
-                this.config,
+            currentFile:
+                this.state.currentFile,
+
+            fileCount:
+                files.length,
+
+            online:
+                navigator.onLine,
+
+            updating:
+                this.updating,
 
             database:
-                {
-
-                    name:
-                        MARA_ENGINE.DATABASE,
-
-                    version:
-                        MARA_ENGINE.DATABASE_VERSION,
-
-                    ready:
-                        Boolean(
-                            this.db
-                        )
-
-                }
+                MARA_ENGINE_CONFIG.databaseName
 
         };
 
@@ -1705,207 +2309,411 @@ window.MARAEngineSingle = {
 
 
     /* =====================================================
-       BOOT
+       REVOKE BUILD URLS
     ===================================================== */
 
-    async boot() {
+    revokeBuildURLs(
+        build
+    ) {
 
-        if (
-            this.booted
+        for (
+            const [
+                key,
+                url
+            ]
+            of this.objectURLs
         ) {
 
-            this.log(
-                "Engine sudah boot."
-            );
+            if (
+                key.startsWith(
+                    `${Number(build)}:`
+                )
+            ) {
 
-            return true;
+                try {
+
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                } catch {}
+
+                this.objectURLs.delete(
+                    key
+                );
+
+            }
 
         }
 
+    },
+
+
+    /* =====================================================
+       UPDATE PIPELINE
+    ===================================================== */
+
+    async update() {
+
+        if (
+            this.updating
+        ) {
+
+            console.warn(
+                "[MARA ENGINE] Update sedang berjalan."
+            );
+
+            return {
+
+                updated:
+                    false,
+
+                busy:
+                    true
+
+            };
+
+        }
+
+        this.updating =
+            true;
 
         this.state.startedAt =
             Date.now();
 
-
         this.state.error =
             null;
 
-
-        this.setStatus(
-            "BOOTING"
-        );
-
-
         try {
 
-            /* =========================================
-               STEP 1
-            ========================================= */
-
-            await this.loadConfig();
+            await this.init();
 
 
-            /* =========================================
-               STEP 2
-            ========================================= */
+            /* =============================================
+               OFFLINE
+            ============================================= */
 
-            await this.initDatabase();
+            if (
+                !navigator.onLine
+            ) {
 
+                this.setStatus(
+                    "OFFLINE"
+                );
 
-            /* =========================================
-               STEP 3
-            ========================================= */
+                this.emit(
+                    "update:none",
+                    {
+                        offline:
+                            true
+                    }
+                );
 
-            await this.saveEngineInfo();
+                return {
 
+                    updated:
+                        false,
 
-            /* =========================================
-               STEP 4
-            ========================================= */
+                    offline:
+                        true
 
-            this.detectFrames();
+                };
 
-
-            /* =========================================
-               STEP 5
-            ========================================= */
-
-            this.setupIntroListener();
-
-
-            /* =========================================
-               STEP 6
-            ========================================= */
-
-            this.state.engine =
-                true;
+            }
 
 
-            this.state.ready =
-                true;
+            /* =============================================
+               MANIFEST
+            ============================================= */
+
+            const manifest =
+                await this.fetchManifest();
+
+            const remoteBuild =
+                Number(
+                    manifest.build
+                );
+
+            const localBuild =
+                await this.getActiveBuild();
 
 
-            this.state.status =
-                "READY";
+            /* =============================================
+               NO UPDATE
+            ============================================= */
 
+            if (
+                localBuild !== null &&
+                !this.isNewerBuild(
+                    remoteBuild,
+                    localBuild
+                )
+            ) {
 
-            this.state.readyAt =
-                Date.now();
+                this.setStatus(
+                    "UP_TO_DATE"
+                );
 
+                this.emit(
+                    "update:none",
+                    {
 
-            this.initialized =
-                true;
+                        build:
+                            localBuild,
 
+                        version:
+                            this.state.activeVersion
 
-            this.booted =
-                true;
+                    }
+                );
 
+                return {
 
-            this.emit(
-                "ready",
-                this.getStatus()
-            );
+                    updated:
+                        false,
 
-
-            /* =========================================
-               INTRO SUCCESS
-            ========================================= */
-
-            this.notifyIntro(
-                "MARA_ENGINE_READY",
-                {
-
-                    status:
-                        "SUCCESS",
-
-                    message:
-                        "MARA ENGINE SINGLE berhasil dimuat.",
+                    build:
+                        localBuild,
 
                     version:
-                        MARA_ENGINE.VERSION,
+                        this.state.activeVersion
 
-                    stage:
-                        MARA_ENGINE.STAGE
+                };
+
+            }
+
+
+            /* =============================================
+               UPDATE START
+            ============================================= */
+
+            this.emit(
+                "update:start",
+                {
+
+                    oldBuild:
+                        localBuild,
+
+                    newBuild:
+                        remoteBuild,
+
+                    version:
+                        manifest.version
 
                 }
             );
 
 
-            this.log(
-                "======================================"
+            /* =============================================
+               INTRO NOTIFICATION
+            ============================================= */
+
+            this.emit(
+                "intro:update-start",
+                {
+
+                    build:
+                        remoteBuild,
+
+                    version:
+                        manifest.version
+
+                }
             );
 
 
-            this.log(
-                "MARA ENGINE SINGLE READY"
+            /* =============================================
+               DOWNLOAD
+            ============================================= */
+
+            await this.downloadBuild(
+                manifest
             );
 
 
-            this.log(
-                "Version:",
-                MARA_ENGINE.VERSION
+            /* =============================================
+               VERIFY
+            ============================================= */
+
+            await this.verifyBuild(
+                manifest
             );
 
 
-            this.log(
-                "Stage:",
-                MARA_ENGINE.STAGE
+            /* =============================================
+               INSTALL
+            ============================================= */
+
+            await this.installBuild(
+                manifest
             );
 
 
-            this.log(
-                "IndexedDB:",
-                this.state.database
+            /* =============================================
+               VERIFY INSTALLED BUILD
+            ============================================= */
+
+            await this.verifyActiveBuild(
+                remoteBuild
             );
 
 
-            this.log(
-                "Intro:",
-                this.state.intro
+            /* =============================================
+               ACTIVATE
+            ============================================= */
+
+            await this.activateBuild(
+                remoteBuild,
+                manifest.version
             );
 
 
-            this.log(
-                "Main Frame:",
-                this.state.mainFrame
+            /* =============================================
+               OLD BUILD
+            ============================================= */
+
+            if (
+                localBuild !== null &&
+                Number(localBuild) !==
+                    Number(remoteBuild) &&
+                !MARA_ENGINE_CONFIG.keepOldBuild
+            ) {
+
+                /*
+                 * Build baru sudah aktif.
+                 * Sekarang aman membersihkan build lama.
+                 */
+
+                await this.deleteBuild(
+                    localBuild
+                );
+
+            }
+
+
+            /* =============================================
+               COMPLETE
+            ============================================= */
+
+            this.state.progress =
+                100;
+
+            this.state.completedAt =
+                Date.now();
+
+            this.setStatus(
+                "UPDATED",
+                {
+
+                    activeBuild:
+                        remoteBuild,
+
+                    activeVersion:
+                        manifest.version,
+
+                    progress:
+                        100,
+
+                    installingBuild:
+                        null,
+
+                    currentFile:
+                        null
+
+                }
             );
 
 
-            this.log(
-                "======================================"
+            const result = {
+
+                updated:
+                    true,
+
+                oldBuild:
+                    localBuild,
+
+                newBuild:
+                    remoteBuild,
+
+                version:
+                    manifest.version
+
+            };
+
+
+            this.emit(
+                "update:complete",
+                result
             );
 
 
-            return true;
+            this.emit(
+                "intro:update-finished",
+                result
+            );
+
+
+            return result;
+
 
         } catch (
             error
         ) {
 
-            this.state.status =
-                "ERROR";
-
+            console.error(
+                "[MARA ENGINE] UPDATE FAILED:",
+                error
+            );
 
             this.state.error =
                 error.message;
 
-
-            this.emit(
-                "error",
+            this.setStatus(
+                "ERROR",
                 {
 
-                    error
+                    error:
+                        error.message
 
                 }
             );
 
 
-            this.notifyIntro(
-                "MARA_ENGINE_ERROR",
+            /*
+             * TEMP BUILD DIBERSIHKAN.
+             *
+             * ACTIVE BUILD LAMA TIDAK DISENTUH.
+             */
+
+            if (
+                this.state.installingBuild
+            ) {
+
+                try {
+
+                    await this.deleteTemporaryBuild(
+                        this.state.installingBuild
+                    );
+
+                } catch (
+                    cleanupError
+                ) {
+
+                    console.warn(
+                        "[MARA ENGINE] Cleanup gagal:",
+                        cleanupError
+                    );
+
+                }
+
+            }
+
+
+            this.emit(
+                "update:error",
                 {
 
-                    status:
-                        "ERROR",
+                    error,
 
                     message:
                         error.message
@@ -1914,15 +2722,122 @@ window.MARAEngineSingle = {
             );
 
 
-            this.error(
-                "ENGINE BOOT FAILED:",
-                error
+            this.emit(
+                "intro:update-error",
+                {
+
+                    message:
+                        error.message
+
+                }
             );
 
 
-            return false;
+            return {
+
+                updated:
+                    false,
+
+                error:
+                    true,
+
+                message:
+                    error.message
+
+            };
+
+
+        } finally {
+
+            this.updating =
+                false;
 
         }
+
+    },
+
+
+    /* =====================================================
+       RECOVER
+    ===================================================== */
+
+    async recover() {
+
+        await this.init();
+
+        /*
+         * Jika ada temporary build yang tertinggal
+         * dari update sebelumnya, bersihkan.
+         */
+
+        const transaction =
+            this.db.transaction(
+                MARA_ENGINE_CONFIG.stores.temporary,
+                "readonly"
+            );
+
+        const store =
+            transaction.objectStore(
+                MARA_ENGINE_CONFIG.stores.temporary
+            );
+
+        const files =
+            await this.request(
+                store.getAll()
+            );
+
+        const builds =
+            new Set(
+                files.map(
+                    file =>
+                        Number(
+                            file.build
+                        )
+                )
+            );
+
+        for (
+            const build
+            of builds
+        ) {
+
+            const ready =
+                await this.hasBuild(
+                    build
+                );
+
+            if (
+                !ready
+            ) {
+
+                await this.deleteTemporaryBuild(
+                    build
+                );
+
+            }
+
+        }
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       SLEEP
+    ===================================================== */
+
+    sleep(
+        ms
+    ) {
+
+        return new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    ms
+                )
+        );
 
     }
 
@@ -1930,35 +2845,142 @@ window.MARAEngineSingle = {
 
 
 /* =========================================================
-   ONLINE
+   GLOBAL API
 ========================================================= */
 
-window.addEventListener(
-    "online",
-    () => {
+window.MARAUpdate = {
 
-        MARAEngineSingle.state.online =
-            true;
+    init:
+        () =>
+            MARAEngineSingle.init(),
+
+    check:
+        () =>
+            MARAEngineSingle.fetchManifest(),
+
+    update:
+        () =>
+            MARAEngineSingle.update(),
+
+    recover:
+        () =>
+            MARAEngineSingle.recover(),
+
+    status:
+        () =>
+            MARAEngineSingle.getStatus(),
+
+    activeBuild:
+        () =>
+            MARAEngineSingle.getActiveBuild(),
+
+    load:
+        path =>
+            MARAEngineSingle.loadActiveFile(
+                path
+            ),
+
+    loadIntoIframe:
+        (
+            iframe,
+            path
+        ) =>
+            MARAEngineSingle.loadIntoIframe(
+                iframe,
+                path
+            ),
+
+    loadLockScreen:
+        iframe =>
+            MARAEngineSingle.loadLockScreen(
+                iframe
+            ),
+
+    loadHomeScreen:
+        iframe =>
+            MARAEngineSingle.loadHomeScreen(
+                iframe
+            )
+
+};
 
 
-        MARAEngineSingle.emit(
-            "online"
+/* =========================================================
+   ENGINE EVENTS
+========================================================= */
+
+MARAEngineSingle.on(
+    "download:progress",
+    data => {
+
+        console.log(
+            `[MARA ENGINE] DOWNLOAD ${data.progress}%`,
+            data.path
         );
 
+    }
+);
 
-        MARAEngineSingle.notifyIntro(
-            "MARA_ONLINE",
-            {
 
-                message:
-                    "Koneksi internet tersedia."
+MARAEngineSingle.on(
+    "verify:success",
+    data => {
 
-            }
+        console.log(
+            "[MARA ENGINE] VERIFICATION OK:",
+            data.build
         );
 
+    }
+);
 
-        MARAEngineSingle.log(
-            "ONLINE"
+
+MARAEngineSingle.on(
+    "install:complete",
+    data => {
+
+        console.log(
+            "[MARA ENGINE] INSTALL COMPLETE:",
+            data.build
+        );
+
+    }
+);
+
+
+MARAEngineSingle.on(
+    "build:active",
+    data => {
+
+        console.log(
+            "[MARA ENGINE] ACTIVE BUILD:",
+            data.build
+        );
+
+    }
+);
+
+
+MARAEngineSingle.on(
+    "update:complete",
+    data => {
+
+        console.log(
+            "[MARA ENGINE] UPDATE COMPLETE:",
+            data
+        );
+
+    }
+);
+
+
+MARAEngineSingle.on(
+    "update:error",
+    data => {
+
+        console.error(
+            "[MARA ENGINE] UPDATE ERROR:",
+            data.message
         );
 
     }
@@ -1966,35 +2988,39 @@ window.addEventListener(
 
 
 /* =========================================================
-   OFFLINE
+   NETWORK
 ========================================================= */
+
+window.addEventListener(
+    "online",
+    () => {
+
+        console.log(
+            "[MARA ENGINE] NETWORK ONLINE"
+        );
+
+        MARAEngineSingle.emit(
+            "network:online"
+        );
+
+    }
+);
+
 
 window.addEventListener(
     "offline",
     () => {
 
-        MARAEngineSingle.state.online =
-            false;
+        console.log(
+            "[MARA ENGINE] NETWORK OFFLINE"
+        );
 
+        MARAEngineSingle.setStatus(
+            "OFFLINE"
+        );
 
         MARAEngineSingle.emit(
-            "offline"
-        );
-
-
-        MARAEngineSingle.notifyIntro(
-            "MARA_OFFLINE",
-            {
-
-                message:
-                    "MARA OS berjalan offline."
-
-            }
-        );
-
-
-        MARAEngineSingle.log(
-            "OFFLINE"
+            "network:offline"
         );
 
     }
@@ -2011,20 +3037,67 @@ document.addEventListener(
 
         try {
 
-            MARAEngineSingle.log(
-                "ENGINE-SINGLE.JS LOADED."
+            await MARAEngineSingle.init();
+
+            await MARAEngineSingle.recover();
+
+            const status =
+                await MARAEngineSingle.getStatus();
+
+            console.log(
+                "[MARA ENGINE] STATUS:",
+                status
             );
 
 
-            await MARAEngineSingle.boot();
+            /* =============================================
+               AUTO UPDATE
+            ============================================= */
+
+            if (
+                MARA_ENGINE_CONFIG.autoUpdate &&
+                navigator.onLine
+            ) {
+
+                setTimeout(
+                    async () => {
+
+                        try {
+
+                            await MARAEngineSingle.update();
+
+                        } catch (
+                            error
+                        ) {
+
+                            console.error(
+                                "[MARA ENGINE] AUTO UPDATE ERROR:",
+                                error
+                            );
+
+                        }
+
+                    },
+                    MARA_ENGINE_CONFIG.autoUpdateDelay
+                );
+
+            }
 
         } catch (
             error
         ) {
 
-            MARAEngineSingle.error(
-                "BOOT ERROR:",
+            console.error(
+                "[MARA ENGINE] INITIALIZATION ERROR:",
                 error
+            );
+
+            MARAEngineSingle.setStatus(
+                "ERROR",
+                {
+                    error:
+                        error.message
+                }
             );
 
         }
@@ -2034,112 +3107,119 @@ document.addEventListener(
 
 
 /* =========================================================
-   GLOBAL MARA API
+   MESSAGE BRIDGE
 ========================================================= */
 
-window.MARA = {
+window.addEventListener(
+    "message",
+    event => {
 
-    engine:
-        MARAEngineSingle,
+        const data =
+            event.data;
 
+        if (
+            !data ||
+            typeof data !==
+                "object"
+        ) {
 
-    boot:
-        () =>
-            MARAEngineSingle.boot(),
-
-
-    status:
-        () =>
-            MARAEngineSingle.getStatus(),
-
-
-    repository:
-        () =>
-            MARAEngineSingle.checkRepository(),
-
-
-    load:
-        path =>
-            MARAEngineSingle.loadMainUI(
-                path
-            ),
-
-
-    clear:
-        () =>
-            MARAEngineSingle.clearMainUI(),
-
-
-    setting:
-
-        {
-
-            get:
-                id =>
-                    MARAEngineSingle.getSetting(
-                        id
-                    ),
-
-            set:
-                (
-                    id,
-                    value
-                ) =>
-                    MARAEngineSingle.setSetting(
-                        id,
-                        value
-                    )
+            return;
 
         }
 
-};
+        /*
+         * Intro dapat meminta status engine.
+         */
+
+        if (
+            data.type ===
+            "MARA_ENGINE_STATUS_REQUEST"
+        ) {
+
+            MARAEngineSingle
+                .getStatus()
+                .then(
+                    status => {
+
+                        event.source?.postMessage(
+                            {
+
+                                type:
+                                    "MARA_ENGINE_STATUS",
+
+                                status
+
+                            },
+
+                            "*"
+                        );
+
+                    }
+                );
+
+        }
+
+
+        /*
+         * Intro dapat meminta update.
+         */
+
+        if (
+            data.type ===
+            "MARA_ENGINE_UPDATE_REQUEST"
+        ) {
+
+            MARAEngineSingle
+                .update()
+                .then(
+                    result => {
+
+                        event.source?.postMessage(
+                            {
+
+                                type:
+                                    "MARA_ENGINE_UPDATE_RESULT",
+
+                                result
+
+                            },
+
+                            "*"
+                        );
+
+                    }
+                );
+
+        }
+
+    }
+);
 
 
 /* =========================================================
-   COMPATIBILITY API
-========================================================= */
-
-window.MARAUpdate = {
-
-    status:
-        () =>
-            MARAEngineSingle.getStatus(),
-
-
-    check:
-        () =>
-            MARAEngineSingle.checkRepository(),
-
-
-    boot:
-        () =>
-            MARAEngineSingle.boot()
-
-};
-
-
-/* =========================================================
-   FINAL LOG
+   ENGINE READY
 ========================================================= */
 
 console.log(
-    "================================================"
+    "=============================================="
 );
 
 console.log(
-    "[MARA ENGINE] ENGINE-SINGLE.JS LOADED"
+    " MARA OS ENGINE SINGLE"
 );
 
 console.log(
-    "[MARA ENGINE] VERSION:",
-    MARA_ENGINE.VERSION
+    " IndexedDB Build Engine"
 );
 
 console.log(
-    "[MARA ENGINE] STAGE:",
-    MARA_ENGINE.STAGE
+    " Stage 1"
 );
 
 console.log(
-    "================================================"
+    " ENGINE-SINGLE.JS LOADED SUCCESSFULLY"
+);
+
+console.log(
+    "=============================================="
 );
