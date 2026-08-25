@@ -1,0 +1,44 @@
+{
+  "engine": {
+    "name": "MARA ENGINE SINGLE",
+    "id": "mara-engine-single",
+    "version": "1.0.0",
+    "stage": 1,
+    "status": "development"
+  },
+
+  "app": {
+    "name": "MARA OS",
+    "version": "1.0.0",
+    "build": 1
+  },
+
+  "paths": {
+    "intro": "ux/intro.html",
+    "mainIframe": "mara-main-frame",
+    "build": "ux/build.js"
+  },
+
+  "storage": {
+    "enabled": true,
+    "database": "MARA_OS_STORAGE",
+    "version": 1
+  },
+
+  "boot": {
+    "showIntro": true,
+    "introTimeout": 30000,
+    "autoStart": true
+  },
+
+  "repository": {
+    "enabled": false,
+    "manifest": "",
+    "channel": "stable"
+  },
+
+  "debug": {
+    "enabled": true,
+    "logPrefix": "[MARA ENGINE]"
+  }
+}
