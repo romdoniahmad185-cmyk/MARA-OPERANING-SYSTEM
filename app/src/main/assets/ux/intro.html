@@ -1,0 +1,2754 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+
+«»
+
+<meta
+name="theme-color"
+content="#000000"
+
+«»
+
+<title>MARA OS</title><style>
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+* {
+
+    box-sizing: border-box;
+
+    -webkit-tap-highlight-color: transparent;
+
+}
+
+
+html,
+body {
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+
+    overflow: hidden;
+
+    background: #000;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+}
+
+
+/* =====================================================
+   MARA OS MAIN
+===================================================== */
+
+#mara-os {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            #10201e 0%,
+            #07110f 38%,
+            #020605 72%,
+            #000 100%
+        );
+
+}
+
+
+.os-placeholder {
+
+    text-align: center;
+
+    color:
+        rgba(255,255,255,.3);
+
+}
+
+
+.os-placeholder h1 {
+
+    margin: 0;
+
+    font-size: 25px;
+
+    letter-spacing: 6px;
+
+}
+
+
+.os-placeholder p {
+
+    margin-top: 10px;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+}
+
+
+/* =====================================================
+   INTRO OVERLAY
+===================================================== */
+
+#intro-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 999999;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            #0b1c1a 0%,
+            #04100e 35%,
+            #010505 70%,
+            #000 100%
+        );
+
+    opacity: 1;
+
+    visibility: visible;
+
+    transition:
+        opacity 1.5s ease,
+        visibility 1.5s ease;
+
+}
+
+
+#intro-overlay.hide {
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+}
+
+
+/* =====================================================
+   AMBIENT LIGHT
+===================================================== */
+
+.ambient-light {
+
+    position: absolute;
+
+    width: 430px;
+
+    height: 430px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0,229,255,.15),
+            rgba(0,201,167,.08) 34%,
+            transparent 70%
+        );
+
+    filter: blur(42px);
+
+    animation:
+        ambientPulse
+        6s
+        ease-in-out
+        infinite;
+
+}
+
+
+.ambient-light-2 {
+
+    position: absolute;
+
+    width: 260px;
+
+    height: 260px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(124,255,203,.10),
+            transparent 70%
+        );
+
+    filter: blur(30px);
+
+    animation:
+        ambientPulse2
+        8s
+        ease-in-out
+        infinite;
+
+}
+
+
+.ambient-ring {
+
+    position: absolute;
+
+    width: 300px;
+
+    height: 300px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(124,255,203,.07);
+
+    animation:
+        ringPulse
+        7s
+        ease-in-out
+        infinite;
+
+}
+
+
+.ambient-ring-2 {
+
+    position: absolute;
+
+    width: 390px;
+
+    height: 390px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(0,229,255,.035);
+
+    animation:
+        ringPulse2
+        9s
+        ease-in-out
+        infinite;
+
+}
+
+
+/* =====================================================
+   INTRO CONTENT
+===================================================== */
+
+.intro-content {
+
+    position: relative;
+
+    z-index: 10;
+
+    width: 100%;
+
+    min-height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+}
+
+
+/* =====================================================
+   LOGO
+===================================================== */
+
+.logo-container {
+
+    position: relative;
+
+    width: 225px;
+
+    height: 225px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    animation:
+        logoFloat
+        6s
+        ease-in-out
+        infinite;
+
+}
+
+
+.logo-container::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 20px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0,229,255,.13),
+            transparent 70%
+        );
+
+    filter: blur(25px);
+
+    animation:
+        logoGlow
+        5s
+        ease-in-out
+        infinite;
+
+}
+
+
+.mara-logo {
+
+    width: 100%;
+
+    height: 100%;
+
+    overflow: visible;
+
+}
+
+
+/* =====================================================
+   SVG FLOW
+===================================================== */
+
+.flow-main,
+.flow-second {
+
+    stroke-dasharray: 1500;
+
+    stroke-dashoffset: 1500;
+
+    filter:
+        drop-shadow(
+            0 0 7px
+            rgba(0,229,255,.30)
+        );
+
+    animation:
+        drawFlow
+        2.8s
+        cubic-bezier(.65,0,.35,1)
+        forwards;
+
+}
+
+
+.flow-second {
+
+    animation-delay: .35s;
+
+}
+
+
+.central-flow {
+
+    stroke-dasharray: 180;
+
+    stroke-dashoffset: 180;
+
+    animation:
+        drawCentral
+        .9s
+        ease
+        forwards;
+
+    animation-delay: 2.45s;
+
+}
+
+
+.flow-point {
+
+    opacity: 0;
+
+    transform-box: fill-box;
+
+    transform-origin: center;
+
+    animation:
+        pointAppear
+        .8s
+        ease
+        forwards;
+
+    animation-delay: 3s;
+
+}
+
+
+/* =====================================================
+   LOGO SHINE
+===================================================== */
+
+.logo-shine {
+
+    position: absolute;
+
+    width: 210px;
+
+    height: 210px;
+
+    border-radius: 50%;
+
+    background:
+        conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 250deg,
+            rgba(255,255,255,.13) 285deg,
+            transparent 320deg,
+            transparent 360deg
+        );
+
+    opacity: 0;
+
+    animation:
+        shineRotate
+        5s
+        linear
+        infinite;
+
+    animation-delay: 2.7s;
+
+}
+
+
+/* =====================================================
+   INTRO TEXT
+===================================================== */
+
+.os-name {
+
+    margin-top: -5px;
+
+    font-size: 36px;
+
+    font-weight: 600;
+
+    letter-spacing: 7px;
+
+    color: #fff;
+
+    opacity: 0;
+
+    transform: translateY(18px);
+
+    text-shadow:
+        0 0 20px
+        rgba(0,229,255,.18);
+
+    animation:
+        textReveal
+        1s
+        cubic-bezier(.2,.8,.2,1)
+        forwards;
+
+    animation-delay: 3.15s;
+
+}
+
+
+.os-subtitle {
+
+    margin-top: 10px;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+    color:
+        rgba(255,255,255,.4);
+
+    opacity: 0;
+
+    animation:
+        textReveal
+        .9s
+        ease
+        forwards;
+
+    animation-delay: 3.55s;
+
+}
+
+
+.os-version {
+
+    margin-top: 17px;
+
+    font-size: 8px;
+
+    line-height: 1.9;
+
+    letter-spacing: 1.5px;
+
+    color:
+        rgba(255,255,255,.3);
+
+    opacity: 0;
+
+    animation:
+        fadeIn
+        .8s
+        ease
+        forwards;
+
+    animation-delay: 3.95s;
+
+}
+
+
+/* =====================================================
+   BOOT STATUS
+===================================================== */
+
+.boot-status {
+
+    position: absolute;
+
+    bottom: 58px;
+
+    font-size: 8px;
+
+    letter-spacing: 2px;
+
+    color:
+        rgba(124,255,203,.4);
+
+    opacity: 0;
+
+    animation:
+        fadeIn
+        .8s
+        ease
+        forwards;
+
+    animation-delay: 4.1s;
+
+}
+
+
+/* =====================================================
+   BOOT PROGRESS
+===================================================== */
+
+.boot-progress {
+
+    position: absolute;
+
+    bottom: 38px;
+
+    width: 145px;
+
+    height: 1px;
+
+    overflow: hidden;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.07);
+
+    opacity: 0;
+
+    animation:
+        fadeIn
+        .8s
+        ease
+        forwards;
+
+    animation-delay: 4s;
+
+}
+
+
+.boot-progress::after {
+
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    top: 0;
+
+    width: 0;
+
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00e5ff,
+            #00c9a7,
+            #7cffcb
+        );
+
+    box-shadow:
+        0 0 8px
+        rgba(0,229,255,.65);
+
+    animation:
+        bootProgress
+        6.1s
+        ease
+        forwards;
+
+}
+
+
+/* =====================================================
+   PARTICLES
+===================================================== */
+
+.tech-particle {
+
+    position: absolute;
+
+    width: 2px;
+
+    height: 2px;
+
+    border-radius: 50%;
+
+    background: #fff;
+
+    box-shadow:
+        0 0 8px
+        rgba(255,255,255,.75);
+
+    opacity: 0;
+
+    animation:
+        particleFloat
+        var(--duration)
+        ease-in-out
+        infinite;
+
+}
+
+
+/* =====================================================
+   UPDATE SPINNER
+===================================================== */
+
+#mara-update-spinner {
+
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 82px;
+
+    z-index: 100000;
+
+    transform:
+        translateX(-50%);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity .6s ease,
+        visibility .6s ease;
+
+}
+
+
+#mara-update-spinner.show {
+
+    opacity: 1;
+
+    visibility: visible;
+
+}
+
+
+/* =====================================================
+   SPINNER RING
+===================================================== */
+
+.spinner-ring {
+
+    position: relative;
+
+    width: 34px;
+
+    height: 34px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(255,255,255,.08);
+
+    border-top-color:
+        #00E5FF;
+
+    border-right-color:
+        #00C9A7;
+
+    box-shadow:
+        0 0 12px
+        rgba(0,229,255,.12);
+
+    animation:
+        maraSpinnerRotate
+        1.1s
+        linear
+        infinite;
+
+}
+
+
+.spinner-ring::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 5px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid
+        rgba(124,255,203,.15);
+
+    border-left-color:
+        #7CFFCB;
+
+    animation:
+        maraSpinnerRotateReverse
+        1.7s
+        linear
+        infinite;
+
+}
+
+
+.spinner-core {
+
+    position: absolute;
+
+    left: 50%;
+
+    top: 50%;
+
+    width: 5px;
+
+    height: 5px;
+
+    margin-left: -2.5px;
+
+    margin-top: -2.5px;
+
+    border-radius: 50%;
+
+    background: #fff;
+
+    box-shadow:
+        0 0 7px
+        rgba(255,255,255,.9),
+
+        0 0 14px
+        rgba(0,229,255,.6);
+
+    animation:
+        maraCorePulse
+        1.4s
+        ease-in-out
+        infinite;
+
+}
+
+
+/* =====================================================
+   SPINNER TEXT
+===================================================== */
+
+.spinner-text {
+
+    margin-top: 11px;
+
+    font-size: 7px;
+
+    letter-spacing: 2px;
+
+    color:
+        rgba(255,255,255,.55);
+
+    white-space: nowrap;
+
+}
+
+
+.spinner-subtext {
+
+    margin-top: 5px;
+
+    font-size: 6px;
+
+    letter-spacing: 1.5px;
+
+    color:
+        rgba(124,255,203,.35);
+
+    white-space: nowrap;
+
+}
+
+
+/* =====================================================
+   SPINNER STATES
+===================================================== */
+
+#mara-update-spinner.success
+.spinner-ring {
+
+    border-top-color:
+        #7CFFCB;
+
+    border-right-color:
+        #00C9A7;
+
+}
+
+
+#mara-update-spinner.update
+.spinner-ring {
+
+    border-top-color:
+        #00E5FF;
+
+    border-right-color:
+        #7CFFCB;
+
+}
+
+
+#mara-update-spinner.error
+.spinner-ring {
+
+    border-top-color:
+        #FFB86C;
+
+    border-right-color:
+        #FF8A65;
+
+}
+
+
+/* =====================================================
+   ANIMATION
+===================================================== */
+
+@keyframes drawFlow {
+
+    from {
+        stroke-dashoffset: 1500;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+
+}
+
+
+@keyframes drawCentral {
+
+    from {
+        stroke-dashoffset: 180;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+
+}
+
+
+@keyframes pointAppear {
+
+    0% {
+        opacity: 0;
+        transform: scale(.1);
+    }
+
+    60% {
+        opacity: 1;
+        transform: scale(1.35);
+    }
+
+    100% {
+        opacity: .9;
+        transform: scale(1);
+    }
+
+}
+
+
+@keyframes textReveal {
+
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+}
+
+
+@keyframes logoFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+
+}
+
+
+@keyframes logoGlow {
+
+    0%,
+    100% {
+        transform: scale(.85);
+        opacity: .35;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: .8;
+    }
+
+}
+
+
+@keyframes ambientPulse {
+
+    0%,
+    100% {
+        transform: scale(.85);
+        opacity: .35;
+    }
+
+    50% {
+        transform: scale(1.12);
+        opacity: .8;
+    }
+
+}
+
+
+@keyframes ambientPulse2 {
+
+    0%,
+    100% {
+        transform: scale(.8);
+        opacity: .15;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: .5;
+    }
+
+}
+
+
+@keyframes ringPulse {
+
+    0%,
+    100% {
+        transform: scale(.92);
+        opacity: .2;
+    }
+
+    50% {
+        transform: scale(1.06);
+        opacity: .55;
+    }
+
+}
+
+
+@keyframes ringPulse2 {
+
+    0%,
+    100% {
+        transform: scale(.94);
+        opacity: .1;
+    }
+
+    50% {
+        transform: scale(1.08);
+        opacity: .35;
+    }
+
+}
+
+
+@keyframes shineRotate {
+
+    from {
+        transform: rotate(0deg);
+        opacity: 0;
+    }
+
+    25% {
+        opacity: .45;
+    }
+
+    60% {
+        opacity: .15;
+    }
+
+    to {
+        transform: rotate(360deg);
+        opacity: 0;
+    }
+
+}
+
+
+@keyframes bootProgress {
+
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+
+}
+
+
+@keyframes particleFloat {
+
+    0% {
+
+        transform:
+            translate3d(
+                0,
+                20px,
+                0
+            )
+            scale(.4);
+
+        opacity: 0;
+
+    }
+
+    20% {
+        opacity: .65;
+    }
+
+    70% {
+        opacity: .25;
+    }
+
+    100% {
+
+        transform:
+            translate3d(
+                var(--move-x),
+                -100px,
+                0
+            )
+            scale(1);
+
+        opacity: 0;
+
+    }
+
+}
+
+
+@keyframes maraSpinnerRotate {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+@keyframes maraSpinnerRotateReverse {
+
+    from {
+        transform: rotate(360deg);
+    }
+
+    to {
+        transform: rotate(0deg);
+    }
+
+}
+
+
+@keyframes maraCorePulse {
+
+    0%,
+    100% {
+
+        transform: scale(.7);
+        opacity: .5;
+
+    }
+
+    50% {
+
+        transform: scale(1.25);
+        opacity: 1;
+
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width:480px) {
+
+    .logo-container {
+
+        width: 190px;
+
+        height: 190px;
+
+    }
+
+
+    .logo-shine {
+
+        width: 175px;
+
+        height: 175px;
+
+    }
+
+
+    .os-name {
+
+        font-size: 29px;
+
+        letter-spacing: 5px;
+
+    }
+
+
+    .os-subtitle {
+
+        font-size: 8px;
+
+        letter-spacing: 2px;
+
+    }
+
+
+    #mara-update-spinner {
+
+        bottom: 72px;
+
+    }
+
+}
+
+</style></head><body><!-- =====================================================
+     MARA OS MAIN
+===================================================== --><main id="mara-os"><div class="os-placeholder">
+
+    <h1>MARA OS</h1>
+
+    <p>SYSTEM READY</p>
+
+</div>
+
+</main><!-- =====================================================
+     INTRO
+===================================================== --><div id="intro-overlay"><div class="ambient-light"></div>
+
+<div class="ambient-light-2"></div>
+
+<div class="ambient-ring"></div>
+
+<div class="ambient-ring-2"></div>
+
+
+<div class="intro-content">
+
+
+    <div class="logo-container">
+
+        <div class="logo-shine"></div>
+
+
+        <svg
+            class="mara-logo"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            fill="none"
+        >
+
+            <defs>
+
+                <linearGradient
+                    id="maraFlow"
+                    x1="90"
+                    y1="390"
+                    x2="420"
+                    y2="110"
+                    gradientUnits="userSpaceOnUse"
+                >
+
+                    <stop
+                        offset="0%"
+                        stop-color="#00E5FF"
+                    />
+
+                    <stop
+                        offset="35%"
+                        stop-color="#00C9A7"
+                    />
+
+                    <stop
+                        offset="70%"
+                        stop-color="#00A8A8"
+                    />
+
+                    <stop
+                        offset="100%"
+                        stop-color="#7CFFCB"
+                    />
+
+                </linearGradient>
+
+
+                <linearGradient
+                    id="maraFlowHighlight"
+                    x1="180"
+                    y1="220"
+                    x2="330"
+                    y2="300"
+                    gradientUnits="userSpaceOnUse"
+                >
+
+                    <stop
+                        offset="0%"
+                        stop-color="#FFFFFF"
+                        stop-opacity=".95"
+                    />
+
+                    <stop
+                        offset="100%"
+                        stop-color="#FFFFFF"
+                        stop-opacity=".25"
+                    />
+
+                </linearGradient>
+
+            </defs>
+
+
+            <path
+                class="flow-main"
+                d="
+                    M116 174
+                    C166 112 242 104 306 139
+                    C361 169 382 214 358 256
+                    C334 299 273 313 224 288
+                    C181 266 164 228 181 194
+                    C199 158 250 148 291 169
+                    C326 187 340 218 326 244
+                "
+                stroke="url(#maraFlow)"
+                stroke-width="48"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <path
+                class="flow-second"
+                d="
+                    M396 338
+                    C346 400 270 408 206 373
+                    C151 343 130 298 154 256
+                    C178 213 239 199 288 224
+                    C331 246 348 284 331 318
+                    C313 354 262 364 221 343
+                    C186 325 172 294 186 268
+                "
+                stroke="url(#maraFlow)"
+                stroke-width="48"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+
+            <path
+                class="central-flow"
+                d="
+                    M181 256
+                    C207 237 243 230 276 241
+                "
+                stroke="url(#maraFlowHighlight)"
+                stroke-width="9"
+                stroke-linecap="round"
+                opacity=".8"
+            />
+
+
+            <circle
+                class="flow-point"
+                cx="276"
+                cy="241"
+                r="7"
+                fill="#FFFFFF"
+                opacity=".9"
+            />
+
+        </svg>
+
+    </div>
+
+
+    <div class="os-name">
+        MARA OS
+    </div>
+
+
+    <div class="os-subtitle">
+        DIGITAL OPERATING SYSTEM
+    </div>
+
+
+    <div class="os-version">
+
+        Version
+        <span id="mara-version">...</span>
+
+        <br>
+
+        Build
+        <span id="mara-build">...</span>
+
+    </div>
+
+</div>
+
+
+<div class="boot-status" id="boot-status">
+
+    INITIALIZING MARA SYSTEM
+
+</div>
+
+
+<div class="boot-progress"></div>
+
+</div><!-- =====================================================
+     UPDATE SPINNER
+===================================================== --><div id="mara-update-spinner"><div class="spinner-ring">
+
+    <div class="spinner-core"></div>
+
+</div>
+
+
+<div
+    class="spinner-text"
+    id="spinner-text"
+>
+    CHECKING FOR UPDATE
+</div>
+
+
+<div
+    class="spinner-subtext"
+    id="spinner-subtext"
+>
+    PREPARING MARA OS
+</div>
+
+</div><!-- =====================================================
+     OPTIONAL UPGRADE ENGINE
+=====================================================
+
+     Engine ini adalah engine utama untuk:
+
+     Repository
+          ↓
+     Manifest
+          ↓
+     Download Build
+          ↓
+     Temporary IndexedDB
+          ↓
+     Verify
+          ↓
+     Delete Old Build
+          ↓
+     Install New Build
+          ↓
+     Active Build
+
+     Jika file belum tersedia, intro tetap dapat
+     membaca manifest secara langsung.
+===================================================== --><script src="./upgrade-engine.js"></script><script>
+
+/* =====================================================
+   MARA OS CONFIGURATION
+===================================================== */
+
+const MARA_CONFIG = {
+
+    introDuration:
+        7200,
+
+    spinnerMinDuration:
+        1200,
+
+    updateManifestURL:
+        "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/engine-single.json"
+
+};
+
+
+/* =====================================================
+   AUDIO ENGINE
+===================================================== */
+
+let maraAudioContext = null;
+
+let maraAudioStarted = false;
+
+let maraMaster = null;
+
+
+function getMaraAudioContext() {
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+
+    if (!AudioContext) {
+
+        return null;
+
+    }
+
+
+    if (!maraAudioContext) {
+
+        maraAudioContext =
+            new AudioContext();
+
+    }
+
+
+    return maraAudioContext;
+
+}
+
+
+function createMaraMaster(ctx) {
+
+    const input =
+        ctx.createGain();
+
+    const compressor =
+        ctx.createDynamicsCompressor();
+
+    input.gain.value =
+        .16;
+
+    compressor.threshold.value =
+        -30;
+
+    compressor.knee.value =
+        18;
+
+    compressor.ratio.value =
+        2.5;
+
+    compressor.attack.value =
+        .01;
+
+    compressor.release.value =
+        .45;
+
+    input.connect(compressor);
+
+    compressor.connect(
+        ctx.destination
+    );
+
+    maraMaster =
+        input;
+
+    return input;
+
+}
+
+
+/* =====================================================
+   GLASS NOTE
+===================================================== */
+
+function maraGlassNote(
+    ctx,
+    output,
+    frequency,
+    start,
+    duration,
+    volume = .045
+) {
+
+    const osc =
+        ctx.createOscillator();
+
+    const harmonic =
+        ctx.createOscillator();
+
+    const filter =
+        ctx.createBiquadFilter();
+
+    const gain =
+        ctx.createGain();
+
+    osc.type =
+        "sine";
+
+    harmonic.type =
+        "sine";
+
+    osc.frequency.setValueAtTime(
+        frequency,
+        start
+    );
+
+    harmonic.frequency.setValueAtTime(
+        frequency * 2,
+        start
+    );
+
+    filter.type =
+        "lowpass";
+
+    filter.frequency.setValueAtTime(
+        2800,
+        start
+    );
+
+    filter.Q.value =
+        .8;
+
+    gain.gain.setValueAtTime(
+        .0001,
+        start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        start + .018
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume * .28,
+        start + duration * .22
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .0001,
+        start + duration
+    );
+
+    osc.connect(filter);
+
+    harmonic.connect(filter);
+
+    filter.connect(gain);
+
+    gain.connect(output);
+
+    osc.start(start);
+
+    harmonic.start(start);
+
+    osc.stop(
+        start + duration + .05
+    );
+
+    harmonic.stop(
+        start + duration + .05
+    );
+
+}
+
+
+/* =====================================================
+   WARM GLASS PAD
+===================================================== */
+
+function maraGlassPad(
+    ctx,
+    output,
+    frequency,
+    start,
+    duration
+) {
+
+    const osc1 =
+        ctx.createOscillator();
+
+    const osc2 =
+        ctx.createOscillator();
+
+    const filter =
+        ctx.createBiquadFilter();
+
+    const gain =
+        ctx.createGain();
+
+    osc1.type =
+        "sine";
+
+    osc2.type =
+        "triangle";
+
+    osc1.frequency.value =
+        frequency;
+
+    osc2.frequency.value =
+        frequency * 1.002;
+
+    filter.type =
+        "lowpass";
+
+    filter.frequency.value =
+        1200;
+
+    gain.gain.setValueAtTime(
+        .0001,
+        start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .018,
+        start + 1.1
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .009,
+        start + duration * .6
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .0001,
+        start + duration
+    );
+
+    osc1.connect(filter);
+
+    osc2.connect(filter);
+
+    filter.connect(gain);
+
+    gain.connect(output);
+
+    osc1.start(start);
+
+    osc2.start(start);
+
+    osc1.stop(
+        start + duration + .1
+    );
+
+    osc2.stop(
+        start + duration + .1
+    );
+
+}
+
+
+/* =====================================================
+   DIGITAL TICK
+===================================================== */
+
+function maraGlassTick(
+    ctx,
+    output,
+    frequency,
+    start
+) {
+
+    const osc =
+        ctx.createOscillator();
+
+    const gain =
+        ctx.createGain();
+
+    osc.type =
+        "sine";
+
+    osc.frequency.value =
+        frequency;
+
+    gain.gain.setValueAtTime(
+        .0001,
+        start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .018,
+        start + .012
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .0001,
+        start + .18
+    );
+
+    osc.connect(gain);
+
+    gain.connect(output);
+
+    osc.start(start);
+
+    osc.stop(
+        start + .2
+    );
+
+}
+
+
+/* =====================================================
+   CRYSTAL SWEEP
+===================================================== */
+
+function maraCrystalSweep(
+    ctx,
+    output,
+    start
+) {
+
+    const osc =
+        ctx.createOscillator();
+
+    const gain =
+        ctx.createGain();
+
+    const filter =
+        ctx.createBiquadFilter();
+
+    osc.type =
+        "sine";
+
+    osc.frequency.setValueAtTime(
+        520,
+        start
+    );
+
+    osc.frequency.exponentialRampToValueAtTime(
+        980,
+        start + .8
+    );
+
+    filter.type =
+        "lowpass";
+
+    filter.frequency.value =
+        1900;
+
+    gain.gain.setValueAtTime(
+        .0001,
+        start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .022,
+        start + .25
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .0001,
+        start + 1
+    );
+
+    osc.connect(filter);
+
+    filter.connect(gain);
+
+    gain.connect(output);
+
+    osc.start(start);
+
+    osc.stop(
+        start + 1.05
+    );
+
+}
+
+
+/* =====================================================
+   MARA SIGNATURE
+===================================================== */
+
+function maraGlassSignature(
+    ctx,
+    output,
+    start
+) {
+
+    const notes = [
+
+        {
+            frequency: 261.63,
+            delay: 0,
+            volume: .032
+        },
+
+        {
+            frequency: 329.63,
+            delay: .10,
+            volume: .035
+        },
+
+        {
+            frequency: 392.00,
+            delay: .20,
+            volume: .038
+        },
+
+        {
+            frequency: 523.25,
+            delay: .32,
+            volume: .042
+        }
+
+    ];
+
+
+    notes.forEach(
+        note => {
+
+            maraGlassNote(
+                ctx,
+                output,
+                note.frequency,
+                start + note.delay,
+                1.65,
+                note.volume
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   PLAY AUDIO
+===================================================== */
+
+async function playMaraLuxuryGlass() {
+
+    if (maraAudioStarted) {
+
+        return;
+
+    }
+
+
+    const ctx =
+        getMaraAudioContext();
+
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+
+    try {
+
+        if (ctx.state === "suspended") {
+
+            await ctx.resume();
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "[MARA AUDIO]",
+            error
+        );
+
+        return;
+
+    }
+
+
+    const master =
+        createMaraMaster(ctx);
+
+    const now =
+        ctx.currentTime;
+
+    maraAudioStarted =
+        true;
+
+
+    maraGlassPad(
+        ctx,
+        master,
+        65.41,
+        now,
+        8
+    );
+
+
+    maraGlassPad(
+        ctx,
+        master,
+        98,
+        now + 1.2,
+        6.8
+    );
+
+
+    maraGlassNote(
+        ctx,
+        master,
+        261.63,
+        now + .65,
+        2.0,
+        .035
+    );
+
+
+    maraGlassNote(
+        ctx,
+        master,
+        329.63,
+        now + 1.25,
+        2.0,
+        .038
+    );
+
+
+    maraGlassNote(
+        ctx,
+        master,
+        392.00,
+        now + 1.85,
+        2.1,
+        .041
+    );
+
+
+    maraGlassTick(
+        ctx,
+        master,
+        659.25,
+        now + 2.65
+    );
+
+
+    maraGlassTick(
+        ctx,
+        master,
+        783.99,
+        now + 3.15
+    );
+
+
+    maraGlassTick(
+        ctx,
+        master,
+        880,
+        now + 3.65
+    );
+
+
+    maraCrystalSweep(
+        ctx,
+        master,
+        now + 3.9
+    );
+
+
+    maraGlassSignature(
+        ctx,
+        master,
+        now + 5.15
+    );
+
+
+    console.log(
+        "[MARA AUDIO] Luxury Glass aktif."
+    );
+
+}
+
+
+async function unlockMaraAudio() {
+
+    if (maraAudioStarted) {
+
+        return;
+
+    }
+
+
+    try {
+
+        await playMaraLuxuryGlass();
+
+    } catch (error) {
+
+        console.warn(
+            "[MARA AUDIO]",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   PARTICLES
+===================================================== */
+
+function createParticles() {
+
+    const overlay =
+        document.getElementById(
+            "intro-overlay"
+        );
+
+
+    if (!overlay) {
+
+        return;
+
+    }
+
+
+    for (
+        let i = 0;
+        i < 18;
+        i++
+    ) {
+
+        const particle =
+            document.createElement(
+                "div"
+            );
+
+        particle.className =
+            "tech-particle";
+
+        particle.style.left =
+            (
+                Math.random() * 100
+            ) + "%";
+
+        particle.style.top =
+            (
+                40 +
+                Math.random() * 45
+            ) + "%";
+
+        particle.style.setProperty(
+            "--duration",
+            (
+                4 +
+                Math.random() * 5
+            ) + "s"
+        );
+
+        particle.style.setProperty(
+            "--move-x",
+            (
+                Math.random() * 100 -
+                50
+            ) + "px"
+        );
+
+        particle.style.animationDelay =
+            (
+                Math.random() * 3
+            ) + "s";
+
+        overlay.appendChild(
+            particle
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   SPINNER CONTROLLER
+===================================================== */
+
+const maraSpinner = {
+
+    element:
+        document.getElementById(
+            "mara-update-spinner"
+        ),
+
+    text:
+        document.getElementById(
+            "spinner-text"
+        ),
+
+    subtext:
+        document.getElementById(
+            "spinner-subtext"
+        ),
+
+
+    show() {
+
+        if (!this.element) {
+            return;
+        }
+
+        this.element.classList.add(
+            "show"
+        );
+
+    },
+
+
+    hide() {
+
+        if (!this.element) {
+            return;
+        }
+
+        this.element.classList.remove(
+            "show"
+        );
+
+    },
+
+
+    state(state) {
+
+        if (!this.element) {
+            return;
+        }
+
+        this.element.classList.remove(
+            "success",
+            "update",
+            "error"
+        );
+
+        if (state) {
+
+            this.element.classList.add(
+                state
+            );
+
+        }
+
+    },
+
+
+    setStatus(
+        main,
+        sub
+    ) {
+
+        if (this.text) {
+
+            this.text.textContent =
+                main;
+
+        }
+
+        if (this.subtext) {
+
+            this.subtext.textContent =
+                sub;
+
+        }
+
+    }
+
+};
+
+
+/* =====================================================
+   WAIT
+===================================================== */
+
+function wait(ms) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+
+}
+
+
+/* =====================================================
+   UPDATE MANIFEST
+===================================================== */
+
+async function loadMaraManifest() {
+
+    const response =
+        await fetch(
+            MARA_CONFIG.updateManifestURL,
+            {
+                method: "GET",
+                cache: "no-store",
+                headers: {
+                    "Accept":
+                        "application/json"
+                }
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "Manifest HTTP " +
+            response.status
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if (
+        !data ||
+        typeof data !== "object"
+    ) {
+
+        throw new Error(
+            "Manifest tidak valid."
+        );
+
+    }
+
+
+    if (
+        data.version === undefined ||
+        data.build === undefined
+    ) {
+
+        throw new Error(
+            "Manifest tidak mempunyai version/build."
+        );
+
+    }
+
+
+    if (
+        !Array.isArray(data.files)
+    ) {
+
+        throw new Error(
+            "Manifest tidak mempunyai daftar files."
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+/* =====================================================
+   TAMPILKAN VERSION
+===================================================== */
+
+function displayMaraManifest(
+    manifest
+) {
+
+    const versionElement =
+        document.getElementById(
+            "mara-version"
+        );
+
+    const buildElement =
+        document.getElementById(
+            "mara-build"
+        );
+
+
+    if (versionElement) {
+
+        versionElement.textContent =
+            String(
+                manifest.version
+            );
+
+    }
+
+
+    if (buildElement) {
+
+        buildElement.textContent =
+            String(
+                manifest.build
+            );
+
+    }
+
+
+    window.MARA_REMOTE_STATUS = {
+
+        version:
+            String(
+                manifest.version
+            ),
+
+        build:
+            String(
+                manifest.build
+            ),
+
+        manifest:
+            manifest,
+
+        timestamp:
+            Date.now()
+
+    };
+
+}
+
+
+/* =====================================================
+   CEK / JALANKAN UPGRADE ENGINE
+===================================================== */
+
+async function runMaraUpgrade(
+    manifest
+) {
+
+    /*
+     * Jika upgrade-engine.js memiliki API:
+     *
+     * window.MARAUpgrade.install(manifest)
+     *
+     * maka intro akan menyerahkan seluruh proses
+     * kepadanya.
+     */
+
+    if (
+        window.MARAUpgrade &&
+        typeof
+            window.MARAUpgrade.install
+            === "function"
+    ) {
+
+        maraSpinner.show();
+
+        maraSpinner.state(
+            "update"
+        );
+
+        maraSpinner.setStatus(
+            "INSTALLING UPDATE",
+            "MARA OS sedang menyiapkan build " +
+            manifest.build
+        );
+
+
+        await
+            window.MARAUpgrade.install(
+                manifest,
+                {
+
+                    onStatus:
+                        function(
+                            main,
+                            sub
+                        ) {
+
+                            maraSpinner.setStatus(
+                                main,
+                                sub
+                            );
+
+                        }
+
+                }
+            );
+
+
+        maraSpinner.state(
+            "success"
+        );
+
+        maraSpinner.setStatus(
+            "UPDATE COMPLETE",
+            "Build " +
+            manifest.build +
+            " aktif"
+        );
+
+
+        await wait(
+            MARA_CONFIG.spinnerMinDuration
+        );
+
+
+        maraSpinner.hide();
+
+        return true;
+
+    }
+
+
+    /*
+     * Jika engine belum dipasang,
+     * jangan membuat intro gagal.
+     *
+     * Manifest tetap berhasil dibaca.
+     */
+
+    console.warn(
+        "[MARA UPDATE] upgrade-engine.js belum tersedia."
+    );
+
+
+    return false;
+
+}
+
+
+/* =====================================================
+   BOOT MARA
+===================================================== */
+
+async function startMaraIntro() {
+
+    console.log(
+        "[MARA OS] Luxury Glass Intro dimulai."
+    );
+
+
+    createParticles();
+
+
+    playMaraLuxuryGlass()
+        .catch(
+            error => {
+
+                console.warn(
+                    "[MARA AUDIO]",
+                    error
+                );
+
+            }
+        );
+
+
+    /*
+     * =================================================
+     * REPOSITORY
+     * =================================================
+     */
+
+    let manifest = null;
+
+
+    try {
+
+        maraSpinner.show();
+
+        maraSpinner.state(
+            "update"
+        );
+
+        maraSpinner.setStatus(
+            "CHECKING FOR UPDATE",
+            "Menghubungkan ke repository"
+        );
+
+
+        /*
+         * Ambil engine-single.json
+         */
+
+        manifest =
+            await loadMaraManifest();
+
+
+        /*
+         * Tampilkan version/build
+         */
+
+        displayMaraManifest(
+            manifest
+        );
+
+
+        /*
+         * Jalankan upgrade engine
+         */
+
+        await runMaraUpgrade(
+            manifest
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[MARA UPDATE]",
+            error
+        );
+
+
+        window.MARA_REMOTE_STATUS = {
+
+            version:
+                null,
+
+            build:
+                null,
+
+            error:
+                true,
+
+            message:
+                error.message,
+
+            timestamp:
+                Date.now()
+
+        };
+
+
+        /*
+         * Jika repository gagal,
+         * jangan langsung merusak boot.
+         *
+         * Build yang sudah aktif di IndexedDB
+         * nantinya dapat digunakan oleh engine.
+         */
+
+        maraSpinner.state(
+            "error"
+        );
+
+        maraSpinner.setStatus(
+            "OFFLINE MODE",
+            "Menggunakan build lokal"
+        );
+
+
+        await wait(
+            MARA_CONFIG.spinnerMinDuration
+        );
+
+
+        maraSpinner.hide();
+
+    }
+
+
+    /*
+     * =================================================
+     * INTRO TIMER
+     * =================================================
+     *
+     * Intro tidak boleh ditutup sebelum proses
+     * repository/upgrade yang dipanggil di atas
+     * selesai.
+     */
+
+    await wait(
+        MARA_CONFIG.introDuration
+    );
+
+
+    const intro =
+        document.getElementById(
+            "intro-overlay"
+        );
+
+
+    if (intro) {
+
+        intro.classList.add(
+            "hide"
+        );
+
+    }
+
+
+    console.log(
+        "[MARA OS] Intro selesai."
+    );
+
+}
+
+
+/* =====================================================
+   DOM READY
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        startMaraIntro()
+            .catch(
+                error => {
+
+                    console.error(
+                        "[MARA OS] Boot error:",
+                        error
+                    );
+
+                }
+            );
+
+    }
+);
+
+
+/* =====================================================
+   MOBILE AUDIO FALLBACK
+===================================================== */
+
+[
+    "pointerdown",
+    "touchstart",
+    "keydown"
+
+].forEach(
+    eventName => {
+
+        document.addEventListener(
+            eventName,
+            unlockMaraAudio,
+            {
+                once: true,
+
+                passive:
+                    eventName !==
+                    "keydown"
+            }
+        );
+
+    }
+);
+
+</script></body></html>
