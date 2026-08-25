@@ -1,73 +1,106 @@
-/* =====================================================
+/* =========================================================
    MARA OS
    ENGINE SINGLE
-   STAGE 1
-   =====================================================
+   STAGE 1 — COMPLETE BOOT ENGINE
+   =========================================================
 
-   FUNGSI TAHAP 1:
+   PIPELINE:
 
-   1. Memuat engine
-   2. Membaca engine-single.json
-   3. Validasi konfigurasi
-   4. Inisialisasi IndexedDB
-   5. Mendeteksi iframe utama
-   6. Mengirim status ke intro.html
-   7. Menyiapkan API global MARA
-   8. Menjalankan boot sequence
+   index.html
+        ↓
+   engine-single.js
+        ↓
+   engine-single.json
+        ↓
+   IndexedDB
+        ↓
+   Detect Intro
+        ↓
+   Detect Main Iframe
+        ↓
+   ENGINE READY
+        ↓
+   Intro menerima status
+        ↓
+   Main UI siap
+
+   STAGE 1:
+   - Boot engine
+   - Config loader
+   - Config validator
+   - IndexedDB
+   - Engine storage
+   - Build metadata
+   - Intro communication
+   - Main iframe controller
+   - Online / offline
+   - Repository checker
+   - Global API
+   - Error handling
 
    BELUM:
-   - Download update
-   - Extract build
-   - Install build
-   - Aktivasi build
-   - Repository update
+   - Automatic download
+   - Automatic extraction
+   - Automatic installation
+   - Automatic activation
+   - Automatic deletion old build
 
-===================================================== */
+   Bagian tersebut akan masuk tahap berikutnya.
+========================================================= */
 
 
-/* =====================================================
-   CONFIG
-===================================================== */
+/* =========================================================
+   ENGINE CONSTANT
+========================================================= */
 
-const MARA_ENGINE_CONFIG = {
+const MARA_ENGINE = {
 
-    configFile:
-        "engine-single.json",
+    NAME:
+        "MARA ENGINE SINGLE",
 
-    databaseName:
-        "MARA_OS_STORAGE",
+    ID:
+        "mara-engine-single",
 
-    databaseVersion:
+    VERSION:
+        "1.0.0",
+
+    STAGE:
         1,
 
-    mainIframeId:
-        "mara-main-frame",
+    CONFIG_FILE:
+        "engine-single.json",
 
-    introFrameId:
+    DATABASE:
+        "MARA_OS_STORAGE",
+
+    DATABASE_VERSION:
+        2,
+
+    INTRO_FRAME:
         "mara-intro-frame",
 
-    introOverlayId:
+    INTRO_OVERLAY:
         "mara-intro-overlay",
 
-    timeout:
+    MAIN_FRAME:
+        "mara-main-frame",
+
+    REQUEST_TIMEOUT:
         30000
 
 };
 
 
-/* =====================================================
-   GLOBAL ENGINE
-===================================================== */
+/* =========================================================
+   MARA ENGINE OBJECT
+========================================================= */
 
 window.MARAEngineSingle = {
 
-    version:
-        "1.0.0",
-
-    stage:
-        1,
-
     initialized:
+        false,
+
+    booted:
         false,
 
     config:
@@ -76,11 +109,17 @@ window.MARAEngineSingle = {
     db:
         null,
 
-    mainIframe:
-        null,
-
     introFrame:
         null,
+
+    introOverlay:
+        null,
+
+    mainFrame:
+        null,
+
+    events:
+        {},
 
     state: {
 
@@ -96,78 +135,33 @@ window.MARAEngineSingle = {
         database:
             false,
 
-        iframe:
+        intro:
+            false,
+
+        mainFrame:
             false,
 
         ready:
             false,
 
+        online:
+            navigator.onLine,
+
         error:
+            null,
+
+        startedAt:
+            null,
+
+        readyAt:
             null
 
     },
 
 
-    /* =================================================
-       EVENT SYSTEM
-    ================================================= */
-
-    events: {},
-
-
-    on(
-        event,
-        callback
-    ) {
-
-        if (
-            !this.events[event]
-        ) {
-
-            this.events[event] = [];
-
-        }
-
-        this.events[event].push(
-            callback
-        );
-
-    },
-
-
-    emit(
-        event,
-        data = {}
-    ) {
-
-        const listeners =
-            this.events[event] || [];
-
-        listeners.forEach(
-            callback => {
-
-                try {
-
-                    callback(data);
-
-                } catch (error) {
-
-                    console.error(
-                        "[MARA ENGINE] EVENT ERROR",
-                        error
-                    );
-
-                }
-
-            }
-        );
-
-    },
-
-
-    /* =================================================
+    /* =====================================================
        LOG
-    ================================================= */
+    ===================================================== */
 
     log(
         ...args
@@ -205,14 +199,225 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
-       LOAD CONFIG
-    ================================================= */
+    /* =====================================================
+       EVENT SYSTEM
+    ===================================================== */
+
+    on(
+        event,
+        callback
+    ) {
+
+        if (
+            typeof callback !==
+            "function"
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            !this.events[event]
+        ) {
+
+            this.events[event] =
+                [];
+
+        }
+
+
+        this.events[event].push(
+            callback
+        );
+
+    },
+
+
+    off(
+        event,
+        callback
+    ) {
+
+        if (
+            !this.events[event]
+        ) {
+
+            return;
+
+        }
+
+
+        this.events[event] =
+            this.events[event]
+                .filter(
+                    item =>
+                        item !==
+                        callback
+                );
+
+    },
+
+
+    emit(
+        event,
+        data = {}
+    ) {
+
+        const listeners =
+            this.events[event] ||
+            [];
+
+
+        listeners.forEach(
+            callback => {
+
+                try {
+
+                    callback(
+                        data
+                    );
+
+                } catch (
+                    error
+                ) {
+
+                    this.error(
+                        "EVENT ERROR:",
+                        error
+                    );
+
+                }
+
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       UPDATE STATE
+    ===================================================== */
+
+    setStatus(
+        status,
+        extra = {}
+    ) {
+
+        this.state.status =
+            status;
+
+
+        this.emit(
+            "status",
+            {
+
+                status,
+
+                ...extra
+
+            }
+        );
+
+
+        this.notifyIntro(
+            "MARA_ENGINE_STATUS",
+            {
+
+                status,
+
+                ...extra
+
+            }
+        );
+
+
+        this.log(
+            "STATUS:",
+            status,
+            extra
+        );
+
+    },
+
+
+    /* =====================================================
+       FETCH WITH TIMEOUT
+    ===================================================== */
+
+    async fetchURL(
+        url
+    ) {
+
+        const controller =
+            new AbortController();
+
+
+        const timeout =
+            setTimeout(
+                () => {
+
+                    controller.abort();
+
+                },
+                MARA_ENGINE.REQUEST_TIMEOUT
+            );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    url,
+                    {
+
+                        method:
+                            "GET",
+
+                        cache:
+                            "no-store",
+
+                        signal:
+                            controller.signal
+
+                    }
+                );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    `HTTP ${response.status}: ${url}`
+                );
+
+            }
+
+
+            return response;
+
+        } finally {
+
+            clearTimeout(
+                timeout
+            );
+
+        }
+
+    },
+
+
+    /* =====================================================
+       LOAD JSON CONFIG
+    ===================================================== */
 
     async loadConfig() {
 
-        this.state.status =
-            "LOADING_CONFIG";
+        this.setStatus(
+            "LOADING_CONFIG"
+        );
 
 
         this.emit(
@@ -221,28 +426,28 @@ window.MARAEngineSingle = {
 
 
         const response =
-            await fetch(
-                MARA_ENGINE_CONFIG.configFile,
-                {
-                    cache:
-                        "no-store"
-                }
+            await this.fetchURL(
+                MARA_ENGINE.CONFIG_FILE
             );
 
 
-        if (
-            !response.ok
+        let config;
+
+
+        try {
+
+            config =
+                await response.json();
+
+        } catch (
+            error
         ) {
 
             throw new Error(
-                `engine-single.json gagal dimuat. HTTP ${response.status}`
+                "engine-single.json bukan JSON yang valid."
             );
 
         }
-
-
-        const config =
-            await response.json();
 
 
         this.validateConfig(
@@ -266,6 +471,20 @@ window.MARAEngineSingle = {
         );
 
 
+        this.notifyIntro(
+            "MARA_CONFIG_READY",
+            {
+
+                version:
+                    config.engine?.version,
+
+                stage:
+                    config.engine?.stage
+
+            }
+        );
+
+
         this.log(
             "engine-single.json berhasil dimuat."
         );
@@ -276,9 +495,9 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
+    /* =====================================================
        VALIDATE CONFIG
-    ================================================= */
+    ===================================================== */
 
     validateConfig(
         config
@@ -287,11 +506,11 @@ window.MARAEngineSingle = {
         if (
             !config ||
             typeof config !==
-                "object"
+            "object"
         ) {
 
             throw new Error(
-                "Konfigurasi engine tidak valid."
+                "Konfigurasi MARA tidak valid."
             );
 
         }
@@ -313,7 +532,7 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Nama engine tidak ditemukan."
+                "engine.name tidak ditemukan."
             );
 
         }
@@ -324,7 +543,7 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Versi engine tidak ditemukan."
+                "engine.version tidak ditemukan."
             );
 
         }
@@ -335,7 +554,7 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Konfigurasi app tidak ditemukan."
+                "Bagian app tidak ditemukan."
             );
 
         }
@@ -346,7 +565,7 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Konfigurasi paths tidak ditemukan."
+                "Bagian paths tidak ditemukan."
             );
 
         }
@@ -357,9 +576,9 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
+    /* =====================================================
        OPEN INDEXEDDB
-    ================================================= */
+    ===================================================== */
 
     openDatabase() {
 
@@ -369,10 +588,25 @@ window.MARAEngineSingle = {
                 reject
             ) => {
 
+                if (
+                    !window.indexedDB
+                ) {
+
+                    reject(
+                        new Error(
+                            "IndexedDB tidak tersedia pada perangkat ini."
+                        )
+                    );
+
+                    return;
+
+                }
+
+
                 const request =
                     indexedDB.open(
-                        MARA_ENGINE_CONFIG.databaseName,
-                        MARA_ENGINE_CONFIG.databaseVersion
+                        MARA_ENGINE.DATABASE,
+                        MARA_ENGINE.DATABASE_VERSION
                     );
 
 
@@ -383,6 +617,10 @@ window.MARAEngineSingle = {
                             event.target.result;
 
 
+                        /* ===============================
+                           SETTINGS
+                        =============================== */
+
                         if (
                             !db.objectStoreNames.contains(
                                 "settings"
@@ -392,13 +630,19 @@ window.MARAEngineSingle = {
                             db.createObjectStore(
                                 "settings",
                                 {
+
                                     keyPath:
                                         "id"
+
                                 }
                             );
 
                         }
 
+
+                        /* ===============================
+                           ENGINE
+                        =============================== */
 
                         if (
                             !db.objectStoreNames.contains(
@@ -409,13 +653,19 @@ window.MARAEngineSingle = {
                             db.createObjectStore(
                                 "engine",
                                 {
+
                                     keyPath:
                                         "id"
+
                                 }
                             );
 
                         }
 
+
+                        /* ===============================
+                           BUILDS
+                        =============================== */
 
                         if (
                             !db.objectStoreNames.contains(
@@ -426,12 +676,126 @@ window.MARAEngineSingle = {
                             db.createObjectStore(
                                 "builds",
                                 {
+
                                     keyPath:
                                         "build"
+
                                 }
                             );
 
                         }
+
+
+                        /* ===============================
+                           FILES
+                        =============================== */
+
+                        if (
+                            !db.objectStoreNames.contains(
+                                "files"
+                            )
+                        ) {
+
+                            const files =
+                                db.createObjectStore(
+                                    "files",
+                                    {
+
+                                        keyPath:
+                                            "id"
+
+                                    }
+                                );
+
+
+                            files.createIndex(
+                                "build",
+                                "build",
+                                {
+
+                                    unique:
+                                        false
+
+                                }
+                            );
+
+
+                            files.createIndex(
+                                "path",
+                                "path",
+                                {
+
+                                    unique:
+                                        false
+
+                                }
+                            );
+
+                        }
+
+
+                        /* ===============================
+                           ACTIVE
+                        =============================== */
+
+                        if (
+                            !db.objectStoreNames.contains(
+                                "active"
+                            )
+                        ) {
+
+                            db.createObjectStore(
+                                "active",
+                                {
+
+                                    keyPath:
+                                        "id"
+
+                                }
+                            );
+
+                        }
+
+
+                        /* ===============================
+                           TEMPORARY
+                        =============================== */
+
+                        if (
+                            !db.objectStoreNames.contains(
+                                "temporary"
+                            )
+                        ) {
+
+                            const temporary =
+                                db.createObjectStore(
+                                    "temporary",
+                                    {
+
+                                        keyPath:
+                                            "id"
+
+                                    }
+                                );
+
+
+                            temporary.createIndex(
+                                "build",
+                                "build",
+                                {
+
+                                    unique:
+                                        false
+
+                                }
+                            );
+
+                        }
+
+
+                        this.log(
+                            "IndexedDB schema berhasil dibuat/di-upgrade."
+                        );
 
                     };
 
@@ -462,7 +826,10 @@ window.MARAEngineSingle = {
                     () => {
 
                         reject(
-                            request.error
+                            request.error ||
+                            new Error(
+                                "Gagal membuka IndexedDB."
+                            )
                         );
 
                     };
@@ -473,14 +840,15 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
+    /* =====================================================
        INIT DATABASE
-    ================================================= */
+    ===================================================== */
 
     async initDatabase() {
 
-        this.state.status =
-            "INITIALIZING_DATABASE";
+        this.setStatus(
+            "INITIALIZING_DATABASE"
+        );
 
 
         this.db =
@@ -496,8 +864,20 @@ window.MARAEngineSingle = {
         );
 
 
+        this.notifyIntro(
+            "MARA_DATABASE_READY",
+            {
+
+                database:
+                    MARA_ENGINE.DATABASE
+
+            }
+        );
+
+
         this.log(
-            "IndexedDB berhasil diinisialisasi."
+            "IndexedDB READY:",
+            MARA_ENGINE.DATABASE
         );
 
 
@@ -506,22 +886,45 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
-       SAVE ENGINE INFO
-    ================================================= */
+    /* =====================================================
+       DATABASE TRANSACTION
+    ===================================================== */
 
-    async saveEngineInfo() {
+    transaction(
+        storeName,
+        mode = "readonly"
+    ) {
 
         if (
             !this.db
         ) {
 
             throw new Error(
-                "Database belum diinisialisasi."
+                "Database belum siap."
             );
 
         }
 
+
+        return this.db
+            .transaction(
+                storeName,
+                mode
+            )
+            .objectStore(
+                storeName
+            );
+
+    },
+
+
+    /* =====================================================
+       DATABASE REQUEST
+    ===================================================== */
+
+    request(
+        request
+    ) {
 
         return new Promise(
             (
@@ -529,54 +932,21 @@ window.MARAEngineSingle = {
                 reject
             ) => {
 
-                const transaction =
-                    this.db.transaction(
-                        "engine",
-                        "readwrite"
-                    );
-
-
-                const store =
-                    transaction.objectStore(
-                        "engine"
-                    );
-
-
-                store.put({
-
-                    id:
-                        "current",
-
-                    name:
-                        this.config.engine.name,
-
-                    version:
-                        this.config.engine.version,
-
-                    stage:
-                        this.config.engine.stage,
-
-                    loadedAt:
-                        Date.now()
-
-                });
-
-
-                transaction.oncomplete =
+                request.onsuccess =
                     () => {
 
                         resolve(
-                            true
+                            request.result
                         );
 
                     };
 
 
-                transaction.onerror =
+                request.onerror =
                     () => {
 
                         reject(
-                            transaction.error
+                            request.error
                         );
 
                     };
@@ -587,52 +957,92 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
-       DETECT IFRAME
-    ================================================= */
+    /* =====================================================
+       SAVE ENGINE INFORMATION
+    ===================================================== */
 
-    detectIframe() {
-
-        this.mainIframe =
-            document.getElementById(
-                MARA_ENGINE_CONFIG.mainIframeId
-            );
-
-
-        this.introFrame =
-            document.getElementById(
-                MARA_ENGINE_CONFIG.introFrameId
-            );
-
+    async saveEngineInfo() {
 
         if (
-            !this.mainIframe
+            !this.config
         ) {
 
-            this.warn(
-                "mara-main-frame tidak ditemukan."
+            throw new Error(
+                "Config belum tersedia."
             );
-
-            return false;
 
         }
 
 
-        this.state.iframe =
-            true;
+        const data = {
+
+            id:
+                "current",
+
+            engine:
+                this.config.engine,
+
+            app:
+                this.config.app,
+
+            stage:
+                MARA_ENGINE.STAGE,
+
+            loadedAt:
+                Date.now()
+
+        };
+
+
+        await this.request(
+            this.transaction(
+                "engine",
+                "readwrite"
+            ).put(
+                data
+            )
+        );
 
 
         this.emit(
-            "iframe:ready",
-            {
-                iframe:
-                    this.mainIframe
-            }
+            "engine:saved",
+            data
         );
 
 
         this.log(
-            "mara-main-frame berhasil ditemukan."
+            "Informasi engine tersimpan."
+        );
+
+
+        return data;
+
+    },
+
+
+    /* =====================================================
+       SAVE SETTING
+    ===================================================== */
+
+    async setSetting(
+        id,
+        value
+    ) {
+
+        await this.request(
+            this.transaction(
+                "settings",
+                "readwrite"
+            ).put({
+
+                id,
+
+                value,
+
+                updatedAt:
+                    Date.now()
+
+            })
         );
 
 
@@ -641,17 +1051,157 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
-       SEND MESSAGE TO INTRO
-    ================================================= */
+    /* =====================================================
+       GET SETTING
+    ===================================================== */
 
-    sendIntroMessage(
+    async getSetting(
+        id
+    ) {
+
+        return this.request(
+            this.transaction(
+                "settings"
+            ).get(
+                id
+            )
+        );
+
+    },
+
+
+    /* =====================================================
+       DETECT IFRAMES
+    ===================================================== */
+
+    detectFrames() {
+
+        this.introFrame =
+            document.getElementById(
+                MARA_ENGINE.INTRO_FRAME
+            );
+
+
+        this.introOverlay =
+            document.getElementById(
+                MARA_ENGINE.INTRO_OVERLAY
+            );
+
+
+        this.mainFrame =
+            document.getElementById(
+                MARA_ENGINE.MAIN_FRAME
+            );
+
+
+        /* ===============================
+           INTRO
+        =============================== */
+
+        if (
+            this.introFrame
+        ) {
+
+            this.state.intro =
+                true;
+
+
+            this.emit(
+                "intro:ready",
+                {
+
+                    iframe:
+                        this.introFrame
+
+                }
+            );
+
+
+            this.log(
+                "Intro iframe ditemukan."
+            );
+
+        } else {
+
+            this.warn(
+                "Intro iframe tidak ditemukan."
+            );
+
+        }
+
+
+        /* ===============================
+           MAIN FRAME
+        =============================== */
+
+        if (
+            this.mainFrame
+        ) {
+
+            this.state.mainFrame =
+                true;
+
+
+            this.emit(
+                "mainframe:ready",
+                {
+
+                    iframe:
+                        this.mainFrame
+
+                }
+            );
+
+
+            this.log(
+                "mara-main-frame ditemukan."
+            );
+
+        } else {
+
+            this.warn(
+                "mara-main-frame tidak ditemukan."
+            );
+
+        }
+
+
+        return {
+
+            intro:
+                Boolean(
+                    this.introFrame
+                ),
+
+            main:
+                Boolean(
+                    this.mainFrame
+                )
+
+        };
+
+    },
+
+
+    /* =====================================================
+       INTRO MESSAGE
+    ===================================================== */
+
+    notifyIntro(
         type,
         data = {}
     ) {
 
         if (
-            !this.introFrame ||
+            !this.introFrame
+        ) {
+
+            return false;
+
+        }
+
+
+        if (
             !this.introFrame.contentWindow
         ) {
 
@@ -664,8 +1214,23 @@ window.MARAEngineSingle = {
 
             this.introFrame.contentWindow.postMessage(
                 {
+
                     type,
+
+                    timestamp:
+                        Date.now(),
+
+                    engine:
+                        MARA_ENGINE.NAME,
+
+                    engineVersion:
+                        MARA_ENGINE.VERSION,
+
+                    stage:
+                        MARA_ENGINE.STAGE,
+
                     ...data
+
                 },
                 "*"
             );
@@ -673,10 +1238,12 @@ window.MARAEngineSingle = {
 
             return true;
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
             this.error(
-                "Gagal mengirim pesan ke intro.",
+                "Gagal mengirim pesan ke intro:",
                 error
             );
 
@@ -688,237 +1255,114 @@ window.MARAEngineSingle = {
     },
 
 
-    /* =================================================
-       SEND ENGINE STATUS
-    ================================================= */
+    /* =====================================================
+       INTRO MESSAGE LISTENER
+    ===================================================== */
 
-    notifyIntro(
-        status,
-        message = ""
-    ) {
+    setupIntroListener() {
 
-        this.sendIntroMessage(
-            "MARA_ENGINE_STATUS",
-            {
+        window.addEventListener(
+            "message",
+            event => {
 
-                status,
+                if (
+                    !this.introFrame
+                ) {
 
-                message,
+                    return;
 
-                engine:
-                    this.config
-                        ?.engine
-                        ?.name || null,
-
-                version:
-                    this.config
-                        ?.engine
-                        ?.version || null,
-
-                stage:
-                    this.stage
-
-            }
-        );
-
-    },
+                }
 
 
-    /* =================================================
-       BOOT
-    ================================================= */
+                if (
+                    event.source !==
+                    this.introFrame.contentWindow
+                ) {
 
-    async boot() {
+                    return;
 
-        this.state.status =
-            "BOOTING";
-
-
-        this.notifyIntro(
-            "BOOTING",
-            "MARA Engine sedang dimulai."
-        );
+                }
 
 
-        /* =============================================
-           CONFIG
-        ============================================= */
-
-        await this.loadConfig();
+                const data =
+                    event.data;
 
 
-        this.notifyIntro(
-            "CONFIG_READY",
-            "Konfigurasi engine berhasil dimuat."
-        );
+                if (
+                    !data ||
+                    typeof data !==
+                    "object"
+                ) {
+
+                    return;
+
+                }
 
 
-        /* =============================================
-           DATABASE
-        ============================================= */
-
-        await this.initDatabase();
-
-
-        await this.saveEngineInfo();
+                this.emit(
+                    "intro:message",
+                    data
+                );
 
 
-        this.notifyIntro(
-            "DATABASE_READY",
-            "IndexedDB berhasil diinisialisasi."
-        );
+                switch (
+                    data.type
+                ) {
+
+                    case "MARA_INTRO_READY":
+
+                        this.log(
+                            "Intro READY."
+                        );
+
+                        this.notifyIntro(
+                            "MARA_ENGINE_STATUS",
+                            {
+
+                                status:
+                                    this.state.status
+
+                            }
+                        );
+
+                        break;
 
 
-        /* =============================================
-           IFRAME
-        ============================================= */
+                    case "MARA_INTRO_FINISHED":
 
-        this.detectIframe();
+                        this.log(
+                            "Intro FINISHED."
+                        );
 
+                        this.emit(
+                            "intro:finished"
+                        );
 
-        if (
-            this.state.iframe
-        ) {
-
-            this.notifyIntro(
-                "IFRAME_READY",
-                "Jendela utama MARA OS siap."
-            );
-
-        }
+                        break;
 
 
-        /* =============================================
-           ENGINE READY
-        ============================================= */
+                    default:
 
-        this.state.engine =
-            true;
+                        break;
 
-
-        this.state.ready =
-            true;
-
-
-        this.state.status =
-            "READY";
-
-
-        this.initialized =
-            true;
-
-
-        this.emit(
-            "ready",
-            {
-
-                version:
-                    this.version,
-
-                stage:
-                    this.stage,
-
-                config:
-                    this.config
+                }
 
             }
         );
 
-
-        this.notifyIntro(
-            "ENGINE_READY",
-            "MARA Engine berhasil dimuat."
-        );
-
-
-        this.log(
-            "================================="
-        );
-
-
-        this.log(
-            "MARA ENGINE READY"
-        );
-
-
-        this.log(
-            "Version:",
-            this.version
-        );
-
-
-        this.log(
-            "Stage:",
-            this.stage
-        );
-
-
-        this.log(
-            "================================="
-        );
-
-
-        return true;
-
     },
 
 
-    /* =================================================
-       GET STATUS
-    ================================================= */
+    /* =====================================================
+       MAIN FRAME LOAD
+    ===================================================== */
 
-    getStatus() {
-
-        return {
-
-            status:
-                this.state.status,
-
-            initialized:
-                this.initialized,
-
-            engine:
-                this.state.engine,
-
-            config:
-                this.state.config,
-
-            database:
-                this.state.database,
-
-            iframe:
-                this.state.iframe,
-
-            ready:
-                this.state.ready,
-
-            version:
-                this.version,
-
-            stage:
-                this.stage,
-
-            error:
-                this.state.error
-
-        };
-
-    },
-
-
-    /* =================================================
-       LOAD MAIN FILE
-       
-       Tahap 1 belum mengambil build dari IndexedDB.
-       Fungsi ini hanya menyiapkan iframe.
-    ================================================= */
-
-    loadMainFile(
+    loadMainUI(
         path
     ) {
 
         if (
-            !this.mainIframe
+            !this.mainFrame
         ) {
 
             throw new Error(
@@ -933,115 +1377,569 @@ window.MARAEngineSingle = {
         ) {
 
             throw new Error(
-                "Path UI tidak diberikan."
+                "Path UI kosong."
             );
 
         }
 
 
-        this.mainIframe.src =
-            path;
-
-
-        this.emit(
-            "main:load",
+        this.setStatus(
+            "LOADING_UI",
             {
+
                 path
+
             }
         );
 
 
-        return path;
+        this.mainFrame.onload =
+            () => {
 
-    }
+                this.setStatus(
+                    "UI_READY",
+                    {
 
-};
+                        path
 
-
-/* =====================================================
-   GLOBAL API
-===================================================== */
-
-window.MARA = {
-
-    engine:
-
-        MARAEngineSingle,
+                    }
+                );
 
 
-    status:
+                this.emit(
+                    "ui:ready",
+                    {
 
-        () =>
-            MARAEngineSingle.getStatus(),
+                        path,
 
+                        iframe:
+                            this.mainFrame
 
-    boot:
-
-        () =>
-            MARAEngineSingle.boot(),
-
-
-    load:
-
-        path =>
-            MARAEngineSingle.loadMainFile(
-                path
-            )
-
-};
+                    }
+                );
 
 
-/* =====================================================
-   DOM READY
-===================================================== */
+                this.log(
+                    "UI berhasil dimuat:",
+                    path
+                );
 
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
-
-        try {
-
-            MARAEngineSingle.log(
-                "ENGINE-SINGLE.JS DIMUAT."
-            );
+            };
 
 
-            await MARAEngineSingle.boot();
+        this.mainFrame.onerror =
+            () => {
 
-        } catch (error) {
+                this.setStatus(
+                    "UI_ERROR",
+                    {
 
-            MARAEngineSingle.state.status =
-                "ERROR";
+                        path
 
+                    }
+                );
 
-            MARAEngineSingle.state.error =
-                error.message;
-
-
-            MARAEngineSingle.error(
-                "ENGINE BOOT ERROR:",
-                error
-            );
+            };
 
 
-            MARAEngineSingle.notifyIntro(
-                "ENGINE_ERROR",
-                error.message
+        this.mainFrame.src =
+            path;
+
+
+        return true;
+
+    },
+
+
+    /* =====================================================
+       CLEAR MAIN FRAME
+    ===================================================== */
+
+    clearMainUI() {
+
+        if (
+            !this.mainFrame
+        ) {
+
+            return;
+
+        }
+
+
+        this.mainFrame.src =
+            "about:blank";
+
+
+        this.log(
+            "Main iframe dikosongkan."
+        );
+
+    },
+
+
+    /* =====================================================
+       CHECK REPOSITORY
+       
+       Hanya pemeriksaan.
+       Belum download/install.
+    ===================================================== */
+
+    async checkRepository() {
+
+        if (
+            !navigator.onLine
+        ) {
+
+            return {
+
+                online:
+                    false,
+
+                available:
+                    false,
+
+                reason:
+                    "OFFLINE"
+
+            };
+
+        }
+
+
+        if (
+            !this.config
+        ) {
+
+            throw new Error(
+                "Config belum siap."
             );
 
         }
 
+
+        const repository =
+            this.config.repository;
+
+
+        if (
+            !repository ||
+            repository.enabled !==
+            true
+        ) {
+
+            return {
+
+                online:
+                    true,
+
+                available:
+                    false,
+
+                enabled:
+                    false
+
+            };
+
+        }
+
+
+        if (
+            !repository.manifest
+        ) {
+
+            return {
+
+                online:
+                    true,
+
+                available:
+                    false,
+
+                enabled:
+                    true,
+
+                reason:
+                    "MANIFEST_NOT_CONFIGURED"
+
+            };
+
+        }
+
+
+        this.setStatus(
+            "CHECKING_REPOSITORY"
+        );
+
+
+        try {
+
+            const response =
+                await this.fetchURL(
+                    repository.manifest
+                );
+
+
+            const manifest =
+                await response.json();
+
+
+            this.emit(
+                "repository:ready",
+                {
+
+                    manifest
+
+                }
+            );
+
+
+            this.notifyIntro(
+                "MARA_REPOSITORY_READY",
+                {
+
+                    manifest
+
+                }
+            );
+
+
+            this.log(
+                "Repository manifest berhasil dibaca."
+            );
+
+
+            return {
+
+                online:
+                    true,
+
+                available:
+                    true,
+
+                manifest
+
+            };
+
+        } catch (
+            error
+        ) {
+
+            this.warn(
+                "Repository tidak tersedia:",
+                error
+            );
+
+
+            return {
+
+                online:
+                    true,
+
+                available:
+                    false,
+
+                error:
+                    error.message
+
+            };
+
+        }
+
+    },
+
+
+    /* =====================================================
+       GET ENGINE STATUS
+    ===================================================== */
+
+    getStatus() {
+
+        return {
+
+            engine:
+                {
+
+                    name:
+                        MARA_ENGINE.NAME,
+
+                    id:
+                        MARA_ENGINE.ID,
+
+                    version:
+                        MARA_ENGINE.VERSION,
+
+                    stage:
+                        MARA_ENGINE.STAGE
+
+                },
+
+            state:
+                {
+
+                    ...this.state
+
+                },
+
+            config:
+                this.config,
+
+            database:
+                {
+
+                    name:
+                        MARA_ENGINE.DATABASE,
+
+                    version:
+                        MARA_ENGINE.DATABASE_VERSION,
+
+                    ready:
+                        Boolean(
+                            this.db
+                        )
+
+                }
+
+        };
+
+    },
+
+
+    /* =====================================================
+       BOOT
+    ===================================================== */
+
+    async boot() {
+
+        if (
+            this.booted
+        ) {
+
+            this.log(
+                "Engine sudah boot."
+            );
+
+            return true;
+
+        }
+
+
+        this.state.startedAt =
+            Date.now();
+
+
+        this.state.error =
+            null;
+
+
+        this.setStatus(
+            "BOOTING"
+        );
+
+
+        try {
+
+            /* =========================================
+               STEP 1
+            ========================================= */
+
+            await this.loadConfig();
+
+
+            /* =========================================
+               STEP 2
+            ========================================= */
+
+            await this.initDatabase();
+
+
+            /* =========================================
+               STEP 3
+            ========================================= */
+
+            await this.saveEngineInfo();
+
+
+            /* =========================================
+               STEP 4
+            ========================================= */
+
+            this.detectFrames();
+
+
+            /* =========================================
+               STEP 5
+            ========================================= */
+
+            this.setupIntroListener();
+
+
+            /* =========================================
+               STEP 6
+            ========================================= */
+
+            this.state.engine =
+                true;
+
+
+            this.state.ready =
+                true;
+
+
+            this.state.status =
+                "READY";
+
+
+            this.state.readyAt =
+                Date.now();
+
+
+            this.initialized =
+                true;
+
+
+            this.booted =
+                true;
+
+
+            this.emit(
+                "ready",
+                this.getStatus()
+            );
+
+
+            /* =========================================
+               INTRO SUCCESS
+            ========================================= */
+
+            this.notifyIntro(
+                "MARA_ENGINE_READY",
+                {
+
+                    status:
+                        "SUCCESS",
+
+                    message:
+                        "MARA ENGINE SINGLE berhasil dimuat.",
+
+                    version:
+                        MARA_ENGINE.VERSION,
+
+                    stage:
+                        MARA_ENGINE.STAGE
+
+                }
+            );
+
+
+            this.log(
+                "======================================"
+            );
+
+
+            this.log(
+                "MARA ENGINE SINGLE READY"
+            );
+
+
+            this.log(
+                "Version:",
+                MARA_ENGINE.VERSION
+            );
+
+
+            this.log(
+                "Stage:",
+                MARA_ENGINE.STAGE
+            );
+
+
+            this.log(
+                "IndexedDB:",
+                this.state.database
+            );
+
+
+            this.log(
+                "Intro:",
+                this.state.intro
+            );
+
+
+            this.log(
+                "Main Frame:",
+                this.state.mainFrame
+            );
+
+
+            this.log(
+                "======================================"
+            );
+
+
+            return true;
+
+        } catch (
+            error
+        ) {
+
+            this.state.status =
+                "ERROR";
+
+
+            this.state.error =
+                error.message;
+
+
+            this.emit(
+                "error",
+                {
+
+                    error
+
+                }
+            );
+
+
+            this.notifyIntro(
+                "MARA_ENGINE_ERROR",
+                {
+
+                    status:
+                        "ERROR",
+
+                    message:
+                        error.message
+
+                }
+            );
+
+
+            this.error(
+                "ENGINE BOOT FAILED:",
+                error
+            );
+
+
+            return false;
+
+        }
+
     }
-);
+
+};
 
 
-/* =====================================================
-   ONLINE / OFFLINE
-===================================================== */
+/* =========================================================
+   ONLINE
+========================================================= */
 
 window.addEventListener(
     "online",
     () => {
+
+        MARAEngineSingle.state.online =
+            true;
+
 
         MARAEngineSingle.emit(
             "online"
@@ -1049,8 +1947,13 @@ window.addEventListener(
 
 
         MARAEngineSingle.notifyIntro(
-            "ONLINE",
-            "Koneksi internet tersedia."
+            "MARA_ONLINE",
+            {
+
+                message:
+                    "Koneksi internet tersedia."
+
+            }
         );
 
 
@@ -1062,9 +1965,17 @@ window.addEventListener(
 );
 
 
+/* =========================================================
+   OFFLINE
+========================================================= */
+
 window.addEventListener(
     "offline",
     () => {
+
+        MARAEngineSingle.state.online =
+            false;
+
 
         MARAEngineSingle.emit(
             "offline"
@@ -1072,8 +1983,13 @@ window.addEventListener(
 
 
         MARAEngineSingle.notifyIntro(
-            "OFFLINE",
-            "MARA OS berjalan dalam mode offline."
+            "MARA_OFFLINE",
+            {
+
+                message:
+                    "MARA OS berjalan offline."
+
+            }
         );
 
 
@@ -1085,10 +2001,145 @@ window.addEventListener(
 );
 
 
-/* =====================================================
-   FINAL
-===================================================== */
+/* =========================================================
+   DOM READY
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        try {
+
+            MARAEngineSingle.log(
+                "ENGINE-SINGLE.JS LOADED."
+            );
+
+
+            await MARAEngineSingle.boot();
+
+        } catch (
+            error
+        ) {
+
+            MARAEngineSingle.error(
+                "BOOT ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   GLOBAL MARA API
+========================================================= */
+
+window.MARA = {
+
+    engine:
+        MARAEngineSingle,
+
+
+    boot:
+        () =>
+            MARAEngineSingle.boot(),
+
+
+    status:
+        () =>
+            MARAEngineSingle.getStatus(),
+
+
+    repository:
+        () =>
+            MARAEngineSingle.checkRepository(),
+
+
+    load:
+        path =>
+            MARAEngineSingle.loadMainUI(
+                path
+            ),
+
+
+    clear:
+        () =>
+            MARAEngineSingle.clearMainUI(),
+
+
+    setting:
+
+        {
+
+            get:
+                id =>
+                    MARAEngineSingle.getSetting(
+                        id
+                    ),
+
+            set:
+                (
+                    id,
+                    value
+                ) =>
+                    MARAEngineSingle.setSetting(
+                        id,
+                        value
+                    )
+
+        }
+
+};
+
+
+/* =========================================================
+   COMPATIBILITY API
+========================================================= */
+
+window.MARAUpdate = {
+
+    status:
+        () =>
+            MARAEngineSingle.getStatus(),
+
+
+    check:
+        () =>
+            MARAEngineSingle.checkRepository(),
+
+
+    boot:
+        () =>
+            MARAEngineSingle.boot()
+
+};
+
+
+/* =========================================================
+   FINAL LOG
+========================================================= */
 
 console.log(
-    "[MARA ENGINE] ENGINE-SINGLE.JS LOADED — STAGE 1"
+    "================================================"
+);
+
+console.log(
+    "[MARA ENGINE] ENGINE-SINGLE.JS LOADED"
+);
+
+console.log(
+    "[MARA ENGINE] VERSION:",
+    MARA_ENGINE.VERSION
+);
+
+console.log(
+    "[MARA ENGINE] STAGE:",
+    MARA_ENGINE.STAGE
+);
+
+console.log(
+    "================================================"
 );
