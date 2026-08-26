@@ -1,196 +1,361 @@
-<!DOCTYPE html><html lang="id">
+<!DOCTYPE html>
+<html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no,
-               viewport-fit=cover"><title>MARA Status Bar</title>
 
-<style>
-html,
-body {
-    width: 100%;
-    height: 100%;
+    <meta
+        name="viewport"
+        content="
+            width=device-width,
+            initial-scale=1.0,
+            maximum-scale=1.0,
+            user-scalable=no,
+            viewport-fit=cover
+        "
+    >
 
-    margin: 0;
-    padding: 0;
+    <title>MARA OS</title>
 
-    overflow: hidden;
 
-    position: fixed;
+    <style>
 
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
 
-.mara-iframe {
-    position: fixed;
+        html,
+        body {
 
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+            width: 100%;
+            height: 100%;
 
-    width: 100vw;
-    height: 100vh;
+            margin: 0;
+            padding: 0;
 
-    margin: 0;
-    padding: 0;
+            overflow: hidden;
 
-    border: 0;
+            position: fixed;
 
-    display: block;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
 
-    z-index: 1;
-}
+            background: #000;
 
-.mara-header {
-    top: 0;
-}
-</style><link rel="stylesheet" href="style.css">
+        }
 
-</head><body><!-- =====================================================
-     MARA OS — INTRO OVERLAY
-===================================================== --><div
-    id="mara-intro-overlay"
-    style="
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 9999999999999;
-        background: #000;
-        overflow: hidden;
-    "
-><iframe
-    id="mara-intro-frame"
-    src="ux/intro.html"
-    frameborder="0"
-    style="
-        width: 100%;
-        height: 100%;
-        border: 0;
-        display: block;
-    "
-></iframe>
 
-</div><!-- =====================================================
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+        }
+
+
+        /* =====================================================
+           MAIN MARA IFRAME
+        ===================================================== */
+
+        .mara-iframe {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+            width: 100vw;
+            height: 100vh;
+
+            margin: 0;
+            padding: 0;
+
+            border: 0;
+
+            display: block;
+
+            z-index: 1;
+
+            background: #000;
+
+        }
+
+
+        /* =====================================================
+           INTRO OVERLAY
+        ===================================================== */
+
+        #mara-intro-overlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
+            z-index: 9999999999999;
+
+            background: #000;
+
+            overflow: hidden;
+
+            opacity: 1;
+
+            visibility: visible;
+
+            pointer-events: auto;
+
+            transition:
+                opacity 1s ease,
+                visibility 1s ease;
+
+        }
+
+
+        #mara-intro-overlay.hide {
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+        }
+
+
+        /* =====================================================
+           INTRO FRAME
+        ===================================================== */
+
+        #mara-intro-frame {
+
+            width: 100%;
+            height: 100%;
+
+            border: 0;
+
+            display: block;
+
+            background: #000;
+
+        }
+
+
+        /* =====================================================
+           STATUS BAR
+        ===================================================== */
+
+        .mara-header {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            right: 0;
+
+            z-index: 100;
+
+        }
+
+
+        /* =====================================================
+           CONTROL CENTER
+        ===================================================== */
+
+        #controlCenterOverlay {
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 500;
+
+            display: none;
+
+            background: rgba(0,0,0,.45);
+
+        }
+
+
+        #controlCenterFrame {
+
+            width: 100%;
+            height: 100%;
+
+            border: 0;
+
+            display: block;
+
+        }
+
+
+        /* =====================================================
+           SAFE AREA
+        ===================================================== */
+
+        @supports (
+            padding:
+            env(safe-area-inset-top)
+        ) {
+
+            .mara-header {
+
+                padding-top:
+                    env(safe-area-inset-top);
+
+            }
+
+        }
+
+
+    </style>
+
+
+    <!-- =====================================================
+         STATUS BAR STYLE
+    ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
      MARA OS — MAIN FRAME
-===================================================== --><iframe
+========================================================= -->
+
+<iframe
     class="mara-iframe"
     id="mara-main-frame"
-    frameborder="0">
-</iframe><!-- =====================================================
-     MARA OS — STATUS BAR
-===================================================== --><div class="mara-header"><div class="clock" id="clock">
-    00:00
+    frameborder="0"
+    title="MARA OS">
+</iframe>
+
+
+<!-- =========================================================
+     MARA OS — INTRO OVERLAY
+========================================================= -->
+
+<div
+    id="mara-intro-overlay"
+>
+
+    <iframe
+        id="mara-intro-frame"
+        src="ux/intro.html"
+        frameborder="0"
+        title="MARA OS Intro">
+    </iframe>
+
 </div>
 
-<div class="battery">
 
-    <span id="battery-percent">
-        --%
-    </span>
+<!-- =========================================================
+     MARA OS — STATUS BAR
+========================================================= -->
 
-    <div class="battery-icon">
+<div class="mara-header">
 
-        <div
-            class="battery-level"
-            id="battery-level">
+
+    <div
+        class="clock"
+        id="clock"
+    >
+        00:00
+    </div>
+
+
+    <div class="battery">
+
+
+        <span id="battery-percent">
+            --%
+        </span>
+
+
+        <div class="battery-icon">
+
+            <div
+                class="battery-level"
+                id="battery-level">
+            </div>
+
         </div>
+
 
     </div>
 
+
 </div>
 
-</div><!-- =====================================================
+
+<!-- =========================================================
      MARA OS — CONTROL CENTER
-===================================================== --><div id="controlCenterOverlay"><iframe
-    id="controlCenterFrame"
-    src="ux/control-center.html"
-    frameborder="0">
-</iframe>
+========================================================= -->
 
-</div><!-- =====================================================
-     MARA OS — CORE SCRIPTS
-===================================================== --><script src="script.js"></script><!--
-    ENGINE SINGLE HARUS DIMUAT SEBELUM BUILD ENGINE.
+<div
+    id="controlCenterOverlay"
+>
 
-    engine-single.js:
-        - IndexedDB
-        - update
-        - manifest
-        - download
-        - verify
-        - install
-        - active build
-        - file storage
---><script src="engine-single.js"></script><!--
-    build.js menggunakan MARAEngineSingle.
-    Karena itu build.js dimuat setelah engine-single.js.
---><script src="ux/build.js"></script><script>
+    <iframe
+        id="controlCenterFrame"
+        src="ux/control-center.html"
+        frameborder="0"
+        title="MARA Control Center">
+    </iframe>
 
-/* =====================================================
-   MARA OS — INTRO OVERLAY CONTROLLER
-=====================================================
+</div>
 
-   TUGAS INDEX.HTML:
 
-   1. Menampilkan intro.html
-   2. Menunggu intro selesai
-   3. Menunggu proses update selesai
-   4. Tidak menangani download
-   5. Tidak menangani IndexedDB secara langsung
-   6. Tidak menangani install build secara langsung
-   7. Tidak menghapus build secara langsung
+<!-- =========================================================
+     CORE SCRIPT
+========================================================= -->
 
-   ENGINE SINGLE:
+<script src="script.js"></script>
 
-       Repository
-           ↓
-       Manifest
-           ↓
-       Download
-           ↓
-       Temporary IndexedDB
-           ↓
-       Verify
-           ↓
-       Install
-           ↓
-       ACTIVE BUILD
-           ↓
-       Build Runtime
 
-   INTRO:
+<!-- =========================================================
+     MARA ENGINE SINGLE
+     
+     WAJIB DIMUAT SEBELUM BUILD.JS
+========================================================= -->
 
-       Loading
-           ↓
-       Update UI
-           ↓
-       Finished
-           ↓
-       INDEX menerima signal
-           ↓
-       Overlay ditutup
+<script src="engine-single.js"></script>
 
-===================================================== */
 
+<!-- =========================================================
+     MARA BUILD ENGINE
+========================================================= -->
+
+<script src="ux/build.js"></script>
+
+
+<script>
 
 document.addEventListener(
     "DOMContentLoaded",
     function () {
 
 
-        /* =================================================
+        /* =====================================================
            ELEMENT
-        ================================================= */
+        ===================================================== */
 
-        const overlay =
+        const introOverlay =
             document.getElementById(
                 "mara-intro-overlay"
             );
@@ -208,41 +373,11 @@ document.addEventListener(
             );
 
 
-        /* =================================================
-           VALIDASI
-        ================================================= */
-
-        if (
-            !overlay ||
-            !introFrame
-        ) {
-
-            console.warn(
-                "[MARA OS] Intro overlay / iframe tidak ditemukan."
-            );
-
-            return;
-
-        }
-
-
-        /* =================================================
+        /* =====================================================
            STATE
-        ================================================= */
-
-        let introClosed =
-            false;
-
+        ===================================================== */
 
         let introLoaded =
-            false;
-
-
-        let updateRunning =
-            false;
-
-
-        let updateFinished =
             false;
 
 
@@ -250,17 +385,141 @@ document.addEventListener(
             false;
 
 
-        /* =================================================
-           CLOSE INTRO
-        ================================================= */
+        let overlayClosed =
+            false;
 
-        function closeIntro(
-            reason = "unknown"
-        ) {
 
+        let mainLoaded =
+            false;
+
+
+        /* =====================================================
+           MAIN FRAME
+        ===================================================== */
+
+        function loadMainFrame() {
 
             if (
-                introClosed
+                !mainFrame
+            ) {
+
+                console.error(
+                    "[MARA OS] Main iframe tidak ditemukan."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * Jangan memuat halaman sembarangan.
+             *
+             * build.js / MARAEngineSingle akan
+             * menentukan runtime aktif.
+             *
+             * Jika build engine menyediakan API
+             * loadActiveFile(), gunakan itu.
+             */
+
+            if (
+                window.MARAEngineSingle &&
+                typeof
+                    window.MARAEngineSingle
+                        .loadActiveFile
+                    === "function"
+            ) {
+
+                window.MARAEngineSingle
+                    .loadActiveFile(
+                        "home-screen.html"
+                    )
+                    .then(
+                        function (url) {
+
+                            if (
+                                url
+                            ) {
+
+                                mainFrame.src =
+                                    url;
+
+                                console.log(
+                                    "[MARA OS] ACTIVE BUILD → HOME SCREEN"
+                                );
+
+                            }
+
+                        }
+                    )
+                    .catch(
+                        function (error) {
+
+                            console.warn(
+                                "[MARA OS] Gagal memuat Home Screen dari ACTIVE BUILD.",
+                                error
+                            );
+
+                        }
+                    );
+
+                return;
+
+            }
+
+
+            /*
+             * Fallback.
+             *
+             * Hanya digunakan jika engine
+             * belum menyediakan ACTIVE BUILD.
+             */
+
+            mainFrame.src =
+                "ux/home-screen.html";
+
+            console.log(
+                "[MARA OS] HOME SCREEN FALLBACK"
+            );
+
+        }
+
+
+        /* =====================================================
+           MAIN FRAME LOAD
+        ===================================================== */
+
+        if (
+            mainFrame
+        ) {
+
+            mainFrame.addEventListener(
+                "load",
+                function () {
+
+                    mainLoaded =
+                        true;
+
+                    console.log(
+                        "[MARA OS] Main frame loaded."
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           CLOSE INTRO
+        ===================================================== */
+
+        function closeIntro(
+            reason
+        ) {
+
+            if (
+                overlayClosed
             ) {
 
                 return;
@@ -268,148 +527,117 @@ document.addEventListener(
             }
 
 
-            introClosed =
+            overlayClosed =
                 true;
 
 
             console.log(
-                "[MARA OS] Menutup intro.",
+                "[MARA OS] Intro selesai:",
                 reason
             );
 
 
-            /* =============================================
-               HENTIKAN INTERAKSI
-            ============================================= */
+            /*
+             * Pastikan Home Screen mulai
+             * dimuat sebelum intro ditutup.
+             */
 
-            overlay.style.pointerEvents =
-                "none";
-
-
-            /* =============================================
-               FADE OUT
-            ============================================= */
-
-            overlay.style.transition =
-                "opacity 1s ease";
+            loadMainFrame();
 
 
-            overlay.style.opacity =
-                "0";
-
-
-            /* =============================================
-               HAPUS SETELAH ANIMASI
-            ============================================= */
+            /*
+             * Beri waktu sedikit agar
+             * iframe utama mulai mengambil
+             * resource.
+             */
 
             setTimeout(
                 function () {
 
-
-                    if (!overlay) {
+                    if (
+                        !introOverlay
+                    ) {
 
                         return;
 
                     }
 
 
-                    /*
-                     * Hentikan iframe intro.
-                     */
-
-                    if (introFrame) {
-
-                        try {
-
-                            introFrame.src =
-                                "about:blank";
-
-                        } catch (error) {
-
-                            console.warn(
-                                "[MARA OS] Gagal menghentikan intro iframe.",
-                                error
-                            );
-
-                        }
-
-                    }
-
-
-                    /*
-                     * Hapus overlay.
-                     */
-
-                    overlay.remove();
-
-
-                    console.log(
-                        "[MARA OS] Intro overlay dihapus."
+                    introOverlay.classList.add(
+                        "hide"
                     );
 
 
+                    setTimeout(
+                        function () {
+
+                            try {
+
+                                if (
+                                    introFrame
+                                ) {
+
+                                    introFrame.src =
+                                        "about:blank";
+
+                                }
+
+                            } catch (
+                                error
+                            ) {
+
+                                console.warn(
+                                    "[MARA OS] Intro cleanup error:",
+                                    error
+                                );
+
+                            }
+
+
+                            try {
+
+                                introOverlay.remove();
+
+                            } catch (
+                                error
+                            ) {
+
+                                console.warn(
+                                    "[MARA OS] Overlay cleanup error:",
+                                    error
+                                );
+
+                            }
+
+
+                            console.log(
+                                "[MARA OS] Intro overlay removed."
+                            );
+
+                        },
+                        1000
+                    );
+
                 },
-                1000
+                100
             );
 
         }
 
 
-        /* =================================================
-           CEK BOLEH TUTUP INTRO
-        ================================================= */
-
-        function checkIntroFinish() {
-
-
-            if (
-                !introFinished
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                updateRunning
-            ) {
-
-                console.log(
-                    "[MARA OS] Intro selesai tetapi update masih berjalan."
-                );
-
-                return;
-
-            }
-
-
-            if (
-                updateFinished ||
-                !updateRunning
-            ) {
-
-                closeIntro(
-                    "intro-and-update-finished"
-                );
-
-            }
-
-        }
-
-
-        /* =================================================
+        /* =====================================================
            MESSAGE HANDLER
-        ================================================= */
+        ===================================================== */
 
         function handleIntroMessage(
             event
         ) {
 
 
-            /* =============================================
-               VALIDASI SUMBER
-            ============================================= */
+            /*
+             * Hanya menerima pesan dari
+             * iframe intro.
+             */
 
             if (
                 !introFrame ||
@@ -422,13 +650,13 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               VALIDASI DATA
-            ============================================= */
+            const data =
+                event.data;
+
 
             if (
-                !event.data ||
-                typeof event.data !==
+                !data ||
+                typeof data !==
                     "object"
             ) {
 
@@ -438,12 +666,12 @@ document.addEventListener(
 
 
             const type =
-                event.data.type;
+                data.type;
 
 
-            /* =============================================
+            /* =================================================
                INTRO READY
-            ============================================= */
+            ================================================= */
 
             if (
                 type ===
@@ -460,9 +688,9 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               INDEX READY ACK
-            ============================================= */
+            /* =================================================
+               INDEX READY
+            ================================================= */
 
             if (
                 type ===
@@ -479,25 +707,18 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               UPDATE DIMULAI
-            ============================================= */
+            /* =================================================
+               UPDATE STARTED
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_STARTED"
             ) {
 
-                updateRunning =
-                    true;
-
-                updateFinished =
-                    false;
-
-
                 console.log(
-                    "[MARA OS] Update engine dimulai.",
-                    event.data
+                    "[MARA OS] UPDATE STARTED",
+                    data
                 );
 
 
@@ -506,22 +727,18 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               DOWNLOAD
-            ============================================= */
+            /* =================================================
+               DOWNLOADING
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_DOWNLOADING"
             ) {
 
-                updateRunning =
-                    true;
-
-
                 console.log(
-                    "[MARA OS] Download build sedang berlangsung.",
-                    event.data
+                    "[MARA OS] UPDATE DOWNLOADING",
+                    data
                 );
 
 
@@ -530,22 +747,18 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               VERIFIKASI
-            ============================================= */
+            /* =================================================
+               VERIFYING
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_VERIFYING"
             ) {
 
-                updateRunning =
-                    true;
-
-
                 console.log(
-                    "[MARA OS] Verifikasi build.",
-                    event.data
+                    "[MARA OS] UPDATE VERIFYING",
+                    data
                 );
 
 
@@ -554,22 +767,18 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               INSTALL
-            ============================================= */
+            /* =================================================
+               INSTALLING
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_INSTALLING"
             ) {
 
-                updateRunning =
-                    true;
-
-
                 console.log(
-                    "[MARA OS] Instalasi build.",
-                    event.data
+                    "[MARA OS] UPDATE INSTALLING",
+                    data
                 );
 
 
@@ -578,58 +787,45 @@ document.addEventListener(
             }
 
 
-            /* =============================================
-               UPDATE SELESAI
-            ============================================= */
+            /* =================================================
+               UPDATE FINISHED
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_FINISHED"
             ) {
 
-                updateRunning =
-                    false;
-
-                updateFinished =
-                    true;
-
-
                 console.log(
-                    "[MARA OS] Update selesai.",
-                    event.data
+                    "[MARA OS] UPDATE FINISHED",
+                    data
                 );
 
 
-                checkIntroFinish();
-
+                /*
+                 * Update selesai.
+                 *
+                 * Intro belum tentu selesai,
+                 * jadi kita hanya mencatat status.
+                 */
 
                 return;
 
             }
 
 
-            /* =============================================
-               TIDAK ADA UPDATE
-            ============================================= */
+            /* =================================================
+               NO UPDATE
+            ================================================= */
 
             if (
                 type ===
                 "MARA_NO_UPDATE"
             ) {
 
-                updateRunning =
-                    false;
-
-                updateFinished =
-                    true;
-
-
                 console.log(
-                    "[MARA OS] Tidak ada update."
+                    "[MARA OS] NO UPDATE"
                 );
-
-
-                checkIntroFinish();
 
 
                 return;
@@ -637,44 +833,36 @@ document.addEventListener(
             }
 
 
-            /* =============================================
+            /* =================================================
                UPDATE ERROR
-            ============================================= */
+            ================================================= */
 
             if (
                 type ===
                 "MARA_UPDATE_ERROR"
             ) {
 
-                updateRunning =
-                    false;
-
-                updateFinished =
-                    true;
-
-
-                console.error(
-                    "[MARA OS] Update error.",
-                    event.data
+                console.warn(
+                    "[MARA OS] UPDATE ERROR",
+                    data
                 );
 
 
                 /*
-                 * Build aktif sebelumnya tetap
-                 * dapat digunakan.
+                 * Jangan membuat OS gagal boot.
+                 *
+                 * Jika masih ada ACTIVE BUILD,
+                 * build tersebut tetap digunakan.
                  */
-
-                checkIntroFinish();
-
 
                 return;
 
             }
 
 
-            /* =============================================
-               INTRO SELESAI
-            ============================================= */
+            /* =================================================
+               INTRO FINISHED
+            ================================================= */
 
             if (
                 type ===
@@ -686,11 +874,41 @@ document.addEventListener(
 
 
                 console.log(
-                    "[MARA OS] MARA_INTRO_FINISHED diterima."
+                    "[MARA OS] INTRO FINISHED"
                 );
 
 
-                checkIntroFinish();
+                closeIntro(
+                    "MARA_INTRO_FINISHED"
+                );
+
+
+                return;
+
+            }
+
+
+            /* =================================================
+               DIRECT BOOT
+            ================================================= */
+
+            if (
+                type ===
+                "MARA_BOOT_READY"
+            ) {
+
+                introFinished =
+                    true;
+
+
+                console.log(
+                    "[MARA OS] BOOT READY"
+                );
+
+
+                closeIntro(
+                    "MARA_BOOT_READY"
+                );
 
 
                 return;
@@ -700,9 +918,9 @@ document.addEventListener(
         }
 
 
-        /* =================================================
+        /* =====================================================
            MESSAGE LISTENER
-        ================================================= */
+        ===================================================== */
 
         window.addEventListener(
             "message",
@@ -710,57 +928,65 @@ document.addEventListener(
         );
 
 
-        /* =================================================
+        /* =====================================================
            INTRO FRAME LOAD
-        ================================================= */
+        ===================================================== */
 
-        introFrame.addEventListener(
-            "load",
-            function () {
+        if (
+            introFrame
+        ) {
 
-                introLoaded =
-                    true;
+            introFrame.addEventListener(
+                "load",
+                function () {
+
+                    introLoaded =
+                        true;
 
 
-                console.log(
-                    "[MARA OS] intro.html berhasil dimuat."
-                );
-
-
-                /*
-                 * Beri tahu intro bahwa index
-                 * sudah siap menerima komunikasi.
-                 */
-
-                try {
-
-                    introFrame.contentWindow.postMessage(
-                        {
-                            type:
-                                "MARA_INDEX_READY"
-                        },
-                        "*"
+                    console.log(
+                        "[MARA OS] intro.html loaded."
                     );
 
-                } catch (error) {
 
-                    console.warn(
-                        "[MARA OS] Gagal mengirim MARA_INDEX_READY.",
+                    /*
+                     * Kirim signal bahwa
+                     * index.html siap.
+                     */
+
+                    try {
+
+                        introFrame.contentWindow
+                            .postMessage(
+                                {
+                                    type:
+                                        "MARA_INDEX_READY"
+                                },
+                                "*"
+                            );
+
+                    } catch (
                         error
-                    );
+                    ) {
+
+                        console.warn(
+                            "[MARA OS] Gagal mengirim INDEX_READY.",
+                            error
+                        );
+
+                    }
 
                 }
+            );
 
-            }
-        );
+        }
 
 
-        /* =================================================
-           ENGINE STATUS
-        ================================================= */
+        /* =====================================================
+           ENGINE CONNECTION
+        ===================================================== */
 
         function connectEngine() {
-
 
             if (
                 !window.MARAEngineSingle
@@ -777,20 +1003,22 @@ document.addEventListener(
 
 
             console.log(
-                "[MARA OS] MARAEngineSingle terdeteksi."
+                "[MARA OS] MARAEngineSingle detected."
             );
 
 
             /*
-             * Engine READY.
+             * ENGINE READY
              */
 
             MARAEngineSingle.on(
                 "ready",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] ENGINE READY.",
+                        "[MARA ENGINE] READY",
                         data
                     );
 
@@ -799,15 +1027,17 @@ document.addEventListener(
 
 
             /*
-             * Download progress.
+             * DOWNLOAD
              */
 
             MARAEngineSingle.on(
                 "download:progress",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] DOWNLOAD:",
+                        "[MARA ENGINE] DOWNLOAD",
                         data.progress + "%",
                         data.path
                     );
@@ -817,15 +1047,17 @@ document.addEventListener(
 
 
             /*
-             * Verify sukses.
+             * VERIFY
              */
 
             MARAEngineSingle.on(
                 "verify:success",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] VERIFY OK:",
+                        "[MARA ENGINE] VERIFY SUCCESS",
                         data
                     );
 
@@ -834,15 +1066,17 @@ document.addEventListener(
 
 
             /*
-             * Install selesai.
+             * INSTALL
              */
 
             MARAEngineSingle.on(
                 "install:complete",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] INSTALL COMPLETE:",
+                        "[MARA ENGINE] INSTALL SUCCESS",
                         data
                     );
 
@@ -851,15 +1085,17 @@ document.addEventListener(
 
 
             /*
-             * Active build berubah.
+             * ACTIVE BUILD
              */
 
             MARAEngineSingle.on(
                 "build:active",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] ACTIVE BUILD:",
+                        "[MARA ENGINE] ACTIVE BUILD",
                         data
                     );
 
@@ -868,15 +1104,17 @@ document.addEventListener(
 
 
             /*
-             * Update selesai.
+             * UPDATE COMPLETE
              */
 
             MARAEngineSingle.on(
                 "update:complete",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.log(
-                        "[MARA OS] ENGINE UPDATE COMPLETE:",
+                        "[MARA ENGINE] UPDATE COMPLETE",
                         data
                     );
 
@@ -885,15 +1123,17 @@ document.addEventListener(
 
 
             /*
-             * Update error.
+             * UPDATE ERROR
              */
 
             MARAEngineSingle.on(
                 "update:error",
-                function (data) {
+                function (
+                    data
+                ) {
 
                     console.error(
-                        "[MARA OS] ENGINE UPDATE ERROR:",
+                        "[MARA ENGINE] UPDATE ERROR",
                         data
                     );
 
@@ -906,85 +1146,27 @@ document.addEventListener(
         }
 
 
-        /* =================================================
+        /* =====================================================
            CONNECT ENGINE
-        ================================================= */
+        ===================================================== */
 
         connectEngine();
 
 
-        /* =================================================
-           INTRO FRAME LOAD
-        ================================================= */
+        /* =====================================================
+           INTRO FAILSAFE
+        ===================================================== */
 
-        if (
-            !introLoaded
-        ) {
-
-            console.log(
-                "[MARA OS] Menunggu intro.html..."
-            );
-
-        }
-
-
-        /* =================================================
-           FAILSAFE
-        =================================================
-
-           10 menit untuk proses normal.
-
-        ================================================= */
-
-        const INTRO_FAILSAFE_TIME =
-            600000;
+        const INTRO_FAILSAFE =
+            10 * 60 * 1000;
 
 
         setTimeout(
             function () {
 
-
                 if (
-                    introClosed
+                    overlayClosed
                 ) {
-
-                    return;
-
-                }
-
-
-                if (
-                    updateRunning
-                ) {
-
-                    console.warn(
-                        "[MARA OS] Failsafe tercapai tetapi update masih berjalan."
-                    );
-
-
-                    /*
-                     * Tambahan waktu 2 menit.
-                     */
-
-                    setTimeout(
-                        function () {
-
-
-                            if (
-                                !introClosed &&
-                                !updateRunning
-                            ) {
-
-                                closeIntro(
-                                    "failsafe-after-update"
-                                );
-
-                            }
-
-                        },
-                        120000
-                    );
-
 
                     return;
 
@@ -992,110 +1174,102 @@ document.addEventListener(
 
 
                 console.warn(
-                    "[MARA OS] Intro melewati batas waktu pengaman."
+                    "[MARA OS] Intro failsafe."
                 );
 
+
+                /*
+                 * Jangan biarkan aplikasi
+                 * terkunci selamanya pada intro.
+                 */
 
                 closeIntro(
-                    "failsafe-timeout"
-                );
-
-
-            },
-            INTRO_FAILSAFE_TIME
-        );
-
-
-        /* =================================================
-           CLEANUP
-        ================================================= */
-
-        window.addEventListener(
-            "beforeunload",
-            function () {
-
-                window.removeEventListener(
-                    "message",
-                    handleIntroMessage
+                    "failsafe"
                 );
 
             },
-            {
-                once: true
-            }
+            INTRO_FAILSAFE
         );
 
 
-        /* =================================================
+        /* =====================================================
            DEBUG API
-        ================================================= */
+        ===================================================== */
 
         window.MARA_INTRO_CONTROLLER = {
 
-            getState() {
+            getState:
+                function () {
 
-                return {
+                    return {
 
-                    introLoaded:
-                        introLoaded,
+                        introLoaded:
+                            introLoaded,
 
-                    introClosed:
-                        introClosed,
+                        introFinished:
+                            introFinished,
 
-                    introFinished:
-                        introFinished,
+                        overlayClosed:
+                            overlayClosed,
 
-                    updateRunning:
-                        updateRunning,
+                        mainLoaded:
+                            mainLoaded
 
-                    updateFinished:
-                        updateFinished
+                    };
 
-                };
-
-            },
+                },
 
 
-            close(reason) {
+            close:
+                function (
+                    reason
+                ) {
 
-                closeIntro(
-                    reason ||
-                    "manual"
-                );
+                    closeIntro(
+                        reason ||
+                        "manual"
+                    );
 
-            },
-
-
-            getEngine() {
-
-                return window.MARAEngineSingle ||
-                    null;
-
-            },
+                },
 
 
-            getMainFrame() {
+            getEngine:
+                function () {
 
-                return mainFrame ||
-                    null;
+                    return (
+                        window.MARAEngineSingle ||
+                        null
+                    );
 
-            }
+                },
+
+
+            getMainFrame:
+                function () {
+
+                    return (
+                        mainFrame ||
+                        null
+                    );
+
+                }
 
         };
 
 
-        console.log(
-            "[MARA OS] Intro overlay controller aktif."
-        );
-
+        /* =====================================================
+           READY
+        ===================================================== */
 
         console.log(
             "[MARA OS] INDEX.HTML TAHAP 1 READY."
         );
 
-
     }
 );
 
-</script></body>
+</script>
+
+
+</body>
 </html>
