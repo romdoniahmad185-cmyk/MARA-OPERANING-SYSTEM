@@ -1,79 +1,67 @@
-
-
 /* =========================================================
    MARA OS
    ENGINE SINGLE
-   STAGE 2 — UNIFIED BUILD / UPDATE / STORAGE ENGINE
+   FINAL — UNIFIED UPDATE / BUILD / STORAGE ENGINE
 
-   ARCHITECTURE
+   RELATION:
 
-   index.html
-        │
-        ├── intro.html
-        │
-        ├── engine-single.js
-        │
-        └── build.js
-                 │
-                 ▼
-        ┌──────────────────────┐
-        │   MARA ENGINE SINGLE │
-        └──────────────────────┘
-                 │
-        ┌────────┼────────┐
-        ▼        ▼        ▼
-     UPDATE   STORAGE   EVENTS
-        │        │        │
-        ▼        ▼        ▼
-    Manifest IndexedDB postMessage
-        │
-        ▼
-     Download
-        │
-        ▼
-   Temporary Build
-        │
-        ▼
-     SHA-256
-        │
-        ▼
-      Install
-        │
-        ▼
-      READY
-        │
-        ▼
-   ACTIVE BUILD
-        │
-        ▼
-     build.js
-        │
-        ▼
-     MARA UX
+       index.html
+            │
+            ├── iframe → ux/intro.html
+            │
+            ├── engine-single.js
+            │
+            └── ux/build.js
+                     │
+                     ▼
+              MARA ENGINE SINGLE
+                     │
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+       UPDATE      STORAGE     EVENTS
+          │          │          │
+          ▼          ▼          ▼
+      Manifest    IndexedDB   postMessage
+          │
+          ▼
+       Download
+          │
+          ▼
+      Temporary
+          │
+          ▼
+       SHA-256
+          │
+          ▼
+       Install
+          │
+          ▼
+        READY
+          │
+          ▼
+       ACTIVATE
+          │
+          ▼
+     ACTIVE BUILD
+          │
+          ▼
+       build.js
+          │
+          ▼
+        MARA UX
 
 
-   DATABASE
+   DATABASE:
 
-   MARA_OS_STORAGE
-
-   VERSION 4
+       MARA_OS_STORAGE
 
    STORES:
 
-   builds
-      └── metadata build
-
-   files
-      └── permanent build files
-
-   active
-      └── ACTIVE BUILD
-
-   temporary
-      └── temporary update files
-
-   settings
-      └── engine settings
+       builds
+       files
+       active
+       temporary
+       settings
 
 ========================================================= */
 
@@ -83,7 +71,7 @@
 
 
     /* =====================================================
-       GLOBAL PROTECTION
+       ENGINE DUPLICATE PROTECTION
     ===================================================== */
 
     if (
@@ -106,11 +94,17 @@
 
     const CONFIG = {
 
+        name:
+            "MARA_ENGINE_SINGLE",
+
+        version:
+            "3.0.0",
+
         databaseName:
             "MARA_OS_STORAGE",
 
         databaseVersion:
-            4,
+            5,
 
         stores: {
 
@@ -173,13 +167,63 @@
         messageTarget:
             "*",
 
-        allowedProtocols: [
-
-            "https:"
-
-        ]
+        allowedProtocols:
+            [
+                "https:"
+            ]
 
     };
+
+
+    /* =====================================================
+       STATUS DEFINITIONS
+    ===================================================== */
+
+    const STATUS = Object.freeze({
+
+        IDLE:
+            "IDLE",
+
+        INITIALIZING:
+            "INITIALIZING",
+
+        READY:
+            "READY",
+
+        CHECKING:
+            "CHECKING",
+
+        FETCHING_MANIFEST:
+            "FETCHING_MANIFEST",
+
+        UP_TO_DATE:
+            "UP_TO_DATE",
+
+        DOWNLOADING:
+            "DOWNLOADING",
+
+        VERIFYING:
+            "VERIFYING",
+
+        INSTALLING:
+            "INSTALLING",
+
+        ACTIVATING:
+            "ACTIVATING",
+
+        UPDATED:
+            "UPDATED",
+
+        OFFLINE:
+            "OFFLINE",
+
+        RECOVERING:
+            "RECOVERING",
+
+        ERROR:
+            "ERROR"
+
+    });
 
 
     /* =====================================================
@@ -189,7 +233,10 @@
     const STATE = {
 
         status:
-            "IDLE",
+            STATUS.IDLE,
+
+        phase:
+            STATUS.IDLE,
 
         activeBuild:
             null,
@@ -225,13 +272,95 @@
             null,
 
         error:
+            null,
+
+        errorCode:
+            null,
+
+        lastManifest:
             null
 
     };
 
 
     /* =====================================================
-       ENGINE OBJECT
+       UTILITY
+    ===================================================== */
+
+    const Utils = {
+
+        number(
+            value,
+            fallback = null
+        ) {
+
+            const number =
+                Number(value);
+
+            return Number.isFinite(number)
+                ? number
+                : fallback;
+
+        },
+
+
+        integer(
+            value,
+            fallback = null
+        ) {
+
+            const number =
+                Number(value);
+
+            return Number.isInteger(number)
+                ? number
+                : fallback;
+
+        },
+
+
+        sleep(
+            ms
+        ) {
+
+            return new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        ms
+                    )
+            );
+
+        },
+
+
+        clone(
+            value
+        ) {
+
+            try {
+
+                return structuredClone(
+                    value
+                );
+
+            } catch {
+
+                return JSON.parse(
+                    JSON.stringify(
+                        value
+                    )
+                );
+
+            }
+
+        }
+
+    };
+
+
+    /* =====================================================
+       ENGINE
     ===================================================== */
 
     const ENGINE = {
@@ -239,14 +368,26 @@
         __MARA_ENGINE_SINGLE__:
             true,
 
+        name:
+            CONFIG.name,
+
         version:
-            "2.0.0",
+            CONFIG.version,
+
+        config:
+            CONFIG,
+
+        status:
+            STATE,
 
         db:
             null,
 
         initialized:
             false,
+
+        initializing:
+            null,
 
         updating:
             false,
@@ -256,9 +397,6 @@
 
         objectURLs:
             new Map(),
-
-        state:
-            STATE,
 
 
         /* =================================================
@@ -276,7 +414,7 @@
             ) {
 
                 throw new TypeError(
-                    "Callback event harus berupa function."
+                    "Event callback harus berupa function."
                 );
 
             }
@@ -336,40 +474,51 @@
                 this.events[event] ||
                 [];
 
-            listeners.slice().forEach(
-                listener => {
+            const payload = {
 
-                    try {
+                event,
 
-                        listener(
-                            data
-                        );
+                ...data
 
-                    } catch (
-                        error
-                    ) {
+            };
 
-                        console.error(
-                            "[MARA ENGINE] Event listener error:",
+
+            listeners
+                .slice()
+                .forEach(
+                    listener => {
+
+                        try {
+
+                            listener(
+                                payload
+                            );
+
+                        } catch (
                             error
-                        );
+                        ) {
+
+                            console.error(
+                                "[MARA ENGINE] Event listener error:",
+                                error
+                            );
+
+                        }
 
                     }
-
-                }
-            );
+                );
 
 
             this.broadcast(
                 event,
-                data
+                payload
             );
 
         },
 
 
         /* =================================================
-           BROADCAST
+           MESSAGE BROADCAST
         ================================================= */
 
         broadcast(
@@ -383,7 +532,7 @@
                     {
 
                         source:
-                            "MARA_ENGINE_SINGLE",
+                            CONFIG.name,
 
                         type:
                             "MARA_ENGINE_EVENT",
@@ -425,16 +574,30 @@
             STATE.status =
                 status;
 
+            STATE.phase =
+                status;
+
             Object.assign(
                 STATE,
                 extra
             );
 
+
             this.emit(
                 "state",
                 {
-                    ...STATE
+                    state:
+                        this.getState()
                 }
+            );
+
+        },
+
+
+        getState() {
+
+            return Utils.clone(
+                STATE
             );
 
         },
@@ -456,8 +619,37 @@
             }
 
 
+            if (
+                this.initializing
+            ) {
+
+                return this.initializing;
+
+            }
+
+
+            this.initializing =
+                this._initialize();
+
+
+            try {
+
+                return await this.initializing;
+
+            } finally {
+
+                this.initializing =
+                    null;
+
+            }
+
+        },
+
+
+        async _initialize() {
+
             this.setStatus(
-                "INITIALIZING"
+                STATUS.INITIALIZING
             );
 
 
@@ -478,7 +670,7 @@
             ) {
 
                 STATE.activeBuild =
-                    Number(
+                    Utils.integer(
                         active.build
                     );
 
@@ -498,7 +690,16 @@
 
 
             this.setStatus(
-                "READY"
+                STATUS.READY,
+                {
+
+                    activeBuild:
+                        STATE.activeBuild,
+
+                    activeVersion:
+                        STATE.activeVersion
+
+                }
             );
 
 
@@ -546,6 +747,9 @@
                             const db =
                                 event.target.result;
 
+                            const transaction =
+                                event.target.transaction;
+
 
                             /* =================================
                                BUILDS
@@ -571,10 +775,9 @@
                             } else {
 
                                 builds =
-                                    event.target.transaction
-                                        .objectStore(
-                                            CONFIG.stores.builds
-                                        );
+                                    transaction.objectStore(
+                                        CONFIG.stores.builds
+                                    );
 
                             }
 
@@ -639,10 +842,9 @@
                             } else {
 
                                 files =
-                                    event.target.transaction
-                                        .objectStore(
-                                            CONFIG.stores.files
-                                        );
+                                    transaction.objectStore(
+                                        CONFIG.stores.files
+                                    );
 
                             }
 
@@ -728,10 +930,9 @@
                             } else {
 
                                 temporary =
-                                    event.target.transaction
-                                        .objectStore(
-                                            CONFIG.stores.temporary
-                                        );
+                                    transaction.objectStore(
+                                        CONFIG.stores.temporary
+                                    );
 
                             }
 
@@ -810,6 +1011,17 @@
                                 };
 
 
+                            db.onerror =
+                                event => {
+
+                                    console.warn(
+                                        "[MARA ENGINE] IndexedDB error:",
+                                        event.target.error
+                                    );
+
+                                };
+
+
                             resolve(
                                 db
                             );
@@ -824,6 +1036,18 @@
                                 request.error ||
                                 new Error(
                                     "IndexedDB gagal dibuka."
+                                )
+                            );
+
+                        };
+
+
+                    request.onblocked =
+                        () => {
+
+                            reject(
+                                new Error(
+                                    "IndexedDB sedang diblokir oleh koneksi database lama."
                                 )
                             );
 
@@ -910,7 +1134,7 @@
 
 
         /* =================================================
-           ACTIVE RECORD
+           ACTIVE BUILD
         ================================================= */
 
         async readActiveRecord() {
@@ -964,17 +1188,9 @@
             }
 
 
-            const build =
-                Number(
-                    record.build
-                );
-
-
-            return Number.isFinite(
-                build
-            )
-                ? build
-                : null;
+            return Utils.integer(
+                record.build
+            );
 
         },
 
@@ -988,13 +1204,13 @@
 
 
             const numericBuild =
-                Number(build);
+                Utils.integer(
+                    build
+                );
 
 
             if (
-                !Number.isInteger(
-                    numericBuild
-                ) ||
+                numericBuild === null ||
                 numericBuild < 1
             ) {
 
@@ -1005,14 +1221,10 @@
             }
 
 
-            const ready =
-                await this.hasBuild(
-                    numericBuild
-                );
-
-
             if (
-                !ready
+                !(await this.hasBuild(
+                    numericBuild
+                ))
             ) {
 
                 throw new Error(
@@ -1022,51 +1234,10 @@
             }
 
 
-            const record = {
-
-                id:
-                    CONFIG.activeKey,
-
-                build:
-                    numericBuild,
-
-                version:
-                    version === null
-                        ? null
-                        : String(
-                            version
-                        ),
-
-                activatedAt:
-                    Date.now()
-
-            };
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.active,
-                    "readwrite"
-                ).put(
-                    record
-                )
+            return this.activateBuild(
+                numericBuild,
+                version
             );
-
-
-            STATE.activeBuild =
-                numericBuild;
-
-            STATE.activeVersion =
-                record.version;
-
-
-            this.emit(
-                "build:active",
-                record
-            );
-
-
-            return record;
 
         },
 
@@ -1079,6 +1250,11 @@
             url,
             options = {}
         ) {
+
+            this.validateURL(
+                url
+            );
+
 
             let lastError =
                 null;
@@ -1143,7 +1319,6 @@
 
                     return response;
 
-
                 } catch (
                     error
                 ) {
@@ -1162,7 +1337,7 @@
                         CONFIG.retryCount
                     ) {
 
-                        await this.sleep(
+                        await Utils.sleep(
                             CONFIG.retryDelay
                         );
 
@@ -1193,7 +1368,17 @@
                 );
 
 
-            return response.json();
+            try {
+
+                return await response.json();
+
+            } catch {
+
+                throw new Error(
+                    "Response JSON tidak valid."
+                );
+
+            }
 
         },
 
@@ -1205,7 +1390,7 @@
         async fetchManifest() {
 
             this.setStatus(
-                "FETCHING_MANIFEST"
+                STATUS.FETCHING_MANIFEST
             );
 
 
@@ -1250,17 +1435,23 @@
                     manifest.build
                 );
 
-
             STATE.remoteVersion =
                 String(
                     manifest.version
+                );
+
+            STATE.lastManifest =
+                Utils.clone(
+                    manifest
                 );
 
 
             this.emit(
                 "manifest:ready",
                 {
+
                     manifest
+
                 }
             );
 
@@ -1281,7 +1472,7 @@
             if (
                 !manifest ||
                 typeof manifest !==
-                    "object"
+                "object"
             ) {
 
                 throw new Error(
@@ -1292,9 +1483,9 @@
 
 
             if (
-                !manifest.version ||
                 typeof manifest.version !==
-                    "string"
+                "string" ||
+                !manifest.version.trim()
             ) {
 
                 throw new Error(
@@ -1305,15 +1496,13 @@
 
 
             const build =
-                Number(
+                Utils.integer(
                     manifest.build
                 );
 
 
             if (
-                !Number.isInteger(
-                    build
-                ) ||
+                build === null ||
                 build < 1
             ) {
 
@@ -1332,6 +1521,17 @@
 
                 throw new Error(
                     "Manifest.files harus berupa array."
+                );
+
+            }
+
+
+            if (
+                manifest.files.length === 0
+            ) {
+
+                throw new Error(
+                    "Manifest.files tidak boleh kosong."
                 );
 
             }
@@ -1359,7 +1559,7 @@
                     if (
                         !file ||
                         typeof file !==
-                            "object"
+                        "object"
                     ) {
 
                         throw new Error(
@@ -1373,17 +1573,6 @@
                         this.normalizePath(
                             file.path
                         );
-
-
-                    if (
-                        !path
-                    ) {
-
-                        throw new Error(
-                            "Path file kosong."
-                        );
-
-                    }
 
 
                     if (
@@ -1405,6 +1594,8 @@
 
 
                     if (
+                        typeof file.url !==
+                        "string" ||
                         !file.url
                     ) {
 
@@ -1526,7 +1717,7 @@
 
 
         /* =================================================
-           PATH VALIDATION
+           PATH NORMALIZATION
         ================================================= */
 
         normalizePath(
@@ -1557,27 +1748,39 @@
                     );
 
 
-            value =
+            const parts =
                 value
                     .split("/")
                     .filter(
                         part =>
                             part &&
-                            part !== "." &&
-                            part !== ".."
-                    )
-                    .join("/");
+                            part !== "."
+                    );
 
 
             if (
-                !value ||
-                value.includes(
+                parts.includes(
                     ".."
                 )
             ) {
 
                 throw new Error(
                     `Path tidak aman: ${path}`
+                );
+
+            }
+
+
+            value =
+                parts.join("/");
+
+
+            if (
+                !value
+            ) {
+
+                throw new Error(
+                    `Path kosong: ${path}`
                 );
 
             }
@@ -1621,6 +1824,23 @@
             await this.init();
 
 
+            const numericBuild =
+                Utils.integer(
+                    build
+                );
+
+
+            if (
+                numericBuild === null
+            ) {
+
+                throw new Error(
+                    "Temporary build tidak valid."
+                );
+
+            }
+
+
             const normalizedPath =
                 this.normalizePath(
                     path
@@ -1638,8 +1858,16 @@
             }
 
 
-            const numericBuild =
-                Number(build);
+            if (
+                blob.size >
+                CONFIG.maxFileSize
+            ) {
+
+                throw new Error(
+                    `File terlalu besar: ${normalizedPath}`
+                );
+
+            }
 
 
             const data = {
@@ -1696,12 +1924,12 @@
                 this.store(
                     CONFIG.stores.temporary
                 )
-                .index(
-                    "build"
-                )
-                .getAll(
-                    Number(build)
-                )
+                    .index(
+                        "build"
+                    )
+                    .getAll(
+                        Number(build)
+                    )
             );
 
         },
@@ -1740,10 +1968,15 @@
             this.emit(
                 "temporary:deleted",
                 {
+
                     build:
                         Number(build)
+
                 }
             );
+
+
+            return true;
 
         },
 
@@ -1901,7 +2134,7 @@
 
 
             this.setStatus(
-                "DOWNLOADING",
+                STATUS.DOWNLOADING,
                 {
 
                     installingBuild:
@@ -1939,17 +2172,6 @@
 
                 }
             );
-
-
-            if (
-                files.length === 0
-            ) {
-
-                throw new Error(
-                    "Manifest tidak memiliki file."
-                );
-
-            }
 
 
             for (
@@ -2001,7 +2223,7 @@
 
 
             this.setStatus(
-                "VERIFYING",
+                STATUS.VERIFYING,
                 {
 
                     installingBuild:
@@ -2172,7 +2394,9 @@
             this.emit(
                 "verify:success",
                 {
+
                     build
+
                 }
             );
 
@@ -2192,7 +2416,7 @@
 
             if (
                 !window.crypto ||
-                !crypto.subtle
+                !window.crypto.subtle
             ) {
 
                 throw new Error(
@@ -2207,7 +2431,7 @@
 
 
             const hashBuffer =
-                await crypto.subtle.digest(
+                await window.crypto.subtle.digest(
                     "SHA-256",
                     buffer
                 );
@@ -2252,7 +2476,7 @@
 
 
             this.setStatus(
-                "INSTALLING",
+                STATUS.INSTALLING,
                 {
 
                     installingBuild:
@@ -2289,10 +2513,6 @@
             }
 
 
-            /* =============================================
-               MARK INSTALLING
-            ============================================= */
-
             await this.request(
                 this.store(
                     CONFIG.stores.builds,
@@ -2322,10 +2542,6 @@
             );
 
 
-            /* =============================================
-               REMOVE OLD PARTIAL FILES
-            ============================================= */
-
             const oldFiles =
                 await this.getBuildFiles(
                     build
@@ -2348,10 +2564,6 @@
 
             }
 
-
-            /* =============================================
-               TEMP → PERMANENT
-            ============================================= */
 
             for (
                 let index = 0;
@@ -2439,10 +2651,6 @@
             }
 
 
-            /* =============================================
-               MARK READY
-            ============================================= */
-
             await this.request(
                 this.store(
                     CONFIG.stores.builds,
@@ -2472,10 +2680,6 @@
             );
 
 
-            /* =============================================
-               TEMP CLEANUP
-            ============================================= */
-
             await this.deleteTemporaryBuild(
                 build
             );
@@ -2503,7 +2707,7 @@
            VERIFY INSTALLED BUILD
         ================================================= */
 
-        async verifyActiveBuild(
+        async verifyInstalledBuild(
             build
         ) {
 
@@ -2558,7 +2762,9 @@
 
 
             if (
-                metadata.fileCount !==
+                Number(
+                    metadata.fileCount
+                ) !==
                 files.length
             ) {
 
@@ -2584,16 +2790,41 @@
         ) {
 
             const numericBuild =
-                Number(build);
+                Utils.integer(
+                    build
+                );
 
 
-            await this.verifyActiveBuild(
+            if (
+                numericBuild === null ||
+                numericBuild < 1
+            ) {
+
+                throw new Error(
+                    "Build untuk activation tidak valid."
+                );
+
+            }
+
+
+            await this.verifyInstalledBuild(
                 numericBuild
             );
 
 
             const previous =
                 await this.readActiveRecord();
+
+
+            this.setStatus(
+                STATUS.ACTIVATING,
+                {
+
+                    installingBuild:
+                        numericBuild
+
+                }
+            );
 
 
             const record = {
@@ -2625,8 +2856,7 @@
                         "readwrite"
                     ).put(
                         record
-                    )
-                );
+                    );
 
 
                 STATE.activeBuild =
@@ -2634,6 +2864,12 @@
 
                 STATE.activeVersion =
                     record.version;
+
+
+                this.emit(
+                    "build:active",
+                    record
+                );
 
 
                 this.emit(
@@ -2657,16 +2893,11 @@
                 );
 
 
-                return true;
-
+                return record;
 
             } catch (
                 error
             ) {
-
-                /*
-                 * RESTORE ACTIVE RECORD
-                 */
 
                 if (
                     previous
@@ -2697,7 +2928,7 @@
                     ) {
 
                         console.error(
-                            "[MARA ENGINE] Restore ACTIVE gagal:",
+                            "[MARA ENGINE] ACTIVE rollback gagal:",
                             rollbackError
                         );
 
@@ -2748,7 +2979,7 @@
             return Boolean(
                 record &&
                 record.status ===
-                    "READY"
+                "READY"
             );
 
         },
@@ -2765,12 +2996,26 @@
                 this.store(
                     CONFIG.stores.files
                 )
-                .index(
-                    "build"
-                )
-                .getAll(
-                    Number(build)
-                )
+                    .index(
+                        "build"
+                    )
+                    .getAll(
+                        Number(build)
+                    )
+            );
+
+        },
+
+
+        async getBuilds() {
+
+            await this.init();
+
+
+            return this.request(
+                this.store(
+                    CONFIG.stores.builds
+                ).getAll()
             );
 
         },
@@ -2785,13 +3030,13 @@
         ) {
 
             const numericBuild =
-                Number(build);
+                Utils.integer(
+                    build
+                );
 
 
             if (
-                !Number.isInteger(
-                    numericBuild
-                )
+                numericBuild === null
             ) {
 
                 return false;
@@ -2873,7 +3118,7 @@
 
 
         /* =================================================
-           CREATE FILE URL
+           FILE URL
         ================================================= */
 
         async createFileURL(
@@ -2882,7 +3127,20 @@
         ) {
 
             const numericBuild =
-                Number(build);
+                Utils.integer(
+                    build
+                );
+
+
+            if (
+                numericBuild === null
+            ) {
+
+                throw new Error(
+                    "Build tidak valid."
+                );
+
+            }
 
 
             const normalizedPath =
@@ -2964,7 +3222,7 @@
 
 
         /* =================================================
-           LOAD ACTIVE FILE
+           ACTIVE FILE
         ================================================= */
 
         async loadActiveFile(
@@ -2995,7 +3253,7 @@
 
 
         /* =================================================
-           LOAD INTO IFRAME
+           IFRAME LOADER
         ================================================= */
 
         async loadIntoIframe(
@@ -3004,7 +3262,9 @@
         ) {
 
             if (
-                !iframe
+                !iframe ||
+                typeof iframe !==
+                "object"
             ) {
 
                 throw new Error(
@@ -3022,6 +3282,21 @@
 
             iframe.src =
                 url;
+
+
+            this.emit(
+                "iframe:load",
+                {
+
+                    path,
+
+                    url,
+
+                    build:
+                        STATE.activeBuild
+
+                }
+            );
 
 
             return url;
@@ -3065,7 +3340,7 @@
 
 
         /* =================================================
-           REVOKE URL
+           OBJECT URL CLEANUP
         ================================================= */
 
         revokeBuildURLs(
@@ -3162,12 +3437,13 @@
             STATE.startedAt =
                 Date.now();
 
-
             STATE.completedAt =
                 null;
 
-
             STATE.error =
+                null;
+
+            STATE.errorCode =
                 null;
 
 
@@ -3185,7 +3461,7 @@
                 ) {
 
                     this.setStatus(
-                        "OFFLINE"
+                        STATUS.OFFLINE
                     );
 
 
@@ -3214,8 +3490,13 @@
 
 
                 /* =========================================
-                   MANIFEST
+                   CHECK MANIFEST
                 ========================================= */
+
+                this.setStatus(
+                    STATUS.CHECKING
+                );
+
 
                 const manifest =
                     await this.fetchManifest();
@@ -3244,14 +3525,17 @@
                 ) {
 
                     this.setStatus(
-                        "UP_TO_DATE",
+                        STATUS.UP_TO_DATE,
                         {
 
                             activeBuild:
                                 localBuild,
 
                             activeVersion:
-                                this.state.activeVersion
+                                STATE.activeVersion,
+
+                            progress:
+                                100
 
                         }
                     );
@@ -3265,7 +3549,7 @@
                                 localBuild,
 
                             version:
-                                this.state.activeVersion
+                                STATE.activeVersion
 
                         }
                     );
@@ -3280,7 +3564,7 @@
                             localBuild,
 
                         version:
-                            this.state.activeVersion
+                            STATE.activeVersion
 
                     };
 
@@ -3293,6 +3577,16 @@
 
                 STATE.installingBuild =
                     remoteBuild;
+
+
+                STATE.progress =
+                    0;
+
+                STATE.completedFiles =
+                    0;
+
+                STATE.totalFiles =
+                    manifest.files.length;
 
 
                 this.emit(
@@ -3354,10 +3648,10 @@
 
 
                 /* =========================================
-                   VERIFY INSTALLED BUILD
+                   VERIFY INSTALLED
                 ========================================= */
 
-                await this.verifyActiveBuild(
+                await this.verifyInstalledBuild(
                     remoteBuild
                 );
 
@@ -3373,7 +3667,7 @@
 
 
                 /* =========================================
-                   VERIFY ACTIVE RECORD
+                   VERIFY ACTIVE
                 ========================================= */
 
                 const activeAfterInstall =
@@ -3421,21 +3715,18 @@
                 STATE.progress =
                     100;
 
-
                 STATE.completedAt =
                     Date.now();
 
-
                 STATE.installingBuild =
                     null;
-
 
                 STATE.currentFile =
                     null;
 
 
                 this.setStatus(
-                    "UPDATED",
+                    STATUS.UPDATED,
                     {
 
                         activeBuild:
@@ -3482,7 +3773,6 @@
 
                 return result;
 
-
             } catch (
                 error
             ) {
@@ -3494,31 +3784,33 @@
 
 
                 STATE.error =
-                    error.message;
+                    error.message ||
+                    "Update gagal.";
+
+
+                STATE.errorCode =
+                    "UPDATE_FAILED";
 
 
                 STATE.installingBuild =
                     null;
-
 
                 STATE.currentFile =
                     null;
 
 
                 this.setStatus(
-                    "ERROR",
+                    STATUS.ERROR,
                     {
 
                         error:
-                            error.message
+                            STATE.error,
+
+                        errorCode:
+                            STATE.errorCode
 
                     }
                 );
-
-
-                /*
-                 * ACTIVE BUILD LAMA TIDAK DIUBAH.
-                 */
 
 
                 try {
@@ -3538,38 +3830,14 @@
                 ) {
 
                     console.warn(
-                        "[MARA ENGINE] Temporary cleanup gagal:",
+                        "[MARA ENGINE] Cleanup temporary gagal:",
                         cleanupError
                     );
 
                 }
 
 
-                this.emit(
-                    "update:error",
-                    {
-
-                        error,
-
-                        message:
-                            error.message
-
-                    }
-                );
-
-
-                this.emit(
-                    "intro:update-error",
-                    {
-
-                        message:
-                            error.message
-
-                    }
-                );
-
-
-                return {
+                const result = {
 
                     updated:
                         false,
@@ -3578,10 +3846,27 @@
                         true,
 
                     message:
-                        error.message
+                        STATE.error,
+
+                    code:
+                        STATE.errorCode
 
                 };
 
+
+                this.emit(
+                    "update:error",
+                    result
+                );
+
+
+                this.emit(
+                    "intro:update-error",
+                    result
+                );
+
+
+                return result;
 
             } finally {
 
@@ -3602,6 +3887,11 @@
             await this.init();
 
 
+            this.setStatus(
+                STATUS.RECOVERING
+            );
+
+
             const temporaryFiles =
                 await this.request(
                     this.store(
@@ -3610,7 +3900,7 @@
                 );
 
 
-            const builds =
+            const temporaryBuilds =
                 new Set(
                     temporaryFiles.map(
                         file =>
@@ -3623,7 +3913,7 @@
 
             for (
                 const build
-                of builds
+                of temporaryBuilds
             ) {
 
                 const ready =
@@ -3644,11 +3934,6 @@
 
             }
 
-
-            /*
-             * Bersihkan metadata INSTALLING
-             * yang tidak aktif.
-             */
 
             const buildRecords =
                 await this.request(
@@ -3683,6 +3968,11 @@
             }
 
 
+            this.setStatus(
+                STATUS.READY
+            );
+
+
             this.emit(
                 "recovery:complete"
             );
@@ -3699,6 +3989,9 @@
 
         async getStatus() {
 
+            await this.init();
+
+
             const active =
                 await this.getActiveBuild();
 
@@ -3714,13 +4007,16 @@
             return {
 
                 engine:
-                    "MARA_ENGINE_SINGLE",
+                    CONFIG.name,
 
                 engineVersion:
-                    this.version,
+                    CONFIG.version,
 
                 status:
                     STATE.status,
+
+                phase:
+                    STATE.phase,
 
                 activeBuild:
                     active,
@@ -3768,7 +4064,16 @@
                     CONFIG.entryFile,
 
                 error:
-                    STATE.error
+                    STATE.error,
+
+                errorCode:
+                    STATE.errorCode,
+
+                startedAt:
+                    STATE.startedAt,
+
+                completedAt:
+                    STATE.completedAt
 
             };
 
@@ -3776,19 +4081,86 @@
 
 
         /* =================================================
-           SLEEP
+           SETTINGS
+        ================================================= */
+
+        async getSetting(
+            id,
+            fallback = null
+        ) {
+
+            await this.init();
+
+
+            const result =
+                await this.request(
+                    this.store(
+                        CONFIG.stores.settings
+                    ).get(
+                        String(id)
+                    )
+                );
+
+
+            return result
+                ? result.value
+                : fallback;
+
+        },
+
+
+        async setSetting(
+            id,
+            value
+        ) {
+
+            await this.init();
+
+
+            const record = {
+
+                id:
+                    String(id),
+
+                value,
+
+                updatedAt:
+                    Date.now()
+
+            };
+
+
+            await this.request(
+                this.store(
+                    CONFIG.stores.settings,
+                    "readwrite"
+                ).put(
+                    record
+                )
+            );
+
+
+            this.emit(
+                "setting:changed",
+                record
+            );
+
+
+            return value;
+
+        },
+
+
+        /* =================================================
+           PUBLIC SLEEP
         ================================================= */
 
         sleep(
             ms
         ) {
 
-            return new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        ms
-                    )
+            return Utils.sleep(
+                ms
             );
 
         }
@@ -3830,6 +4202,10 @@
             () =>
                 ENGINE.getStatus(),
 
+        state:
+            () =>
+                ENGINE.getState(),
+
         activeBuild:
             () =>
                 ENGINE.getActiveBuild(),
@@ -3868,6 +4244,10 @@
                     build
                 ),
 
+        getBuilds:
+            () =>
+                ENGINE.getBuilds(),
+
         getBuildFiles:
             build =>
                 ENGINE.getBuildFiles(
@@ -3878,6 +4258,26 @@
             build =>
                 ENGINE.deleteBuild(
                     build
+                ),
+
+        getSetting:
+            (
+                id,
+                fallback
+            ) =>
+                ENGINE.getSetting(
+                    id,
+                    fallback
+                ),
+
+        setSetting:
+            (
+                id,
+                value
+            ) =>
+                ENGINE.setSetting(
+                    id,
+                    value
                 )
 
     };
@@ -4014,17 +4414,23 @@
                 setTimeout(
                     () => {
 
-                        ENGINE.update()
-                            .catch(
-                                error => {
+                        if (
+                            !ENGINE.updating
+                        ) {
 
-                                    console.error(
-                                        "[MARA ENGINE] Online recovery error:",
-                                        error
-                                    );
+                            ENGINE.update()
+                                .catch(
+                                    error => {
 
-                                }
-                            );
+                                        console.error(
+                                            "[MARA ENGINE] Online recovery error:",
+                                            error
+                                        );
+
+                                    }
+                                );
+
+                        }
 
                     },
                     CONFIG.autoUpdateDelay
@@ -4046,7 +4452,7 @@
 
 
             ENGINE.setStatus(
-                "OFFLINE"
+                STATUS.OFFLINE
             );
 
 
@@ -4073,7 +4479,7 @@
             if (
                 !data ||
                 typeof data !==
-                    "object"
+                "object"
             ) {
 
                 return;
@@ -4082,7 +4488,7 @@
 
 
             /* =============================================
-               STATUS REQUEST
+               STATUS
             ============================================= */
 
             if (
@@ -4095,21 +4501,41 @@
                     .then(
                         status => {
 
-                            try {
+                            event.source?.postMessage(
+                                {
 
-                                event.source?.postMessage(
-                                    {
+                                    type:
+                                        "MARA_ENGINE_STATUS",
 
-                                        type:
-                                            "MARA_ENGINE_STATUS",
+                                    source:
+                                        CONFIG.name,
 
-                                        status
+                                    status
 
-                                    },
-                                    "*"
-                                );
+                                },
+                                "*"
+                            );
 
-                            } catch {}
+                        }
+                    )
+                    .catch(
+                        error => {
+
+                            event.source?.postMessage(
+                                {
+
+                                    type:
+                                        "MARA_ENGINE_ERROR",
+
+                                    source:
+                                        CONFIG.name,
+
+                                    error:
+                                        error.message
+
+                                },
+                                "*"
+                            );
 
                         }
                     );
@@ -4118,7 +4544,7 @@
 
 
             /* =============================================
-               UPDATE REQUEST
+               UPDATE
             ============================================= */
 
             if (
@@ -4131,21 +4557,20 @@
                     .then(
                         result => {
 
-                            try {
+                            event.source?.postMessage(
+                                {
 
-                                event.source?.postMessage(
-                                    {
+                                    type:
+                                        "MARA_ENGINE_UPDATE_RESULT",
 
-                                        type:
-                                            "MARA_ENGINE_UPDATE_RESULT",
+                                    source:
+                                        CONFIG.name,
 
-                                        result
+                                    result
 
-                                    },
-                                    "*"
-                                );
-
-                            } catch {}
+                                },
+                                "*"
+                            );
 
                         }
                     );
@@ -4154,7 +4579,7 @@
 
 
             /* =============================================
-               ACTIVE BUILD REQUEST
+               ACTIVE BUILD
             ============================================= */
 
             if (
@@ -4167,21 +4592,84 @@
                     .then(
                         build => {
 
-                            try {
+                            event.source?.postMessage(
+                                {
 
-                                event.source?.postMessage(
-                                    {
+                                    type:
+                                        "MARA_ENGINE_ACTIVE_BUILD",
 
-                                        type:
-                                            "MARA_ENGINE_ACTIVE_BUILD",
+                                    source:
+                                        CONFIG.name,
 
-                                        build
+                                    build
 
-                                    },
-                                    "*"
-                                );
+                                },
+                                "*"
+                            );
 
-                            } catch {}
+                        }
+                    );
+
+            }
+
+
+            /* =============================================
+               LOAD ACTIVE FILE
+            ============================================= */
+
+            if (
+                data.type ===
+                "MARA_ENGINE_LOAD_REQUEST"
+            ) {
+
+                ENGINE
+                    .loadActiveFile(
+                        data.path
+                    )
+                    .then(
+                        url => {
+
+                            event.source?.postMessage(
+                                {
+
+                                    type:
+                                        "MARA_ENGINE_LOAD_RESULT",
+
+                                    source:
+                                        CONFIG.name,
+
+                                    path:
+                                        data.path,
+
+                                    url
+
+                                },
+                                "*"
+                            );
+
+                        }
+                    )
+                    .catch(
+                        error => {
+
+                            event.source?.postMessage(
+                                {
+
+                                    type:
+                                        "MARA_ENGINE_LOAD_ERROR",
+
+                                    source:
+                                        CONFIG.name,
+
+                                    path:
+                                        data.path,
+
+                                    error:
+                                        error.message
+
+                                },
+                                "*"
+                            );
 
                         }
                     );
@@ -4217,10 +4705,6 @@
                     status
                 );
 
-
-                /* =========================================
-                   AUTO UPDATE
-                ========================================= */
 
                 if (
                     CONFIG.autoUpdate &&
@@ -4265,12 +4749,23 @@
                 );
 
 
+                STATE.error =
+                    error.message;
+
+
+                STATE.errorCode =
+                    "INITIALIZATION_FAILED";
+
+
                 ENGINE.setStatus(
-                    "ERROR",
+                    STATUS.ERROR,
                     {
 
                         error:
-                            error.message
+                            error.message,
+
+                        errorCode:
+                            STATE.errorCode
 
                     }
                 );
@@ -4312,11 +4807,12 @@
     );
 
     console.log(
-        " Unified Build / Update / Storage Engine"
+        " FINAL UNIFIED UPDATE / BUILD / STORAGE ENGINE"
     );
 
     console.log(
-        " Database: MARA_OS_STORAGE"
+        " Database:",
+        CONFIG.databaseName
     );
 
     console.log(
@@ -4326,7 +4822,7 @@
 
     console.log(
         " Engine Version:",
-        ENGINE.version
+        CONFIG.version
     );
 
     console.log(
@@ -4335,7 +4831,6 @@
 
     console.log(
         "=============================================="
-
     );
 
 })();
