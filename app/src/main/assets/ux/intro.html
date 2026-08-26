@@ -37,7 +37,6 @@ html,
 body {
 
     width: 100%;
-
     height: 100%;
 
     margin: 0;
@@ -54,9 +53,17 @@ body {
 }
 
 
+body {
+
+    position: fixed;
+
+    inset: 0;
+
+}
+
+
 /* =====================================================
    MARA OS BACKGROUND
-   Tidak lagi memiliki layar SYSTEM READY kedua.
 ===================================================== */
 
 #mara-os {
@@ -66,7 +73,6 @@ body {
     inset: 0;
 
     width: 100%;
-
     height: 100%;
 
     background:
@@ -94,7 +100,6 @@ body {
     z-index: 999999;
 
     width: 100%;
-
     height: 100%;
 
     display: flex;
@@ -118,12 +123,15 @@ body {
 
     pointer-events: auto;
 
-    transition:
-        opacity 1.2s ease,
-        visibility 1.2s ease;
-
 }
 
+
+/*
+ * INDEX.HTML yang menentukan kapan
+ * overlay ini ditutup.
+ *
+ * INTRO TIDAK MENUTUP DIRINYA SENDIRI.
+ */
 
 #intro-overlay.hide {
 
@@ -132,6 +140,10 @@ body {
     visibility: hidden;
 
     pointer-events: none;
+
+    transition:
+        opacity .35s ease,
+        visibility .35s ease;
 
 }
 
@@ -145,7 +157,6 @@ body {
     position: absolute;
 
     width: 430px;
-
     height: 430px;
 
     border-radius: 50%;
@@ -174,7 +185,6 @@ body {
     position: absolute;
 
     width: 260px;
-
     height: 260px;
 
     border-radius: 50%;
@@ -202,7 +212,6 @@ body {
     position: absolute;
 
     width: 300px;
-
     height: 300px;
 
     border-radius: 50%;
@@ -225,7 +234,6 @@ body {
     position: absolute;
 
     width: 390px;
-
     height: 390px;
 
     border-radius: 50%;
@@ -284,13 +292,11 @@ body {
     position: relative;
 
     width: 225px;
-
     height: 225px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     animation:
@@ -333,7 +339,6 @@ body {
 .mara-logo {
 
     width: 100%;
-
     height: 100%;
 
     overflow: visible;
@@ -419,7 +424,6 @@ body {
     position: absolute;
 
     width: 210px;
-
     height: 210px;
 
     border-radius: 50%;
@@ -544,10 +548,11 @@ body {
 
     bottom: 30px;
 
-    width: min(
-        80vw,
-        500px
-    );
+    width:
+        min(
+            80vw,
+            500px
+        );
 
     transform:
         translateX(-50%);
@@ -584,7 +589,6 @@ body {
     display: flex;
 
     justify-content: center;
-
     align-items: center;
 
     margin-bottom: 10px;
@@ -648,16 +652,11 @@ body {
 }
 
 
-/* =====================================================
-   PROGRESS FILL
-===================================================== */
-
 .boot-progress-fill {
 
     position: absolute;
 
     left: 0;
-
     top: 0;
 
     width: 0%;
@@ -679,14 +678,10 @@ body {
         rgba(0,229,255,.65);
 
     transition:
-        width .12s linear;
+        width .15s linear;
 
 }
 
-
-/* =====================================================
-   PROGRESS GLOW
-===================================================== */
 
 .boot-progress-fill::after {
 
@@ -695,11 +690,9 @@ body {
     position: absolute;
 
     right: 0;
-
     top: 0;
 
     width: 40px;
-
     height: 100%;
 
     background:
@@ -767,7 +760,6 @@ body {
     position: absolute;
 
     width: 2px;
-
     height: 2px;
 
     border-radius: 50%;
@@ -811,7 +803,6 @@ body {
     flex-direction: column;
 
     align-items: center;
-
     justify-content: center;
 
     opacity: 0;
@@ -819,10 +810,6 @@ body {
     visibility: hidden;
 
     pointer-events: none;
-
-    transition:
-        opacity .5s ease,
-        visibility .5s ease;
 
 }
 
@@ -837,7 +824,7 @@ body {
 
 
 /* =====================================================
-   SPINNER RING
+   SPINNER
 ===================================================== */
 
 .spinner-ring {
@@ -845,7 +832,6 @@ body {
     position: relative;
 
     width: 34px;
-
     height: 34px;
 
     border-radius: 50%;
@@ -904,15 +890,12 @@ body {
     position: absolute;
 
     left: 50%;
-
     top: 50%;
 
     width: 5px;
-
     height: 5px;
 
     margin-left: -2.5px;
-
     margin-top: -2.5px;
 
     border-radius: 50%;
@@ -1014,17 +997,11 @@ body {
 @keyframes drawFlow {
 
     from {
-
-        stroke-dashoffset:
-            1500;
-
+        stroke-dashoffset: 1500;
     }
 
     to {
-
-        stroke-dashoffset:
-            0;
-
+        stroke-dashoffset: 0;
     }
 
 }
@@ -1033,17 +1010,11 @@ body {
 @keyframes drawCentral {
 
     from {
-
-        stroke-dashoffset:
-            180;
-
+        stroke-dashoffset: 180;
     }
 
     to {
-
-        stroke-dashoffset:
-            0;
-
+        stroke-dashoffset: 0;
     }
 
 }
@@ -1052,30 +1023,18 @@ body {
 @keyframes pointAppear {
 
     0% {
-
         opacity: 0;
-
-        transform:
-            scale(.1);
-
+        transform: scale(.1);
     }
 
     60% {
-
         opacity: 1;
-
-        transform:
-            scale(1.35);
-
+        transform: scale(1.35);
     }
 
     100% {
-
         opacity: .9;
-
-        transform:
-            scale(1);
-
+        transform: scale(1);
     }
 
 }
@@ -1084,21 +1043,13 @@ body {
 @keyframes textReveal {
 
     from {
-
         opacity: 0;
-
-        transform:
-            translateY(18px);
-
+        transform: translateY(18px);
     }
 
     to {
-
         opacity: 1;
-
-        transform:
-            translateY(0);
-
+        transform: translateY(0);
     }
 
 }
@@ -1107,15 +1058,11 @@ body {
 @keyframes fadeIn {
 
     from {
-
         opacity: 0;
-
     }
 
     to {
-
         opacity: 1;
-
     }
 
 }
@@ -1124,23 +1071,17 @@ body {
 @keyframes bootAreaReveal {
 
     from {
-
         opacity: 0;
-
         transform:
             translateX(-50%)
             translateY(12px);
-
     }
 
     to {
-
         opacity: 1;
-
         transform:
             translateX(-50%)
             translateY(0);
-
     }
 
 }
@@ -1150,17 +1091,11 @@ body {
 
     0%,
     100% {
-
-        transform:
-            translateY(0);
-
+        transform: translateY(0);
     }
 
     50% {
-
-        transform:
-            translateY(-4px);
-
+        transform: translateY(-4px);
     }
 
 }
@@ -1170,23 +1105,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.85);
-
-        opacity:
-            .35;
-
+        transform: scale(.85);
+        opacity: .35;
     }
 
     50% {
-
-        transform:
-            scale(1.1);
-
-        opacity:
-            .8;
-
+        transform: scale(1.1);
+        opacity: .8;
     }
 
 }
@@ -1196,23 +1121,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.85);
-
-        opacity:
-            .35;
-
+        transform: scale(.85);
+        opacity: .35;
     }
 
     50% {
-
-        transform:
-            scale(1.12);
-
-        opacity:
-            .8;
-
+        transform: scale(1.12);
+        opacity: .8;
     }
 
 }
@@ -1222,23 +1137,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.8);
-
-        opacity:
-            .15;
-
+        transform: scale(.8);
+        opacity: .15;
     }
 
     50% {
-
-        transform:
-            scale(1.2);
-
-        opacity:
-            .5;
-
+        transform: scale(1.2);
+        opacity: .5;
     }
 
 }
@@ -1248,23 +1153,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.92);
-
-        opacity:
-            .2;
-
+        transform: scale(.92);
+        opacity: .2;
     }
 
     50% {
-
-        transform:
-            scale(1.06);
-
-        opacity:
-            .55;
-
+        transform: scale(1.06);
+        opacity: .55;
     }
 
 }
@@ -1274,23 +1169,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.94);
-
-        opacity:
-            .1;
-
+        transform: scale(.94);
+        opacity: .1;
     }
 
     50% {
-
-        transform:
-            scale(1.08);
-
-        opacity:
-            .35;
-
+        transform: scale(1.08);
+        opacity: .35;
     }
 
 }
@@ -1299,35 +1184,21 @@ body {
 @keyframes shineRotate {
 
     from {
-
-        transform:
-            rotate(0deg);
-
+        transform: rotate(0deg);
         opacity: 0;
-
     }
 
     25% {
-
-        opacity:
-            .45;
-
+        opacity: .45;
     }
 
     60% {
-
-        opacity:
-            .15;
-
+        opacity: .15;
     }
 
     to {
-
-        transform:
-            rotate(360deg);
-
+        transform: rotate(360deg);
         opacity: 0;
-
     }
 
 }
@@ -1336,7 +1207,6 @@ body {
 @keyframes particleFloat {
 
     0% {
-
         transform:
             translate3d(
                 0,
@@ -1346,25 +1216,17 @@ body {
             scale(.4);
 
         opacity: 0;
-
     }
 
     20% {
-
-        opacity:
-            .65;
-
+        opacity: .65;
     }
 
     70% {
-
-        opacity:
-            .25;
-
+        opacity: .25;
     }
 
     100% {
-
         transform:
             translate3d(
                 var(--move-x),
@@ -1374,7 +1236,6 @@ body {
             scale(1);
 
         opacity: 0;
-
     }
 
 }
@@ -1383,17 +1244,11 @@ body {
 @keyframes maraSpinnerRotate {
 
     from {
-
-        transform:
-            rotate(0deg);
-
+        transform: rotate(0deg);
     }
 
     to {
-
-        transform:
-            rotate(360deg);
-
+        transform: rotate(360deg);
     }
 
 }
@@ -1402,17 +1257,11 @@ body {
 @keyframes maraSpinnerRotateReverse {
 
     from {
-
-        transform:
-            rotate(360deg);
-
+        transform: rotate(360deg);
     }
 
     to {
-
-        transform:
-            rotate(0deg);
-
+        transform: rotate(0deg);
     }
 
 }
@@ -1422,23 +1271,13 @@ body {
 
     0%,
     100% {
-
-        transform:
-            scale(.7);
-
-        opacity:
-            .5;
-
+        transform: scale(.7);
+        opacity: .5;
     }
 
     50% {
-
-        transform:
-            scale(1.25);
-
-        opacity:
-            1;
-
+        transform: scale(1.25);
+        opacity: 1;
     }
 
 }
@@ -1463,7 +1302,6 @@ body {
     .logo-container {
 
         width: 190px;
-
         height: 190px;
 
     }
@@ -1472,7 +1310,6 @@ body {
     .logo-shine {
 
         width: 175px;
-
         height: 175px;
 
     }
@@ -1523,20 +1360,6 @@ body {
     }
 
 
-    .boot-progress {
-
-        height: 4px;
-
-    }
-
-
-    .boot-percent {
-
-        font-size: 8px;
-
-    }
-
-
     .boot-message {
 
         font-size: 6px;
@@ -1562,7 +1385,6 @@ body {
     .logo-container {
 
         width: 145px;
-
         height: 145px;
 
     }
@@ -1571,7 +1393,6 @@ body {
     .logo-shine {
 
         width: 135px;
-
         height: 135px;
 
     }
@@ -1608,24 +1429,18 @@ body {
 
 
 <!-- =====================================================
-     MARA OS BACKGROUND
-     
-     Tidak ada .os-placeholder.
-     Dengan demikian layar kedua
-     "MARA OS / SYSTEM READY" tidak akan muncul.
+     MARA BACKGROUND
 ===================================================== -->
 
 <main id="mara-os"></main>
 
 
 <!-- =====================================================
-     INTRO OVERLAY
+     INTRO
 ===================================================== -->
 
 <div id="intro-overlay">
 
-
-    <!-- AMBIENT -->
 
     <div class="ambient-light"></div>
 
@@ -1635,10 +1450,6 @@ body {
 
     <div class="ambient-ring-2"></div>
 
-
-    <!-- =================================================
-         INTRO CONTENT
-    ================================================= -->
 
     <div class="intro-content">
 
@@ -1660,9 +1471,7 @@ body {
                 fill="none"
             >
 
-
                 <defs>
-
 
                     <linearGradient
                         id="maraFlow"
@@ -1719,11 +1528,8 @@ body {
 
                     </linearGradient>
 
-
                 </defs>
 
-
-                <!-- MAIN FLOW -->
 
                 <path
                     class="flow-main"
@@ -1743,8 +1549,6 @@ body {
                 />
 
 
-                <!-- SECOND FLOW -->
-
                 <path
                     class="flow-second"
                     d="
@@ -1763,8 +1567,6 @@ body {
                 />
 
 
-                <!-- CENTRAL FLOW -->
-
                 <path
                     class="central-flow"
                     d="
@@ -1778,8 +1580,6 @@ body {
                 />
 
 
-                <!-- POINT -->
-
                 <circle
                     class="flow-point"
                     cx="276"
@@ -1789,9 +1589,7 @@ body {
                     opacity=".9"
                 />
 
-
             </svg>
-
 
         </div>
 
@@ -1801,9 +1599,7 @@ body {
         ================================================= -->
 
         <div class="os-name">
-
             MARA OS
-
         </div>
 
 
@@ -1812,14 +1608,16 @@ body {
         ================================================= -->
 
         <div class="os-subtitle">
-
             DIGITAL OPERATING SYSTEM
-
         </div>
 
 
         <!-- =================================================
              VERSION / BUILD
+             
+             DATA DIAMBIL DARI:
+             
+             stable/upgrade-manifest.json
         ================================================= -->
 
         <div class="os-version">
@@ -1834,14 +1632,11 @@ body {
 
         </div>
 
-
     </div>
 
 
     <!-- =================================================
          BOOT AREA
-         
-         SATU-SATUNYA LOADING BAR.
     ================================================= -->
 
     <div class="boot-area">
@@ -1851,9 +1646,7 @@ body {
             class="boot-status"
             id="boot-status"
         >
-
             INITIALIZING MARA SYSTEM
-
         </div>
 
 
@@ -1862,12 +1655,10 @@ body {
 
             <div class="boot-progress">
 
-
                 <div
                     class="boot-progress-fill"
                     id="boot-progress-fill"
                 ></div>
-
 
             </div>
 
@@ -1876,37 +1667,26 @@ body {
                 class="boot-percent"
                 id="boot-percent"
             >
-
                 0%
-
             </div>
-
 
         </div>
 
 
         <div class="boot-message">
 
-
             <span id="boot-message">
-
                 PREPARING MARA OS
-
             </span>
 
 
             <span id="boot-stage">
-
                 BOOT
-
             </span>
-
 
         </div>
 
-
     </div>
-
 
 </div>
 
@@ -1929,9 +1709,7 @@ body {
         class="spinner-text"
         id="spinner-text"
     >
-
         CHECKING FOR UPDATE
-
     </div>
 
 
@@ -1939,11 +1717,8 @@ body {
         class="spinner-subtext"
         id="spinner-subtext"
     >
-
         PREPARING MARA OS
-
     </div>
-
 
 </div>
 
@@ -1955,6 +1730,15 @@ body {
 <script src="./upgrade-engine.js"></script>
 
 
+<!-- =====================================================
+     ENGINE SINGLE
+     
+     ENGINE UTAMA DIMUAT OLEH INTRO.
+===================================================== -->
+
+<script src="../engine-single.js"></script>
+
+
 <script>
 
 /* =====================================================
@@ -1963,20 +1747,110 @@ body {
 
 const MARA_CONFIG = {
 
-    introDuration:
-        7600,
-
-    spinnerMinDuration:
-        1000,
+    /*
+     * SUMBER RESMI VERSION + BUILD
+     */
 
     updateManifestURL:
-        "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/engine-single.json"
+        "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/upgrade-manifest.json"
 
 };
 
 
 /* =====================================================
-   AUDIO ENGINE
+   STATE
+===================================================== */
+
+const MARA_STATE = {
+
+    indexReady:
+        false,
+
+    manifestLoaded:
+        false,
+
+    engineReady:
+        false,
+
+    engineWorking:
+        false,
+
+    engineFinished:
+        false,
+
+    upgradeFinished:
+        false,
+
+    bootSent:
+        false,
+
+    version:
+        null,
+
+    build:
+        null,
+
+    progress:
+        0,
+
+    error:
+        null
+
+};
+
+
+/* =====================================================
+   LOG
+===================================================== */
+
+function maraLog(
+    ...args
+) {
+
+    console.log(
+        "[MARA INTRO]",
+        ...args
+    );
+
+}
+
+
+function maraWarn(
+    ...args
+) {
+
+    console.warn(
+        "[MARA INTRO]",
+        ...args
+    );
+
+}
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const introOverlay =
+    document.getElementById(
+        "intro-overlay"
+    );
+
+
+const versionElement =
+    document.getElementById(
+        "mara-version"
+    );
+
+
+const buildElement =
+    document.getElementById(
+        "mara-build"
+    );
+
+
+/* =====================================================
+   AUDIO
 ===================================================== */
 
 let maraAudioContext = null;
@@ -2013,7 +1887,9 @@ function getMaraAudioContext() {
 }
 
 
-function createMaraMaster(ctx) {
+function createMaraMaster(
+    ctx
+) {
 
     const input =
         ctx.createGain();
@@ -2046,7 +1922,6 @@ function createMaraMaster(ctx) {
         compressor
     );
 
-
     compressor.connect(
         ctx.destination
     );
@@ -2060,10 +1935,6 @@ function createMaraMaster(ctx) {
 
 }
 
-
-/* =====================================================
-   GLASS NOTE
-===================================================== */
 
 function maraGlassNote(
     ctx,
@@ -2099,7 +1970,6 @@ function maraGlassNote(
         start
     );
 
-
     harmonic.frequency.setValueAtTime(
         frequency * 2,
         start
@@ -2109,15 +1979,10 @@ function maraGlassNote(
     filter.type =
         "lowpass";
 
-
     filter.frequency.setValueAtTime(
         2800,
         start
     );
-
-
-    filter.Q.value =
-        .8;
 
 
     gain.gain.setValueAtTime(
@@ -2133,51 +1998,23 @@ function maraGlassNote(
 
 
     gain.gain.exponentialRampToValueAtTime(
-        volume * .28,
-        start + duration * .22
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
         .0001,
         start + duration
     );
 
 
-    osc.connect(
-        filter
-    );
+    osc.connect(filter);
+    harmonic.connect(filter);
+    filter.connect(gain);
+    gain.connect(output);
 
 
-    harmonic.connect(
-        filter
-    );
-
-
-    filter.connect(
-        gain
-    );
-
-
-    gain.connect(
-        output
-    );
-
-
-    osc.start(
-        start
-    );
-
-
-    harmonic.start(
-        start
-    );
-
+    osc.start(start);
+    harmonic.start(start);
 
     osc.stop(
         start + duration + .05
     );
-
 
     harmonic.stop(
         start + duration + .05
@@ -2185,330 +2022,6 @@ function maraGlassNote(
 
 }
 
-
-/* =====================================================
-   WARM GLASS PAD
-===================================================== */
-
-function maraGlassPad(
-    ctx,
-    output,
-    frequency,
-    start,
-    duration
-) {
-
-    const osc1 =
-        ctx.createOscillator();
-
-    const osc2 =
-        ctx.createOscillator();
-
-    const filter =
-        ctx.createBiquadFilter();
-
-    const gain =
-        ctx.createGain();
-
-
-    osc1.type =
-        "sine";
-
-    osc2.type =
-        "triangle";
-
-
-    osc1.frequency.value =
-        frequency;
-
-    osc2.frequency.value =
-        frequency * 1.002;
-
-
-    filter.type =
-        "lowpass";
-
-
-    filter.frequency.value =
-        1200;
-
-
-    gain.gain.setValueAtTime(
-        .0001,
-        start
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .018,
-        start + 1.1
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .009,
-        start + duration * .6
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .0001,
-        start + duration
-    );
-
-
-    osc1.connect(
-        filter
-    );
-
-    osc2.connect(
-        filter
-    );
-
-    filter.connect(
-        gain
-    );
-
-    gain.connect(
-        output
-    );
-
-
-    osc1.start(
-        start
-    );
-
-    osc2.start(
-        start
-    );
-
-
-    osc1.stop(
-        start + duration + .1
-    );
-
-    osc2.stop(
-        start + duration + .1
-    );
-
-}
-
-
-/* =====================================================
-   DIGITAL TICK
-===================================================== */
-
-function maraGlassTick(
-    ctx,
-    output,
-    frequency,
-    start
-) {
-
-    const osc =
-        ctx.createOscillator();
-
-    const gain =
-        ctx.createGain();
-
-
-    osc.type =
-        "sine";
-
-
-    osc.frequency.value =
-        frequency;
-
-
-    gain.gain.setValueAtTime(
-        .0001,
-        start
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .018,
-        start + .012
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .0001,
-        start + .18
-    );
-
-
-    osc.connect(
-        gain
-    );
-
-
-    gain.connect(
-        output
-    );
-
-
-    osc.start(
-        start
-    );
-
-
-    osc.stop(
-        start + .2
-    );
-
-}
-
-
-/* =====================================================
-   CRYSTAL SWEEP
-===================================================== */
-
-function maraCrystalSweep(
-    ctx,
-    output,
-    start
-) {
-
-    const osc =
-        ctx.createOscillator();
-
-    const gain =
-        ctx.createGain();
-
-    const filter =
-        ctx.createBiquadFilter();
-
-
-    osc.type =
-        "sine";
-
-
-    osc.frequency.setValueAtTime(
-        520,
-        start
-    );
-
-
-    osc.frequency.exponentialRampToValueAtTime(
-        980,
-        start + .8
-    );
-
-
-    filter.type =
-        "lowpass";
-
-
-    filter.frequency.value =
-        1900;
-
-
-    gain.gain.setValueAtTime(
-        .0001,
-        start
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .022,
-        start + .25
-    );
-
-
-    gain.gain.exponentialRampToValueAtTime(
-        .0001,
-        start + 1
-    );
-
-
-    osc.connect(
-        filter
-    );
-
-
-    filter.connect(
-        gain
-    );
-
-
-    gain.connect(
-        output
-    );
-
-
-    osc.start(
-        start
-    );
-
-
-    osc.stop(
-        start + 1.05
-    );
-
-}
-
-
-/* =====================================================
-   MARA SIGNATURE
-===================================================== */
-
-function maraGlassSignature(
-    ctx,
-    output,
-    start
-) {
-
-    const notes = [
-
-        {
-            frequency: 261.63,
-            delay: 0,
-            volume: .032
-        },
-
-        {
-            frequency: 329.63,
-            delay: .10,
-            volume: .035
-        },
-
-        {
-            frequency: 392.00,
-            delay: .20,
-            volume: .038
-        },
-
-        {
-            frequency: 523.25,
-            delay: .32,
-            volume: .042
-        }
-
-    ];
-
-
-    notes.forEach(
-        note => {
-
-            maraGlassNote(
-                ctx,
-                output,
-                note.frequency,
-                start + note.delay,
-                1.65,
-                note.volume
-            );
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   PLAY AUDIO
-===================================================== */
 
 async function playMaraLuxuryGlass() {
 
@@ -2543,8 +2056,8 @@ async function playMaraLuxuryGlass() {
 
     } catch (error) {
 
-        console.warn(
-            "[MARA AUDIO]",
+        maraWarn(
+            "Audio tidak dapat diaktifkan.",
             error
         );
 
@@ -2565,30 +2078,12 @@ async function playMaraLuxuryGlass() {
         true;
 
 
-    maraGlassPad(
-        ctx,
-        master,
-        65.41,
-        now,
-        8
-    );
-
-
-    maraGlassPad(
-        ctx,
-        master,
-        98,
-        now + 1.2,
-        6.8
-    );
-
-
     maraGlassNote(
         ctx,
         master,
         261.63,
-        now + .65,
-        2.0,
+        now,
+        2,
         .035
     );
 
@@ -2597,8 +2092,8 @@ async function playMaraLuxuryGlass() {
         ctx,
         master,
         329.63,
-        now + 1.25,
-        2.0,
+        now + .35,
+        2,
         .038
     );
 
@@ -2606,53 +2101,25 @@ async function playMaraLuxuryGlass() {
     maraGlassNote(
         ctx,
         master,
-        392.00,
-        now + 1.85,
-        2.1,
+        392,
+        now + .7,
+        2,
         .041
     );
 
 
-    maraGlassTick(
+    maraGlassNote(
         ctx,
         master,
-        659.25,
-        now + 2.65
+        523.25,
+        now + 1.1,
+        2,
+        .044
     );
 
 
-    maraGlassTick(
-        ctx,
-        master,
-        783.99,
-        now + 3.15
-    );
-
-
-    maraGlassTick(
-        ctx,
-        master,
-        880,
-        now + 3.65
-    );
-
-
-    maraCrystalSweep(
-        ctx,
-        master,
-        now + 3.9
-    );
-
-
-    maraGlassSignature(
-        ctx,
-        master,
-        now + 5.15
-    );
-
-
-    console.log(
-        "[MARA AUDIO] Luxury Glass aktif."
+    maraLog(
+        "Luxury Glass audio aktif."
     );
 
 }
@@ -2660,21 +2127,16 @@ async function playMaraLuxuryGlass() {
 
 async function unlockMaraAudio() {
 
-    if (maraAudioStarted) {
-
-        return;
-
-    }
-
-
     try {
 
         await playMaraLuxuryGlass();
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
-        console.warn(
-            "[MARA AUDIO]",
+        maraWarn(
+            "Audio fallback.",
             error
         );
 
@@ -2689,13 +2151,7 @@ async function unlockMaraAudio() {
 
 function createParticles() {
 
-    const overlay =
-        document.getElementById(
-            "intro-overlay"
-        );
-
-
-    if (!overlay) {
+    if (!introOverlay) {
 
         return;
 
@@ -2755,7 +2211,7 @@ function createParticles() {
             ) + "s";
 
 
-        overlay.appendChild(
+        introOverlay.appendChild(
             particle
         );
 
@@ -2765,7 +2221,7 @@ function createParticles() {
 
 
 /* =====================================================
-   SPINNER CONTROLLER
+   SPINNER
 ===================================================== */
 
 const maraSpinner = {
@@ -2788,37 +2244,33 @@ const maraSpinner = {
 
     show() {
 
-        if (!this.element) {
+        if (this.element) {
 
-            return;
+            this.element.classList.add(
+                "show"
+            );
 
         }
-
-
-        this.element.classList.add(
-            "show"
-        );
 
     },
 
 
     hide() {
 
-        if (!this.element) {
+        if (this.element) {
 
-            return;
+            this.element.classList.remove(
+                "show"
+            );
 
         }
-
-
-        this.element.classList.remove(
-            "show"
-        );
 
     },
 
 
-    state(state) {
+    state(
+        state
+    ) {
 
         if (!this.element) {
 
@@ -2853,7 +2305,7 @@ const maraSpinner = {
         if (this.text) {
 
             this.text.textContent =
-                main;
+                main || "";
 
         }
 
@@ -2861,7 +2313,7 @@ const maraSpinner = {
         if (this.subtext) {
 
             this.subtext.textContent =
-                sub;
+                sub || "";
 
         }
 
@@ -2910,24 +2362,48 @@ const maraBootUI = {
         value
     ) {
 
-        value =
+        const numeric =
+            Number(value);
+
+
+        if (
+            !Number.isFinite(
+                numeric
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const safe =
             Math.max(
                 0,
                 Math.min(
                     100,
-                    Math.round(value)
+                    Math.round(
+                        numeric
+                    )
                 )
             );
 
 
+        /*
+         * Progress hanya boleh bergerak maju.
+         */
+
         this.progress =
-            value;
+            Math.max(
+                this.progress,
+                safe
+            );
 
 
         if (this.fill) {
 
             this.fill.style.width =
-                value + "%";
+                this.progress + "%";
 
         }
 
@@ -2935,7 +2411,7 @@ const maraBootUI = {
         if (this.percent) {
 
             this.percent.textContent =
-                value + "%";
+                this.progress + "%";
 
         }
 
@@ -2951,7 +2427,7 @@ const maraBootUI = {
         if (this.status) {
 
             this.status.textContent =
-                status;
+                status || "";
 
         }
 
@@ -2959,7 +2435,7 @@ const maraBootUI = {
         if (this.message) {
 
             this.message.textContent =
-                message;
+                message || "";
 
         }
 
@@ -2967,7 +2443,7 @@ const maraBootUI = {
         if (this.stage) {
 
             this.stage.textContent =
-                stage;
+                stage || "";
 
         }
 
@@ -2977,24 +2453,7 @@ const maraBootUI = {
 
 
 /* =====================================================
-   WAIT
-===================================================== */
-
-function wait(ms) {
-
-    return new Promise(
-        resolve =>
-            setTimeout(
-                resolve,
-                ms
-            )
-    );
-
-}
-
-
-/* =====================================================
-   UPDATE PROGRESS
+   BOOT PROGRESS
 ===================================================== */
 
 function setBootProgress(
@@ -3019,15 +2478,15 @@ function setBootProgress(
 
 
 /* =====================================================
-   MANIFEST
+   LOAD MANIFEST
 ===================================================== */
 
 async function loadMaraManifest() {
 
     setBootProgress(
-        15,
+        5,
         "CHECKING SYSTEM",
-        "Menghubungkan ke repository",
+        "Menghubungkan ke repository MARA",
         "NETWORK"
     );
 
@@ -3036,9 +2495,12 @@ async function loadMaraManifest() {
         await fetch(
             MARA_CONFIG.updateManifestURL,
             {
-                method: "GET",
 
-                cache: "no-store",
+                method:
+                    "GET",
+
+                cache:
+                    "no-store",
 
                 headers: {
 
@@ -3046,6 +2508,7 @@ async function loadMaraManifest() {
                         "application/json"
 
                 }
+
             }
         );
 
@@ -3061,20 +2524,21 @@ async function loadMaraManifest() {
 
 
     setBootProgress(
-        28,
+        15,
         "MANIFEST RECEIVED",
         "Membaca konfigurasi MARA OS",
         "MANIFEST"
     );
 
 
-    const data =
+    const manifest =
         await response.json();
 
 
     if (
-        !data ||
-        typeof data !== "object"
+        !manifest ||
+        typeof manifest !==
+            "object"
     ) {
 
         throw new Error(
@@ -3085,59 +2549,61 @@ async function loadMaraManifest() {
 
 
     if (
-        data.version === undefined ||
-        data.build === undefined
+        manifest.version ===
+            undefined ||
+        manifest.build ===
+            undefined
     ) {
 
         throw new Error(
-            "Manifest tidak mempunyai version/build."
+            "Manifest tidak memiliki version/build."
         );
 
     }
 
 
     if (
-        !Array.isArray(data.files)
+        !Array.isArray(
+            manifest.files
+        )
     ) {
 
         throw new Error(
-            "Manifest tidak mempunyai daftar files."
+            "Manifest tidak memiliki daftar files."
         );
 
     }
 
 
-    return data;
+    return manifest;
 
 }
 
 
 /* =====================================================
-   DISPLAY MANIFEST
+   DISPLAY VERSION / BUILD
 ===================================================== */
 
 function displayMaraManifest(
     manifest
 ) {
 
-    const versionElement =
-        document.getElementById(
-            "mara-version"
+    MARA_STATE.version =
+        String(
+            manifest.version
         );
 
 
-    const buildElement =
-        document.getElementById(
-            "mara-build"
+    MARA_STATE.build =
+        String(
+            manifest.build
         );
 
 
     if (versionElement) {
 
         versionElement.textContent =
-            String(
-                manifest.version
-            );
+            MARA_STATE.version;
 
     }
 
@@ -3145,9 +2611,7 @@ function displayMaraManifest(
     if (buildElement) {
 
         buildElement.textContent =
-            String(
-                manifest.build
-            );
+            MARA_STATE.build;
 
     }
 
@@ -3155,14 +2619,10 @@ function displayMaraManifest(
     window.MARA_REMOTE_STATUS = {
 
         version:
-            String(
-                manifest.version
-            ),
+            MARA_STATE.version,
 
         build:
-            String(
-                manifest.build
-            ),
+            MARA_STATE.build,
 
         manifest:
             manifest,
@@ -3171,6 +2631,18 @@ function displayMaraManifest(
             Date.now()
 
     };
+
+
+    maraLog(
+        "Version:",
+        MARA_STATE.version
+    );
+
+
+    maraLog(
+        "Build:",
+        MARA_STATE.build
+    );
 
 }
 
@@ -3184,124 +2656,154 @@ async function runMaraUpgrade(
 ) {
 
     if (
-        window.MARAUpgrade &&
+        !window.MARAUpgrade ||
         typeof
-            window.MARAUpgrade.install
-            === "function"
+            window.MARAUpgrade.install !==
+            "function"
     ) {
 
-
-        maraSpinner.show();
-
-
-        maraSpinner.state(
-            "update"
+        maraWarn(
+            "upgrade-engine.js tidak menyediakan install()."
         );
 
 
-        maraSpinner.setStatus(
-            "INSTALLING UPDATE",
-            "Menyiapkan build " +
-            manifest.build
-        );
+        /*
+         * Tidak langsung menganggap
+         * engine selesai.
+         *
+         * Engine-single tetap menjadi
+         * sumber keputusan.
+         */
+
+        return false;
+
+    }
 
 
-        setBootProgress(
-            38,
-            "INSTALLING ENGINE",
-            "Menyiapkan MARA Engine",
-            "ENGINE"
-        );
+    maraSpinner.show();
+
+    maraSpinner.state(
+        "update"
+    );
 
 
-        await
-            window.MARAUpgrade.install(
-                manifest,
-                {
+    maraSpinner.setStatus(
+        "CHECKING UPDATE",
+        "Build " +
+        manifest.build
+    );
 
-                    onStatus:
-                        function(
+
+    setBootProgress(
+        25,
+        "UPGRADE ENGINE",
+        "Memeriksa build MARA",
+        "UPGRADE"
+    );
+
+
+    try {
+
+        await window.MARAUpgrade.install(
+            manifest,
+            {
+
+                onStatus:
+                    function(
+                        main,
+                        sub
+                    ) {
+
+                        maraSpinner.setStatus(
                             main,
                             sub
+                        );
+
+
+                        const text =
+                            String(
+                                main || ""
+                            ).toUpperCase();
+
+
+                        if (
+                            text.includes(
+                                "DOWNLOAD"
+                            )
                         ) {
 
-                            maraSpinner.setStatus(
-                                main,
-                                sub
+                            setBootProgress(
+                                45,
+                                "DOWNLOADING",
+                                sub ||
+                                    "Mengunduh engine",
+                                "DOWNLOAD"
                             );
-
-
-                            if (
-                                typeof main ===
-                                "string"
-                            ) {
-
-                                const upper =
-                                    main.toUpperCase();
-
-
-                                if (
-                                    upper.includes(
-                                        "VERIFY"
-                                    )
-                                ) {
-
-                                    setBootProgress(
-                                        72,
-                                        "VERIFYING",
-                                        sub ||
-                                            "Memverifikasi build",
-                                        "VERIFY"
-                                    );
-
-                                }
-
-                                else if (
-                                    upper.includes(
-                                        "INSTALL"
-                                    )
-                                ) {
-
-                                    setBootProgress(
-                                        52,
-                                        "INSTALLING",
-                                        sub ||
-                                            "Menginstal build",
-                                        "INSTALL"
-                                    );
-
-                                }
-
-                                else if (
-                                    upper.includes(
-                                        "DOWNLOAD"
-                                    )
-                                ) {
-
-                                    setBootProgress(
-                                        45,
-                                        "DOWNLOADING",
-                                        sub ||
-                                            "Mengunduh build",
-                                        "DOWNLOAD"
-                                    );
-
-                                }
-
-                            }
 
                         }
 
-                }
-            );
+
+                        else if (
+                            text.includes(
+                                "VERIFY"
+                            )
+                        ) {
+
+                            setBootProgress(
+                                70,
+                                "VERIFYING",
+                                sub ||
+                                    "Memverifikasi build",
+                                "VERIFY"
+                            );
+
+                        }
 
 
-        setBootProgress(
-            88,
-            "ENGINE READY",
-            "Build berhasil dipasang",
-            "READY"
+                        else if (
+                            text.includes(
+                                "INSTALL"
+                            )
+                        ) {
+
+                            setBootProgress(
+                                80,
+                                "INSTALLING",
+                                sub ||
+                                    "Memasang build",
+                                "INSTALL"
+                            );
+
+                        }
+
+
+                        else if (
+                            text.includes(
+                                "COMPLETE"
+                            ) ||
+                            text.includes(
+                                "READY"
+                            )
+                        ) {
+
+                            setBootProgress(
+                                90,
+                                "ENGINE READY",
+                                sub ||
+                                    "Engine siap",
+                                "READY"
+                            );
+
+                        }
+
+                    }
+
+            }
         );
+
+
+        MARA_STATE.upgradeFinished =
+            true;
 
 
         maraSpinner.state(
@@ -3310,154 +2812,143 @@ async function runMaraUpgrade(
 
 
         maraSpinner.setStatus(
-            "UPDATE COMPLETE",
+            "UPGRADE COMPLETE",
             "Build " +
             manifest.build +
-            " aktif"
+            " siap"
         );
 
 
-        await wait(
-            MARA_CONFIG.spinnerMinDuration
+        setBootProgress(
+            90,
+            "UPGRADE COMPLETE",
+            "Build berhasil diproses",
+            "UPGRADE"
         );
-
-
-        maraSpinner.hide();
 
 
         return true;
 
     }
 
-
-    console.warn(
-        "[MARA UPDATE] upgrade-engine.js belum tersedia."
-    );
-
-
-    setBootProgress(
-        65,
-        "LOCAL ENGINE",
-        "Menggunakan engine lokal",
-        "LOCAL"
-    );
-
-
-    return false;
-
-}
-
-
-/* =====================================================
-   OFFLINE MODE
-===================================================== */
-
-function enterOfflineMode(
-    error
-) {
-
-    console.warn(
-        "[MARA OS] Offline mode:",
+    catch (
         error
-    );
-
-
-    window.MARA_REMOTE_STATUS = {
-
-        version:
-            null,
-
-        build:
-            null,
-
-        error:
-            true,
-
-        message:
-            error.message,
-
-        timestamp:
-            Date.now()
-
-    };
-
-
-    maraSpinner.state(
-        "error"
-    );
-
-
-    maraSpinner.setStatus(
-        "OFFLINE MODE",
-        "Menggunakan build lokal"
-    );
-
-
-    setBootProgress(
-        70,
-        "OFFLINE MODE",
-        "Build lokal tetap digunakan",
-        "LOCAL"
-    );
-
-}
-
-
-/* =====================================================
-   BOOT SIMULATION
-===================================================== */
-
-async function finishBootProgress() {
-
-    const current =
-        maraBootUI.progress;
-
-
-    for (
-        let value = current;
-        value <= 100;
-        value++
     ) {
 
-        if (value < 90) {
-
-            setBootProgress(
-                value,
-                "MARA OS INITIALIZING",
-                "Memuat komponen sistem",
-                "BOOT"
-            );
-
-        }
-
-        else if (value < 96) {
-
-            setBootProgress(
-                value,
-                "MARA OS READY",
-                "Finalizing system",
-                "FINAL"
-            );
-
-        }
-
-        else {
-
-            setBootProgress(
-                value,
-                "MARA OS READY",
-                "System initialization complete",
-                "READY"
-            );
-
-        }
+        maraSpinner.state(
+            "error"
+        );
 
 
-        await wait(
-            28
+        maraSpinner.setStatus(
+            "UPGRADE ERROR",
+            error.message
+        );
+
+
+        throw error;
+
+    }
+
+}
+
+
+/* =====================================================
+   ENGINE ACCESS
+===================================================== */
+
+function getMaraEngine() {
+
+    return (
+        window.MARAEngineSingle ||
+        null
+    );
+
+}
+
+
+/* =====================================================
+   ENGINE STATE
+===================================================== */
+
+function updateEngineState(
+    data = {}
+) {
+
+    MARA_STATE.engineWorking =
+        Boolean(
+            data.working
+        );
+
+
+    if (
+        Number.isFinite(
+            Number(
+                data.progress
+            )
+        )
+    ) {
+
+        setBootProgress(
+            Number(
+                data.progress
+            ),
+            "MARA ENGINE",
+            data.message ||
+                "Engine sedang bekerja",
+            data.phase ||
+                "ENGINE"
         );
 
     }
+
+}
+
+
+/* =====================================================
+   ENGINE FINISHED CHECK
+===================================================== */
+
+function checkBootReady() {
+
+    if (
+        MARA_STATE.bootSent
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Manifest harus tersedia.
+     */
+
+    if (
+        !MARA_STATE.manifestLoaded
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Engine harus memberikan
+     * keputusan selesai.
+     */
+
+    if (
+        !MARA_STATE.engineFinished
+    ) {
+
+        return;
+
+    }
+
+
+    MARA_STATE.bootSent =
+        true;
 
 
     setBootProgress(
@@ -3468,91 +2959,753 @@ async function finishBootProgress() {
     );
 
 
-    await wait(
-        550
+    maraSpinner.hide();
+
+
+    maraLog(
+        "ENGINE → INTRO → INDEX",
+        "MARA_BOOT_READY"
+    );
+
+
+    /*
+     * INTRO TIDAK MENUTUP DIRINYA.
+     *
+     * Perintah dikirim ke parent/index.html.
+     */
+
+    window.parent.postMessage(
+        {
+
+            type:
+                "MARA_BOOT_READY",
+
+            version:
+                MARA_STATE.version,
+
+            build:
+                MARA_STATE.build,
+
+            source:
+                "intro",
+
+            engineReady:
+                MARA_STATE.engineReady,
+
+            upgradeFinished:
+                MARA_STATE.upgradeFinished
+
+        },
+        "*"
     );
 
 }
 
 
 /* =====================================================
-   HIDE INTRO
+   ENGINE EVENT CONNECTION
 ===================================================== */
 
-async function hideMaraIntro() {
+function connectMaraEngine() {
 
-    const intro =
-        document.getElementById(
-            "intro-overlay"
+    const engine =
+        getMaraEngine();
+
+
+    if (!engine) {
+
+        maraWarn(
+            "MARAEngineSingle belum tersedia."
         );
 
 
-    if (!intro) {
+        setBootProgress(
+            20,
+            "ENGINE WAITING",
+            "Menunggu MARA Engine",
+            "ENGINE"
+        );
 
-        return;
+
+        return false;
 
     }
 
 
-    setBootProgress(
-        100,
-        "MARA OS READY",
-        "100% • System ready",
-        "READY"
+    maraLog(
+        "MARAEngineSingle terdeteksi."
     );
 
 
-    await wait(
-        500
-    );
+    if (
+        typeof engine.on ===
+        "function"
+    ) {
 
 
-    intro.classList.add(
-        "hide"
-    );
+        /* =============================================
+           READY
+        ============================================= */
+
+        engine.on(
+            "ready",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineReady =
+                    true;
+
+                MARA_STATE.engineWorking =
+                    false;
+
+                MARA_STATE.engineFinished =
+                    true;
 
 
-    console.log(
-        "[MARA OS] Intro selesai."
-    );
-
-}
-
-
-/* =====================================================
-   START MARA INTRO
-===================================================== */
-
-async function startMaraIntro() {
-
-    console.log(
-        "[MARA OS] Luxury Glass Intro dimulai."
-    );
+                setBootProgress(
+                    100,
+                    "MARA ENGINE READY",
+                    "Engine siap digunakan",
+                    "READY"
+                );
 
 
-    createParticles();
+                maraSpinner.state(
+                    "success"
+                );
 
 
-    /*
-     * AUDIO
-     */
+                maraSpinner.setStatus(
+                    "ENGINE READY",
+                    "MARA Engine aktif"
+                );
 
-    playMaraLuxuryGlass()
-        .catch(
-            error => {
 
-                console.warn(
-                    "[MARA AUDIO]",
-                    error
+                maraLog(
+                    "ENGINE READY",
+                    data
+                );
+
+
+                checkBootReady();
+
+            }
+        );
+
+
+        /* =============================================
+           UPDATE START
+        ============================================= */
+
+        engine.on(
+            "update:start",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    true;
+
+                MARA_STATE.engineFinished =
+                    false;
+
+
+                setBootProgress(
+                    30,
+                    "ENGINE UPDATE",
+                    "Update engine dimulai",
+                    "UPDATE"
+                );
+
+
+                maraSpinner.show();
+
+                maraSpinner.state(
+                    "update"
+                );
+
+
+                maraSpinner.setStatus(
+                    "ENGINE UPDATE",
+                    "Memproses pembaruan"
                 );
 
             }
         );
 
 
+        /* =============================================
+           DOWNLOAD
+        ============================================= */
+
+        engine.on(
+            "download:progress",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    true;
+
+
+                const progress =
+                    Number(
+                        data &&
+                        data.progress
+                    );
+
+
+                if (
+                    Number.isFinite(
+                        progress
+                    )
+                ) {
+
+                    setBootProgress(
+                        progress,
+                        "DOWNLOADING",
+                        "Mengunduh komponen MARA",
+                        "DOWNLOAD"
+                    );
+
+                }
+
+
+                maraSpinner.show();
+
+                maraSpinner.state(
+                    "update"
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           VERIFY START
+        ============================================= */
+
+        engine.on(
+            "verify:start",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    true;
+
+
+                setBootProgress(
+                    70,
+                    "VERIFYING",
+                    "Memverifikasi engine",
+                    "VERIFY"
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           VERIFY SUCCESS
+        ============================================= */
+
+        engine.on(
+            "verify:success",
+            function(
+                data
+            ) {
+
+                setBootProgress(
+                    78,
+                    "VERIFIED",
+                    "Build berhasil diverifikasi",
+                    "VERIFY"
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           INSTALL START
+        ============================================= */
+
+        engine.on(
+            "install:start",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    true;
+
+
+                setBootProgress(
+                    82,
+                    "INSTALLING",
+                    "Memasang komponen engine",
+                    "INSTALL"
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           INSTALL COMPLETE
+        ============================================= */
+
+        engine.on(
+            "install:complete",
+            function(
+                data
+            ) {
+
+                setBootProgress(
+                    90,
+                    "INSTALLED",
+                    "Engine berhasil dipasang",
+                    "INSTALL"
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           ACTIVE BUILD
+        ============================================= */
+
+        engine.on(
+            "build:active",
+            function(
+                data
+            ) {
+
+                setBootProgress(
+                    95,
+                    "BUILD ACTIVE",
+                    "Build aktif",
+                    "BUILD"
+                );
+
+
+                maraLog(
+                    "ACTIVE BUILD",
+                    data
+                );
+
+            }
+        );
+
+
+        /* =============================================
+           UPDATE COMPLETE
+        ============================================= */
+
+        engine.on(
+            "update:complete",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    false;
+
+                MARA_STATE.engineReady =
+                    true;
+
+                MARA_STATE.engineFinished =
+                    true;
+
+
+                setBootProgress(
+                    100,
+                    "MARA ENGINE READY",
+                    "Pembaruan selesai",
+                    "READY"
+                );
+
+
+                maraSpinner.state(
+                    "success"
+                );
+
+
+                maraSpinner.setStatus(
+                    "UPDATE COMPLETE",
+                    "Engine siap digunakan"
+                );
+
+
+                maraLog(
+                    "UPDATE COMPLETE",
+                    data
+                );
+
+
+                checkBootReady();
+
+            }
+        );
+
+
+        /* =============================================
+           NO UPDATE
+        ============================================= */
+
+        engine.on(
+            "update:none",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    false;
+
+                MARA_STATE.engineReady =
+                    true;
+
+                MARA_STATE.engineFinished =
+                    true;
+
+
+                setBootProgress(
+                    100,
+                    "MARA ENGINE READY",
+                    "Tidak ada update",
+                    "READY"
+                );
+
+
+                maraSpinner.state(
+                    "success"
+                );
+
+
+                maraSpinner.setStatus(
+                    "ENGINE READY",
+                    "Build lokal sudah terbaru"
+                );
+
+
+                maraLog(
+                    "NO UPDATE",
+                    data
+                );
+
+
+                checkBootReady();
+
+            }
+        );
+
+
+        /* =============================================
+           ALIAS NO UPDATE
+        ============================================= */
+
+        engine.on(
+            "no:update",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    false;
+
+                MARA_STATE.engineReady =
+                    true;
+
+                MARA_STATE.engineFinished =
+                    true;
+
+
+                setBootProgress(
+                    100,
+                    "MARA ENGINE READY",
+                    "Build sudah terbaru",
+                    "READY"
+                );
+
+
+                checkBootReady();
+
+            }
+        );
+
+
+        /* =============================================
+           ERROR
+        ============================================= */
+
+        engine.on(
+            "update:error",
+            function(
+                data
+            ) {
+
+                MARA_STATE.engineWorking =
+                    false;
+
+                MARA_STATE.error =
+                    data;
+
+
+                maraSpinner.state(
+                    "error"
+                );
+
+
+                maraSpinner.setStatus(
+                    "ENGINE ERROR",
+                    "Pemeriksaan engine gagal"
+                );
+
+
+                maraWarn(
+                    "ENGINE ERROR",
+                    data
+                );
+
+            }
+        );
+
+    }
+
+
     /*
-     * START PROGRESS
+     * Jika engine mempunyai getState(),
+     * baca state awal.
      */
+
+    if (
+        typeof engine.getState ===
+        "function"
+    ) {
+
+        try {
+
+            const state =
+                engine.getState();
+
+
+            maraLog(
+                "ENGINE STATE",
+                state
+            );
+
+
+            if (
+                state &&
+                state.ready ===
+                    true
+            ) {
+
+                MARA_STATE.engineReady =
+                    true;
+
+                MARA_STATE.engineFinished =
+                    true;
+
+                checkBootReady();
+
+            }
+
+        }
+
+        catch (
+            error
+        ) {
+
+            maraWarn(
+                "Gagal membaca engine state.",
+                error
+            );
+
+        }
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =====================================================
+   INTRO READY → INDEX
+===================================================== */
+
+function notifyIndexReady() {
+
+    window.parent.postMessage(
+        {
+
+            type:
+                "MARA_INTRO_READY"
+
+        },
+        "*"
+    );
+
+
+    maraLog(
+        "INTRO READY dikirim ke INDEX."
+    );
+
+}
+
+
+/* =====================================================
+   INDEX MESSAGE HANDLER
+===================================================== */
+
+window.addEventListener(
+    "message",
+    function(
+        event
+    ) {
+
+        const data =
+            event.data;
+
+
+        if (
+            !data ||
+            typeof data !==
+                "object"
+        ) {
+
+            return;
+
+        }
+
+
+        /* =============================================
+           INDEX READY
+        ============================================= */
+
+        if (
+            data.type ===
+            "MARA_INDEX_READY"
+        ) {
+
+            MARA_STATE.indexReady =
+                true;
+
+
+            maraLog(
+                "INDEX READY."
+            );
+
+
+            notifyIndexReady();
+
+            return;
+
+        }
+
+
+        /* =============================================
+           ENGINE STATUS REQUEST
+        ============================================= */
+
+        if (
+            data.type ===
+            "MARA_ENGINE_STATUS_REQUEST"
+        ) {
+
+            const engine =
+                getMaraEngine();
+
+
+            let state =
+                null;
+
+
+            if (
+                engine &&
+                typeof engine.getState ===
+                    "function"
+            ) {
+
+                try {
+
+                    state =
+                        engine.getState();
+
+                }
+
+                catch (
+                    error
+                ) {
+
+                    maraWarn(
+                        "Gagal mengambil engine state.",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            window.parent.postMessage(
+                {
+
+                    type:
+                        "MARA_ENGINE_STATE",
+
+                    state:
+                        state,
+
+                    version:
+                        MARA_STATE.version,
+
+                    build:
+                        MARA_STATE.build
+
+                },
+                "*"
+            );
+
+            return;
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   BOOT
+===================================================== */
+
+async function startMaraIntro() {
+
+    maraLog(
+        "MARA OS Intro dimulai."
+    );
+
+
+    createParticles();
+
+
+    playMaraLuxuryGlass()
+        .catch(
+            error => {
+
+                maraWarn(
+                    "Audio gagal.",
+                    error
+                );
+
+            }
+        );
+
 
     setBootProgress(
         0,
@@ -3562,24 +3715,15 @@ async function startMaraIntro() {
     );
 
 
-    await wait(
-        350
-    );
-
-
-    let manifest =
-        null;
-
-
     /*
      * =================================================
-     * LOAD MANIFEST
+     * MANIFEST
      * =================================================
      */
 
     try {
 
-        manifest =
+        const manifest =
             await loadMaraManifest();
 
 
@@ -3588,16 +3732,15 @@ async function startMaraIntro() {
         );
 
 
+        MARA_STATE.manifestLoaded =
+            true;
+
+
         setBootProgress(
-            32,
+            20,
             "MANIFEST READY",
             "Repository berhasil terhubung",
             "MANIFEST"
-        );
-
-
-        await wait(
-            250
         );
 
 
@@ -3612,46 +3755,66 @@ async function startMaraIntro() {
         );
 
 
+        /*
+         * Upgrade selesai belum otomatis
+         * berarti boot selesai.
+         *
+         * Kita tetap menunggu event
+         * dari MARAEngineSingle.
+         */
+
+
+        connectMaraEngine();
+
+
+        checkBootReady();
+
     }
 
-    catch (error) {
+    catch (
+        error
+    ) {
 
-        enterOfflineMode(
+        MARA_STATE.error =
+            error;
+
+
+        maraSpinner.state(
+            "error"
+        );
+
+
+        maraSpinner.setStatus(
+            "OFFLINE / ERROR",
+            "Build lokal dapat digunakan"
+        );
+
+
+        setBootProgress(
+            100,
+            "LOCAL ENGINE",
+            "Repository tidak tersedia",
+            "LOCAL"
+        );
+
+
+        maraWarn(
+            "Manifest/upgrade gagal:",
             error
         );
 
 
-        await wait(
-            700
-        );
+        /*
+         * Jangan memalsukan
+         * MARA_BOOT_READY.
+         *
+         * Engine harus tetap menentukan
+         * apakah sistem dapat boot.
+         */
+
+        connectMaraEngine();
 
     }
-
-
-    /*
-     * =================================================
-     * FINAL BOOT
-     * =================================================
-     */
-
-    await finishBootProgress();
-
-
-    /*
-     * Spinner hanya indikator update.
-     * Intro tetap menggunakan progress bar utama.
-     */
-
-    maraSpinner.hide();
-
-
-    /*
-     * =================================================
-     * TUTUP INTRO
-     * =================================================
-     */
-
-    await hideMaraIntro();
 
 }
 
@@ -3662,38 +3825,15 @@ async function startMaraIntro() {
 
 document.addEventListener(
     "DOMContentLoaded",
-    () => {
+    function() {
 
         startMaraIntro()
             .catch(
                 error => {
 
-                    console.error(
-                        "[MARA OS] Boot error:",
+                    maraWarn(
+                        "Intro error:",
                         error
-                    );
-
-
-                    /*
-                     * Jangan biarkan intro
-                     * menggantung selamanya.
-                     */
-
-                    setBootProgress(
-                        100,
-                        "MARA OS READY",
-                        "Boot fallback selesai",
-                        "READY"
-                    );
-
-
-                    setTimeout(
-                        () => {
-
-                            hideMaraIntro();
-
-                        },
-                        800
                     );
 
                 }
@@ -3704,7 +3844,7 @@ document.addEventListener(
 
 
 /* =====================================================
-   MOBILE AUDIO FALLBACK
+   MOBILE AUDIO
 ===================================================== */
 
 [
@@ -3719,11 +3859,14 @@ document.addEventListener(
             eventName,
             unlockMaraAudio,
             {
-                once: true,
+
+                once:
+                    true,
 
                 passive:
                     eventName !==
                     "keydown"
+
             }
         );
 
@@ -3744,62 +3887,70 @@ window.MARABoot = {
     },
 
 
-    setProgress(
-        value,
-        status,
-        message,
-        stage
-    ) {
+    getState() {
 
-        setBootProgress(
-            value,
-            status ||
-                "MARA OS",
-            message ||
-                "System processing",
-            stage ||
-                "BOOT"
+        return {
+
+            ...MARA_STATE,
+
+            progress:
+                maraBootUI.progress
+
+        };
+
+    },
+
+
+    getManifest() {
+
+        return (
+            window.MARA_REMOTE_STATUS ||
+            null
         );
 
     },
 
 
-    hideIntro() {
+    getEngine() {
 
-        return hideMaraIntro();
-
-    },
-
-
-    showSpinner() {
-
-        maraSpinner.show();
+        return getMaraEngine();
 
     },
 
 
-    hideSpinner() {
+    /*
+     * API ini hanya untuk komunikasi
+     * dengan INDEX.
+     *
+     * Bukan untuk menutup intro.
+     */
 
-        maraSpinner.hide();
+    requestStatus() {
+
+        window.parent.postMessage(
+            {
+
+                type:
+                    "MARA_ENGINE_STATUS_REQUEST"
+
+            },
+            "*"
+        );
 
     }
 
 };
 
 
-console.log(
-    "[MARA OS] Boot interface loaded."
+/* =====================================================
+   FINAL LOG
+===================================================== */
+
+maraLog(
+    "Boot interface loaded."
 );
 
 </script>
-
-
-<!-- =====================================================
-     ENGINE SINGLE
-===================================================== -->
-
-<script src="../engine-single.js"></script>
-
 
 </body>
 
