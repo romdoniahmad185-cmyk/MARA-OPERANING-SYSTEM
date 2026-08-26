@@ -3,72 +3,88 @@
  * MARA OS — BUILD RUNTIME ENGINE
  * ============================================================
  *
- * BUILD.JS
+ * FILE:
  *
- * Tanggung jawab:
+ *     ux/build.js
  *
- *   engine-single.js
- *          │
- *          ├── check update
- *          ├── download
- *          ├── install
- *          ├── verify
- *          └── READY
- *                    │
- *                    ▼
- *               BUILD.JS
- *                    │
- *                    ├── IndexedDB
- *                    ├── ACTIVE_BUILD
- *                    ├── metadata
- *                    ├── build files
- *                    ├── Blob URL
- *                    └── MAIN UX
+ * VERSI:
+ *
+ *     BUILD RUNTIME v2
  *
  * ============================================================
  *
- * PENTING
+ * ARSITEKTUR
+ * ============================================================
  *
- * BUILD.JS TIDAK:
- *
- *   ❌ download upgrade
- *   ❌ install upgrade
- *   ❌ verify upgrade
- *   ❌ membuat progress upgrade
- *   ❌ mengambil alih loading engine-single.js
- *
- * Semua pekerjaan upgrade adalah tanggung jawab:
- *
- *   engine-single.js
+ *              engine-single.js
+ *                     │
+ *                     │
+ *        ┌────────────┴────────────┐
+ *        │                         │
+ *     CHECK                    UPDATE
+ *        │                         │
+ *     DOWNLOAD                 INSTALL
+ *        │                         │
+ *     VERIFY                  ENGINE READY
+ *        │                         │
+ *        └────────────┬────────────┘
+ *                     │
+ *                     ▼
+ *                 build.js
+ *                     │
+ *          ┌──────────┼──────────┐
+ *          │          │          │
+ *      IndexedDB   ACTIVE_BUILD  Metadata
+ *          │          │          │
+ *          └──────────┼──────────┘
+ *                     │
+ *                     ▼
+ *                 Build Files
+ *                     │
+ *                     ▼
+ *                  Blob URL
+ *                     │
+ *                     ▼
+ *                 MAIN UX
  *
  * ============================================================
  *
- * SAAT ENGINE SEDANG BEKERJA
+ * TANGGUNG JAWAB ENGINE-SINGLE.JS
+ * ============================================================
  *
- *   DOWNLOAD
- *   INSTALL
- *   VERIFY
- *   UPGRADE
- *
- * BUILD.JS:
- *
- *   → diam
- *   → tidak menampilkan terminal
- *   → tidak menampilkan progress palsu
- *   → menunggu ENGINE READY
+ *   ✓ check update
+ *   ✓ download
+ *   ✓ install
+ *   ✓ verify
+ *   ✓ upgrade
+ *   ✓ menentukan ACTIVE_BUILD
+ *   ✓ memberi status engine
  *
  * ============================================================
  *
- * SAAT TIDAK ADA PEKERJAAN ENGINE
+ * TANGGUNG JAWAB BUILD.JS
+ * ============================================================
  *
- * BUILD.JS dapat menampilkan terminal diagnostik:
+ *   ✓ membaca ACTIVE_BUILD
+ *   ✓ membaca metadata
+ *   ✓ membaca build files
+ *   ✓ membuat Blob URL
+ *   ✓ memuat HTML
+ *   ✓ memuat Main UX
+ *   ✓ preload
+ *   ✓ cache
+ *   ✓ diagnostics
  *
- *   [INFO] Checking database...
- *   [OK] IndexedDB connected
- *   [INFO] Checking ACTIVE_BUILD...
- *   [OK] Active build: ...
- *   [INFO] Checking metadata...
- *   [INFO] Upgrade belum tersedia
+ * ============================================================
+ *
+ * BUILD.JS TIDAK BOLEH:
+ *
+ *   ✗ download update
+ *   ✗ install update
+ *   ✗ verify update
+ *   ✗ menentukan update tersedia
+ *   ✗ membuat progress upgrade
+ *   ✗ mengambil alih engine-single.js
  *
  * ============================================================
  */
@@ -82,7 +98,7 @@
        CONFIGURATION
     ======================================================== */
 
-    const MARA_BUILD_CONFIG = {
+    const CONFIG = {
 
         dbName:
             "MARA_OS_UPGRADE_DB",
@@ -106,40 +122,16 @@
             10000,
 
         fileTimeout:
-            10000,
-
-        /*
-         * Waktu tunggu awal untuk menerima status
-         * dari engine-single.js.
-         *
-         * Ini BUKAN progress upgrade.
-         */
+            15000,
 
         engineHandshakeTimeout:
-            3000,
-
-        /*
-         * Interval pemeriksaan engine.
-
-         */
+            5000,
 
         enginePollInterval:
             100,
 
-        /*
-         * Maksimum waktu menunggu engine
-         * menyelesaikan pekerjaan.
-
-         */
-
         engineWorkTimeout:
             300000,
-
-        /*
-         * Terminal diagnostik hanya dibuat
-         * ketika memang diperlukan.
-
-         */
 
         terminalEnabled:
             true
@@ -148,8 +140,8 @@
 
 
     /* ========================================================
-       STATE
-    ======================================================== */
+       RUNTIME STATE
+       ======================================================== */
 
     const STATE = {
 
@@ -197,9 +189,9 @@
 
     /* ========================================================
        ENGINE STATE
-    ======================================================== */
+       ======================================================== */
 
-    const ENGINE_STATE = {
+    const ENGINE = {
 
         state:
             "UNKNOWN",
@@ -226,16 +218,16 @@
             null,
 
         updatedAt:
-            null
+            0
 
     };
 
 
     /* ========================================================
        ENGINE ACTIVE STATES
-    ======================================================== */
+       ======================================================== */
 
-    const ENGINE_ACTIVE_STATES = [
+    const ENGINE_ACTIVE_STATES = new Set([
 
         "STARTING",
 
@@ -257,14 +249,18 @@
 
         "UPGRADING",
 
-        "PROCESSING"
+        "PROCESSING",
 
-    ];
+        "UPDATING",
+
+        "COMMITTING"
+
+    ]);
 
 
     /* ========================================================
-       LOGGER
-    ======================================================== */
+       LOGGING
+       ======================================================== */
 
     function log(...args) {
 
@@ -298,13 +294,29 @@
 
     /* ========================================================
        UTILITY
-    ======================================================== */
+       ======================================================== */
+
+    function wait(ms) {
+
+        return new Promise(
+            resolve => {
+
+                setTimeout(
+                    resolve,
+                    ms
+                );
+
+            }
+        );
+
+    }
+
 
     function normalizePath(path) {
 
         if (
-            path === undefined ||
-            path === null
+            path === null ||
+            path === undefined
         ) {
 
             return "";
@@ -335,8 +347,8 @@
     function normalizeBuild(build) {
 
         if (
-            build === undefined ||
-            build === null
+            build === null ||
+            build === undefined
         ) {
 
             return null;
@@ -345,13 +357,11 @@
 
 
         if (
-            typeof build ===
-            "object"
+            typeof build === "object"
         ) {
 
             if (
-                build.build !==
-                undefined
+                build.build !== undefined
             ) {
 
                 return String(
@@ -362,8 +372,7 @@
 
 
             if (
-                build.version !==
-                undefined
+                build.version !== undefined
             ) {
 
                 return String(
@@ -374,8 +383,7 @@
 
 
             if (
-                build.id !==
-                undefined
+                build.id !== undefined
             ) {
 
                 return String(
@@ -384,12 +392,21 @@
 
             }
 
+
+            if (
+                build.activeBuild !== undefined
+            ) {
+
+                return String(
+                    build.activeBuild
+                );
+
+            }
+
         }
 
 
-        return String(
-            build
-        );
+        return String(build);
 
     }
 
@@ -397,8 +414,7 @@
     function isBlob(value) {
 
         return (
-            typeof Blob !==
-                "undefined" &&
+            typeof Blob !== "undefined" &&
             value instanceof Blob
         );
 
@@ -408,8 +424,7 @@
     function isArrayBuffer(value) {
 
         return (
-            typeof ArrayBuffer !==
-                "undefined" &&
+            typeof ArrayBuffer !== "undefined" &&
             value instanceof ArrayBuffer
         );
 
@@ -419,8 +434,7 @@
     function isTypedArray(value) {
 
         return (
-            typeof ArrayBuffer !==
-                "undefined" &&
+            typeof ArrayBuffer !== "undefined" &&
             ArrayBuffer.isView(value)
         );
 
@@ -498,32 +512,95 @@
 
 
     /* ========================================================
-       ENGINE STATE
+       EVENT DISPATCHER
        ======================================================== */
 
-    function isEngineBusy() {
+    function dispatchEvent(
+        type,
+        detail = {}
+    ) {
 
-        return (
-            ENGINE_STATE.active ===
-            true
-        );
+        try {
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    type,
+                    {
+                        detail
+                    }
+                )
+            );
+
+        } catch (err) {
+
+            warn(
+                "Event dispatch gagal:",
+                type,
+                err
+            );
+
+        }
 
     }
 
+
+    function sendParentMessage(
+        type,
+        data = {}
+    ) {
+
+        if (
+            !window.parent ||
+            window.parent === window
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            window.parent.postMessage(
+                {
+                    type,
+                    ...data
+                },
+                "*"
+            );
+
+        } catch (err) {
+
+            warn(
+                "Parent message gagal:",
+                err
+            );
+
+        }
+
+    }
+
+
+    /* ========================================================
+       ENGINE STATE NORMALIZATION
+       ======================================================== */
 
     function normalizeEngineState(
         state
     ) {
 
         return String(
-            state ||
-            "UNKNOWN"
+            state || "UNKNOWN"
         )
             .trim()
             .toUpperCase();
 
     }
 
+
+    /* ========================================================
+       UPDATE ENGINE STATE
+       ======================================================== */
 
     function updateEngineState(
         state,
@@ -537,118 +614,157 @@
             );
 
 
-        ENGINE_STATE.state =
-            normalized;
+        let numericProgress =
+            Number(progress);
 
 
-        const numericProgress =
-            Number(
-                progress
+        if (
+            !Number.isFinite(
+                numericProgress
+            )
+        ) {
+
+            numericProgress =
+                0;
+
+        }
+
+
+        numericProgress =
+            Math.max(
+                0,
+                Math.min(
+                    100,
+                    numericProgress
+                )
             );
 
 
-        ENGINE_STATE.progress =
-            Number.isFinite(
-                numericProgress
-            )
-                ? Math.max(
-                    0,
-                    Math.min(
-                        100,
-                        numericProgress
-                    )
-                )
-                : 0;
+        ENGINE.state =
+            normalized;
 
 
-        ENGINE_STATE.active =
-            ENGINE_ACTIVE_STATES.includes(
+        ENGINE.progress =
+            numericProgress;
+
+
+        ENGINE.active =
+            ENGINE_ACTIVE_STATES.has(
                 normalized
             );
 
 
-        ENGINE_STATE.ready =
-            normalized ===
-            "READY";
+        ENGINE.ready =
+            normalized === "READY";
 
 
-        ENGINE_STATE.idle =
-            normalized ===
-            "IDLE";
+        ENGINE.idle =
+            normalized === "IDLE";
 
 
-        ENGINE_STATE.received =
+        ENGINE.received =
             true;
 
 
-        ENGINE_STATE.error =
+        ENGINE.error =
             data.error ||
             data.message ||
             null;
 
 
-        ENGINE_STATE.metadata =
+        ENGINE.metadata =
             data.metadata ||
+            data.meta ||
             null;
 
 
-        ENGINE_STATE.updatedAt =
+        ENGINE.updatedAt =
             Date.now();
 
 
-        /*
-         * Kalau engine sudah READY,
-         * progress secara logika dianggap 100%.
-         */
-
         if (
-            ENGINE_STATE.ready
+            ENGINE.ready
         ) {
 
-            ENGINE_STATE.progress =
+            ENGINE.progress =
                 100;
 
         }
 
 
         log(
-            "ENGINE STATE:",
-            ENGINE_STATE.state,
-            ENGINE_STATE.progress + "%"
+            "ENGINE:",
+            ENGINE.state,
+            ENGINE.progress + "%"
         );
 
 
         dispatchEvent(
             "MARA_ENGINE_STATE",
             {
+
                 state:
-                    ENGINE_STATE.state,
+                    ENGINE.state,
 
                 progress:
-                    ENGINE_STATE.progress,
+                    ENGINE.progress,
 
                 active:
-                    ENGINE_STATE.active,
+                    ENGINE.active,
 
                 ready:
-                    ENGINE_STATE.ready,
+                    ENGINE.ready,
 
                 idle:
-                    ENGINE_STATE.idle,
+                    ENGINE.idle,
 
                 error:
-                    ENGINE_STATE.error,
+                    ENGINE.error,
 
                 metadata:
-                    ENGINE_STATE.metadata
+                    ENGINE.metadata
+
             }
         );
+
+
+        if (
+            ENGINE.ready
+        ) {
+
+            dispatchEvent(
+                "MARA_BUILD_ENGINE_READY",
+                {
+                    state:
+                        ENGINE.state,
+
+                    metadata:
+                        ENGINE.metadata
+                }
+            );
+
+        }
+
+
+        if (
+            ENGINE.error
+        ) {
+
+            dispatchEvent(
+                "MARA_BUILD_ENGINE_ERROR",
+                {
+                    error:
+                        ENGINE.error
+                }
+            );
+
+        }
 
     }
 
 
     /* ========================================================
-       ENGINE MESSAGE LISTENER
+       ENGINE MESSAGE HANDLER
        ======================================================== */
 
     function handleEngineMessage(
@@ -661,18 +777,13 @@
 
         if (
             !data ||
-            typeof data !==
-            "object"
+            typeof data !== "object"
         ) {
 
             return;
 
         }
 
-
-        /*
-         * Format utama.
-         */
 
         if (
             data.type ===
@@ -690,144 +801,59 @@
         }
 
 
-        /*
-         * Alias status mulai.
+        const aliases = {
 
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_STARTING"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_STARTING:
                 "STARTING",
-                data.progress,
-                data
-            );
 
-            return;
+            MARA_ENGINE_CHECKING:
+                "CHECKING",
 
-        }
+            MARA_ENGINE_CHECKING_UPDATE:
+                "CHECKING_UPDATE",
 
-
-        /*
-         * Alias download.
-
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_DOWNLOADING"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_DOWNLOADING:
                 "DOWNLOADING",
-                data.progress,
-                data
-            );
 
-            return;
+            MARA_ENGINE_DOWNLOADED:
+                "DOWNLOADED",
 
-        }
-
-
-        /*
-         * Alias install.
-
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_INSTALLING"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_INSTALLING:
                 "INSTALLING",
-                data.progress,
-                data
-            );
 
-            return;
+            MARA_ENGINE_INSTALL:
+                "INSTALL",
 
-        }
-
-
-        /*
-         * Alias verify.
-
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_VERIFYING"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_VERIFYING:
                 "VERIFYING",
-                data.progress,
-                data
-            );
 
-            return;
+            MARA_ENGINE_VERIFY:
+                "VERIFY",
 
-        }
+            MARA_ENGINE_UPGRADING:
+                "UPGRADING",
 
+            MARA_ENGINE_PROCESSING:
+                "PROCESSING",
 
-        /*
-         * Alias READY.
-
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_READY"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_READY:
                 "READY",
-                100,
-                data
-            );
 
-            return;
-
-        }
-
-
-        /*
-         * Alias IDLE.
-
-         */
-
-        if (
-            data.type ===
-            "MARA_ENGINE_IDLE"
-        ) {
-
-            updateEngineState(
+            MARA_ENGINE_IDLE:
                 "IDLE",
-                0,
-                data
-            );
 
-            return;
+            MARA_ENGINE_ERROR:
+                "ERROR"
 
-        }
+        };
 
-
-        /*
-         * Alias ERROR.
-
-         */
 
         if (
-            data.type ===
-            "MARA_ENGINE_ERROR"
+            aliases[data.type]
         ) {
 
             updateEngineState(
-                "ERROR",
+                aliases[data.type],
                 data.progress,
                 data
             );
@@ -844,79 +870,234 @@
 
 
     /* ========================================================
-       DISPATCH EVENT
-       ======================================================== */
+       DIRECT ENGINE CUSTOM EVENT
+       ========================================================
+       Mendukung engine-single.js yang mengirim:
+ *
+ *   window.dispatchEvent(
+ *       new CustomEvent(
+ *           "MARA_ENGINE_STATE",
+ *           ...
+ *       )
+ *   )
+     ======================================================== */
 
-    function dispatchEvent(
-        type,
-        detail = {}
-    ) {
+    window.addEventListener(
+        "MARA_ENGINE_STATE",
+        event => {
 
-        try {
+            const detail =
+                event.detail;
 
-            window.dispatchEvent(
-                new CustomEvent(
-                    type,
-                    {
-                        detail:
-                            detail
-                    }
-                )
-            );
 
-        } catch (err) {
+            if (
+                !detail ||
+                typeof detail !== "object"
+            ) {
 
-            warn(
-                "Gagal dispatch event:",
-                type,
-                err
+                return;
+
+            }
+
+
+            updateEngineState(
+                detail.state,
+                detail.progress,
+                detail
             );
 
         }
+    );
+
+
+    /* ========================================================
+       DIRECT ENGINE ALIASES
+       ======================================================== */
+
+    const ENGINE_EVENT_ALIASES = {
+
+        MARA_ENGINE_STARTING:
+            "STARTING",
+
+        MARA_ENGINE_CHECKING:
+            "CHECKING",
+
+        MARA_ENGINE_CHECKING_UPDATE:
+            "CHECKING_UPDATE",
+
+        MARA_ENGINE_DOWNLOADING:
+            "DOWNLOADING",
+
+        MARA_ENGINE_DOWNLOADED:
+            "DOWNLOADED",
+
+        MARA_ENGINE_INSTALLING:
+            "INSTALLING",
+
+        MARA_ENGINE_INSTALL:
+            "INSTALL",
+
+        MARA_ENGINE_VERIFYING:
+            "VERIFYING",
+
+        MARA_ENGINE_VERIFY:
+            "VERIFY",
+
+        MARA_ENGINE_UPGRADING:
+            "UPGRADING",
+
+        MARA_ENGINE_PROCESSING:
+            "PROCESSING",
+
+        MARA_ENGINE_READY:
+            "READY",
+
+        MARA_ENGINE_IDLE:
+            "IDLE",
+
+        MARA_ENGINE_ERROR:
+            "ERROR"
+
+    };
+
+
+    Object.entries(
+        ENGINE_EVENT_ALIASES
+    ).forEach(
+        ([eventName, state]) => {
+
+            window.addEventListener(
+                eventName,
+                event => {
+
+                    const detail =
+                        event.detail || {};
+
+
+                    updateEngineState(
+                        state,
+                        detail.progress,
+                        detail
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    /* ========================================================
+       ENGINE DIRECT STATE
+       ======================================================== */
+
+    function syncDirectEngineState() {
+
+        const candidates = [
+
+            window.MARAEngine,
+
+            window.MARA_ENGINE,
+
+            window.MARAEngineRuntime,
+
+            window.MARA_ENGINE_RUNTIME
+
+        ];
+
+
+        for (
+            const engine of candidates
+        ) {
+
+            if (
+                !engine ||
+                typeof engine !== "object"
+            ) {
+
+                continue;
+
+            }
+
+
+            try {
+
+                let state =
+                    null;
+
+
+                if (
+                    typeof engine.getState ===
+                    "function"
+                ) {
+
+                    state =
+                        engine.getState();
+
+                }
+
+                else if (
+                    engine.state &&
+                    typeof engine.state ===
+                    "object"
+                ) {
+
+                    state =
+                        engine.state;
+
+                }
+
+
+                if (
+                    !state ||
+                    typeof state !== "object"
+                ) {
+
+                    continue;
+
+                }
+
+
+                updateEngineState(
+                    state.state ||
+                    state.status ||
+                    "UNKNOWN",
+
+                    state.progress ||
+                    0,
+
+                    state
+                );
+
+
+                return true;
+
+            } catch (err) {
+
+                warn(
+                    "Gagal membaca direct engine state:",
+                    err
+                );
+
+            }
+
+        }
+
+
+        return false;
 
     }
 
 
     /* ========================================================
-       SEND PARENT MESSAGE
+       ENGINE BUSY
        ======================================================== */
 
-    function sendParentMessage(
-        type,
-        data = {}
-    ) {
+    function isEngineBusy() {
 
-        if (
-            !window.parent ||
-            window.parent ===
-                window
-        ) {
-
-            return;
-
-        }
-
-
-        try {
-
-            window.parent.postMessage(
-                {
-                    type:
-                        type,
-
-                    ...data
-                },
-                "*"
-            );
-
-        } catch (err) {
-
-            warn(
-                "Gagal postMessage:",
-                err
-            );
-
-        }
+        return (
+            ENGINE.active === true
+        );
 
     }
 
@@ -928,7 +1109,7 @@
     function ensureTerminal() {
 
         if (
-            !MARA_BUILD_CONFIG.terminalEnabled
+            !CONFIG.terminalEnabled
         ) {
 
             return null;
@@ -995,10 +1176,6 @@
 
             "box-shadow:0 8px 30px rgba(0,0,0,.35)",
 
-            /*
-             * Harus berada di bawah status bar.
-             */
-
             "z-index:900",
 
             "display:none",
@@ -1008,9 +1185,15 @@
         ].join(";");
 
 
-        document.body.appendChild(
-            terminal
-        );
+        if (
+            document.body
+        ) {
+
+            document.body.appendChild(
+                terminal
+            );
+
+        }
 
 
         STATE.terminal =
@@ -1023,12 +1206,6 @@
 
 
     function showTerminal() {
-
-        /*
-         * Jangan pernah menampilkan terminal
-         * ketika engine sedang bekerja.
-
-         */
 
         if (
             isEngineBusy()
@@ -1090,12 +1267,6 @@
         message,
         type = "INFO"
     ) {
-
-        /*
-         * Saat engine bekerja,
-         * terminal tidak boleh menerima output.
-
-         */
 
         if (
             isEngineBusy()
@@ -1174,18 +1345,6 @@
     }
 
 
-    function terminalError(
-        message
-    ) {
-
-        terminalLog(
-            message,
-            "ERROR"
-        );
-
-    }
-
-
     function terminalWarn(
         message
     ) {
@@ -1198,34 +1357,33 @@
     }
 
 
-    /* ========================================================
-       ENGINE HANDOFF
-       ======================================================== */
-
-    function wait(
-        milliseconds
+    function terminalError(
+        message
     ) {
 
-        return new Promise(
-            resolve => {
-
-                setTimeout(
-                    resolve,
-                    milliseconds
-                );
-
-            }
+        terminalLog(
+            message,
+            "ERROR"
         );
 
     }
 
 
+    /* ========================================================
+       ENGINE HANDOFF
+       ======================================================== */
+
     async function waitForEngineHandoff() {
 
         /*
-         * Jika engine sudah bekerja,
-         * tunggu sampai selesai.
+         * Sinkronisasi langsung terlebih dahulu.
+         */
 
+        syncDirectEngineState();
+
+
+        /*
+         * Engine sedang bekerja.
          */
 
         if (
@@ -1233,6 +1391,18 @@
         ) {
 
             hideTerminal();
+
+
+            dispatchEvent(
+                "MARA_BUILD_ENGINE_WAITING",
+                {
+                    state:
+                        ENGINE.state,
+
+                    progress:
+                        ENGINE.progress
+                }
+            );
 
 
             const started =
@@ -1246,58 +1416,72 @@
                 if (
                     Date.now() -
                     started >=
-                    MARA_BUILD_CONFIG.engineWorkTimeout
+                    CONFIG.engineWorkTimeout
                 ) {
 
                     throw new Error(
-                        "Timeout menunggu engine-single.js."
+                        "Timeout menunggu engine-single.js menyelesaikan proses."
                     );
 
                 }
 
 
                 await wait(
-                    MARA_BUILD_CONFIG.enginePollInterval
+                    CONFIG.enginePollInterval
+                );
+
+
+                syncDirectEngineState();
+
+            }
+
+
+            if (
+                ENGINE.error
+            ) {
+
+                throw new Error(
+                    ENGINE.error
                 );
 
             }
 
 
-            return ENGINE_STATE;
+            return ENGINE;
 
         }
 
 
         /*
-         * Jika engine sudah READY.
-
+         * Engine sudah READY.
          */
 
         if (
-            ENGINE_STATE.ready
+            ENGINE.ready
         ) {
 
-            return ENGINE_STATE;
+            return ENGINE;
 
         }
 
 
         /*
-         * Beri kesempatan singkat kepada
-         * engine-single.js untuk mengirim
-         * status awal.
-
+         * Beri waktu kepada engine
+         * untuk mengirim status awal.
          */
 
-        const started =
+        const handshakeStart =
             Date.now();
 
 
         while (
             Date.now() -
-            started <
-            MARA_BUILD_CONFIG.engineHandshakeTimeout
+            handshakeStart <
+            CONFIG.engineHandshakeTimeout
         ) {
+
+            syncDirectEngineState();
+
 
             if (
                 isEngineBusy()
@@ -1306,7 +1490,7 @@
                 hideTerminal();
 
 
-                const workStarted =
+                const workStart =
                     Date.now();
 
 
@@ -1316,8 +1500,8 @@
 
                     if (
                         Date.now() -
-                        workStarted >=
-                        MARA_BUILD_CONFIG.engineWorkTimeout
+                        workStart >=
+                        CONFIG.engineWorkTimeout
                     ) {
 
                         throw new Error(
@@ -1328,41 +1512,41 @@
 
 
                     await wait(
-                        MARA_BUILD_CONFIG.enginePollInterval
+                        CONFIG.enginePollInterval
                     );
+
+
+                    syncDirectEngineState();
 
                 }
 
 
-                return ENGINE_STATE;
+                return ENGINE;
 
             }
 
 
             if (
-                ENGINE_STATE.ready
+                ENGINE.ready
             ) {
 
-                return ENGINE_STATE;
+                return ENGINE;
 
             }
 
 
             await wait(
-                MARA_BUILD_CONFIG.enginePollInterval
+                CONFIG.enginePollInterval
             );
 
         }
 
 
         /*
-         * Tidak ada aktivitas engine.
-         *
-         * Build.js boleh bekerja.
-
+         * Tidak ada pekerjaan engine.
          */
 
-        return ENGINE_STATE;
+        return ENGINE;
 
     }
 
@@ -1372,6 +1556,17 @@
        ======================================================== */
 
     function openDatabase() {
+
+        if (
+            STATE.db
+        ) {
+
+            return Promise.resolve(
+                STATE.db
+            );
+
+        }
+
 
         return new Promise(
             (
@@ -1385,7 +1580,7 @@
 
                     reject(
                         new Error(
-                            "IndexedDB tidak tersedia pada browser."
+                            "IndexedDB tidak tersedia."
                         )
                     );
 
@@ -1422,7 +1617,7 @@
                             );
 
                         },
-                        MARA_BUILD_CONFIG.databaseTimeout
+                        CONFIG.databaseTimeout
                     );
 
 
@@ -1433,8 +1628,8 @@
 
                     request =
                         indexedDB.open(
-                            MARA_BUILD_CONFIG.dbName,
-                            MARA_BUILD_CONFIG.dbVersion
+                            CONFIG.dbName,
+                            CONFIG.dbVersion
                         );
 
                 } catch (err) {
@@ -1458,7 +1653,7 @@
                     event => {
 
                         warn(
-                            "IndexedDB meminta upgrade.",
+                            "IndexedDB upgrade event:",
                             event.oldVersion,
                             "→",
                             event.newVersion
@@ -1519,28 +1714,28 @@
                         );
 
 
-                        const db =
+                        STATE.db =
                             request.result;
 
 
-                        STATE.db =
-                            db;
-
-
-                        db.onversionchange =
+                        STATE.db.onversionchange =
                             () => {
 
                                 try {
 
-                                    db.close();
+                                    STATE.db.close();
 
                                 } catch (_) {}
+
+
+                                STATE.db =
+                                    null;
 
                             };
 
 
                         resolve(
-                            db
+                            STATE.db
                         );
 
                     };
@@ -1552,25 +1747,49 @@
 
 
     /* ========================================================
-       CHECK STORE
+       DATABASE STORE
        ======================================================== */
 
     function hasStore(
         storeName
     ) {
 
+        return !!(
+            STATE.db &&
+            STATE.db.objectStoreNames.contains(
+                storeName
+            )
+        );
+
+    }
+
+
+    function assertDatabaseStores() {
+
         if (
-            !STATE.db
+            !hasStore(
+                CONFIG.metaStore
+            )
         ) {
 
-            return false;
+            throw new Error(
+                "Object store metadata tidak ditemukan."
+            );
 
         }
 
 
-        return STATE.db.objectStoreNames.contains(
-            storeName
-        );
+        if (
+            !hasStore(
+                CONFIG.buildStore
+            )
+        ) {
+
+            throw new Error(
+                "Object store builds tidak ditemukan."
+            );
+
+        }
 
     }
 
@@ -1606,7 +1825,7 @@
 
                 if (
                     !hasStore(
-                        MARA_BUILD_CONFIG.metaStore
+                        CONFIG.metaStore
                     )
                 ) {
 
@@ -1628,7 +1847,7 @@
 
                     transaction =
                         STATE.db.transaction(
-                            MARA_BUILD_CONFIG.metaStore,
+                            CONFIG.metaStore,
                             "readonly"
                         );
 
@@ -1645,7 +1864,7 @@
 
                 const store =
                     transaction.objectStore(
-                        MARA_BUILD_CONFIG.metaStore
+                        CONFIG.metaStore
                     );
 
 
@@ -1684,14 +1903,14 @@
 
 
     /* ========================================================
-       GET ACTIVE BUILD
+       ACTIVE BUILD
        ======================================================== */
 
     async function getActiveBuild() {
 
         const metadata =
             await readMetadata(
-                MARA_BUILD_CONFIG.activeBuildKey
+                CONFIG.activeBuildKey
             );
 
 
@@ -1700,10 +1919,8 @@
 
 
         if (
-            metadata ===
-            undefined ||
-            metadata ===
-            null
+            metadata === undefined ||
+            metadata === null
         ) {
 
             throw new Error(
@@ -1718,78 +1935,29 @@
 
 
         if (
-            typeof metadata ===
-            "number"
+            typeof metadata === "object"
         ) {
 
             build =
-                metadata;
+                metadata.build ??
+                metadata.id ??
+                metadata.version ??
+                metadata.activeBuild ??
+                null;
 
         }
 
-        else if (
-            typeof metadata ===
-            "string"
-        ) {
+        else {
 
             build =
                 metadata;
-
-        }
-
-        else if (
-            typeof metadata ===
-            "object"
-        ) {
-
-            if (
-                metadata.build !==
-                undefined
-            ) {
-
-                build =
-                    metadata.build;
-
-            }
-
-            else if (
-                metadata.id !==
-                undefined
-            ) {
-
-                build =
-                    metadata.id;
-
-            }
-
-            else if (
-                metadata.version !==
-                undefined
-            ) {
-
-                build =
-                    metadata.version;
-
-            }
-
-            else if (
-                metadata.activeBuild !==
-                undefined
-            ) {
-
-                build =
-                    metadata.activeBuild;
-
-            }
 
         }
 
 
         if (
-            build ===
-            null ||
-            build ===
-            undefined
+            build === null ||
+            build === undefined
         ) {
 
             throw new Error(
@@ -1829,7 +1997,7 @@
 
         if (
             !hasStore(
-                MARA_BUILD_CONFIG.buildStore
+                CONFIG.buildStore
             )
         ) {
 
@@ -1842,11 +2010,11 @@
 
         return STATE.db
             .transaction(
-                MARA_BUILD_CONFIG.buildStore,
+                CONFIG.buildStore,
                 "readonly"
             )
             .objectStore(
-                MARA_BUILD_CONFIG.buildStore
+                CONFIG.buildStore
             );
 
     }
@@ -1904,8 +2072,11 @@
                 request.onerror =
                     () => {
 
-                        resolve(
-                            undefined
+                        reject(
+                            request.error ||
+                            new Error(
+                                "Gagal membaca build."
+                            )
                         );
 
                     };
@@ -1917,7 +2088,7 @@
 
 
     /* ========================================================
-       POSSIBLE KEYS
+       POSSIBLE FILE KEYS
        ======================================================== */
 
     function generatePossibleKeys(
@@ -1959,7 +2130,7 @@
 
 
     /* ========================================================
-       MATCH RECORD
+       RECORD MATCH
        ======================================================== */
 
     function recordMatches(
@@ -1970,8 +2141,7 @@
 
         if (
             !record ||
-            typeof record !==
-            "object"
+            typeof record !== "object"
         ) {
 
             return false;
@@ -1993,30 +2163,30 @@
 
         const recordPath =
             normalizePath(
-                record.path ||
-                record.file ||
-                record.name ||
+                record.path ??
+                record.file ??
+                record.name ??
                 ""
             );
 
 
         const recordBuild =
             normalizeBuild(
-                record.build !==
-                undefined
+
+                record.build !== undefined
                     ? record.build
-                    : record.buildId !==
-                      undefined
+
+                    : record.buildId !== undefined
                         ? record.buildId
+
                         : record.version
+
             );
 
 
         if (
-            recordBuild !==
-            null &&
-            recordBuild !==
-            targetBuild
+            recordBuild !== null &&
+            recordBuild !== targetBuild
         ) {
 
             return false;
@@ -2025,8 +2195,7 @@
 
 
         if (
-            recordPath ===
-            targetPath
+            recordPath === targetPath
         ) {
 
             return true;
@@ -2036,7 +2205,7 @@
 
         const recordKey =
             normalizePath(
-                record.key ||
+                record.key ??
                 ""
             );
 
@@ -2052,7 +2221,7 @@
 
 
     /* ========================================================
-       FIND FILE BY CURSOR
+       CURSOR SEARCH
        ======================================================== */
 
     function findFileByCursor(
@@ -2109,20 +2278,16 @@
                         }
 
 
-                        const record =
-                            cursor.value;
-
-
                         if (
                             recordMatches(
-                                record,
+                                cursor.value,
                                 build,
                                 path
                             )
                         ) {
 
                             resolve(
-                                record
+                                cursor.value
                             );
 
                             return;
@@ -2207,25 +2372,24 @@
             const key of keys
         ) {
 
-            const result =
+            const record =
                 await getByKey(
                     key
                 );
 
 
             if (
-                result !==
-                undefined
+                record !== undefined
             ) {
 
-                return result;
+                return record;
 
             }
 
         }
 
 
-        const cursorResult =
+        const cursorRecord =
             await findFileByCursor(
                 normalizedBuild,
                 normalizedPath
@@ -2233,11 +2397,10 @@
 
 
         if (
-            cursorResult !==
-            undefined
+            cursorRecord !== undefined
         ) {
 
-            return cursorResult;
+            return cursorRecord;
 
         }
 
@@ -2271,17 +2434,17 @@
 
         const path =
             normalizePath(
-                record.path ||
-                record.file ||
-                record.name ||
+                record.path ??
+                record.file ??
+                record.name ??
                 requestedPath
             );
 
 
         const mime =
-            record.type ||
-            record.mime ||
-            record.contentType ||
+            record.type ??
+            record.mime ??
+            record.contentType ??
             guessMimeType(
                 path
             );
@@ -2296,8 +2459,7 @@
                 blob:
                     record,
 
-                path:
-                    path,
+                path,
 
                 type:
                     record.type ||
@@ -2309,9 +2471,7 @@
 
 
         if (
-            isBlob(
-                record.blob
-            )
+            isBlob(record.blob)
         ) {
 
             return {
@@ -2319,8 +2479,7 @@
                 blob:
                     record.blob,
 
-                path:
-                    path,
+                path,
 
                 type:
                     record.blob.type ||
@@ -2332,9 +2491,7 @@
 
 
         if (
-            isBlob(
-                record.data
-            )
+            isBlob(record.data)
         ) {
 
             return {
@@ -2342,8 +2499,7 @@
                 blob:
                     record.data,
 
-                path:
-                    path,
+                path,
 
                 type:
                     record.data.type ||
@@ -2355,26 +2511,21 @@
 
 
         if (
-            isArrayBuffer(
-                record.data
-            )
+            isArrayBuffer(record.data)
         ) {
 
             return {
 
                 blob:
                     new Blob(
-                        [
-                            record.data
-                        ],
+                        [record.data],
                         {
                             type:
                                 mime
                         }
                     ),
 
-                path:
-                    path,
+                path,
 
                 type:
                     mime
@@ -2385,26 +2536,21 @@
 
 
         if (
-            isTypedArray(
-                record.data
-            )
+            isTypedArray(record.data)
         ) {
 
             return {
 
                 blob:
                     new Blob(
-                        [
-                            record.data
-                        ],
+                        [record.data],
                         {
                             type:
                                 mime
                         }
                     ),
 
-                path:
-                    path,
+                path,
 
                 type:
                     mime
@@ -2415,9 +2561,7 @@
 
 
         if (
-            isBlob(
-                record.content
-            )
+            isBlob(record.content)
         ) {
 
             return {
@@ -2425,8 +2569,7 @@
                 blob:
                     record.content,
 
-                path:
-                    path,
+                path,
 
                 type:
                     record.content.type ||
@@ -2446,17 +2589,14 @@
 
                 blob:
                     new Blob(
-                        [
-                            record.content
-                        ],
+                        [record.content],
                         {
                             type:
                                 mime
                         }
                     ),
 
-                path:
-                    path,
+                path,
 
                 type:
                     mime
@@ -2475,17 +2615,14 @@
 
                 blob:
                     new Blob(
-                        [
-                            record.data
-                        ],
+                        [record.data],
                         {
                             type:
                                 mime
                         }
                     ),
 
-                path:
-                    path,
+                path,
 
                 type:
                     mime
@@ -2504,17 +2641,14 @@
 
                 blob:
                     new Blob(
-                        [
-                            record.text
-                        ],
+                        [record.text],
                         {
                             type:
                                 mime
                         }
                     ),
 
-                path:
-                    path,
+                path,
 
                 type:
                     mime
@@ -2525,14 +2659,14 @@
 
 
         throw new Error(
-            `Format data file tidak didukung: ${path}`
+            `Format file tidak didukung: ${path}`
         );
 
     }
 
 
     /* ========================================================
-       CREATE BLOB URL
+       BLOB URL
        ======================================================== */
 
     function createFileURL(
@@ -2621,21 +2755,12 @@
 
 
         if (
-            STATE.activeBuild ===
-            null
+            STATE.activeBuild === null
         ) {
 
             await getActiveBuild();
 
         }
-
-
-        log(
-            "Membaca file:",
-            normalizedPath,
-            "build:",
-            STATE.activeBuild
-        );
 
 
         const record =
@@ -2667,8 +2792,7 @@
             build:
                 STATE.activeBuild,
 
-            url:
-                url,
+            url,
 
             blob:
                 file.blob,
@@ -2694,7 +2818,7 @@
 
 
     /* ========================================================
-       GET URL
+       GET FILE URL
        ======================================================== */
 
     async function getURL(
@@ -2775,7 +2899,7 @@
                             );
 
                         },
-                        MARA_BUILD_CONFIG.fileTimeout
+                        CONFIG.fileTimeout
                     );
 
 
@@ -2785,10 +2909,12 @@
                         timeout
                     );
 
+
                     frame.removeEventListener(
                         "load",
                         onLoad
                     );
+
 
                     frame.removeEventListener(
                         "error",
@@ -2872,40 +2998,28 @@
 
 
     /* ========================================================
-       FIND MAIN FRAME
+       MAIN FRAME
        ======================================================== */
 
     function getMainFrame() {
 
-        let frame =
+        return (
             document.getElementById(
                 "mara-main-frame"
-            );
+            ) ||
 
-
-        if (
-            frame
-        ) {
-
-            return frame;
-
-        }
-
-
-        frame =
             document.querySelector(
                 ".mara-iframe"
-            );
+            ) ||
 
-
-        return frame ||
-            null;
+            null
+        );
 
     }
 
 
     /* ========================================================
-       LOAD MAIN UX
+       MAIN UX
        ======================================================== */
 
     async function loadMainUX() {
@@ -2925,22 +3039,11 @@
         }
 
 
-        log(
-            "Memuat:",
-            MARA_BUILD_CONFIG.entryFile
-        );
-
-
         const file =
             await loadHTMLIntoFrame(
                 frame,
-                MARA_BUILD_CONFIG.entryFile
+                CONFIG.entryFile
             );
-
-
-        log(
-            "Main UX berhasil dimuat."
-        );
 
 
         return file;
@@ -2949,7 +3052,7 @@
 
 
     /* ========================================================
-       LOAD HOME SCREEN
+       HOME SCREEN
        ======================================================== */
 
     async function loadHomeScreen(
@@ -2961,6 +3064,17 @@
             getMainFrame();
 
 
+        if (
+            !targetFrame
+        ) {
+
+            throw new Error(
+                "Home Screen iframe tidak ditemukan."
+            );
+
+        }
+
+
         return loadHTMLIntoFrame(
             targetFrame,
             "home-screen.html"
@@ -2970,7 +3084,7 @@
 
 
     /* ========================================================
-       LOAD CONTROL CENTER
+       CONTROL CENTER
        ======================================================== */
 
     async function loadControlCenter(
@@ -3012,13 +3126,11 @@
     ) {
 
         if (
-            !Array.isArray(
-                paths
-            )
+            !Array.isArray(paths)
         ) {
 
             throw new Error(
-                "preload() membutuhkan array path."
+                "preload() membutuhkan array."
             );
 
         }
@@ -3056,10 +3168,6 @@
 
     }
 
-
-    /* ========================================================
-       REVOKE URL
-       ======================================================== */
 
     function revokeURLs() {
 
@@ -3126,48 +3234,45 @@
         }
 
 
-        const oldBuild =
+        const previousBuild =
             STATE.activeBuild;
 
 
-        const newBuild =
+        const currentBuild =
             await getActiveBuild();
 
 
         if (
-            oldBuild !==
-            newBuild
+            previousBuild !== null &&
+            previousBuild !== currentBuild
         ) {
 
             log(
                 "ACTIVE_BUILD berubah:",
-                oldBuild,
+                previousBuild,
                 "→",
-                newBuild
+                currentBuild
             );
 
 
-            clearCache();
+            revokeURLs();
 
         }
 
 
-        return newBuild;
+        return currentBuild;
 
     }
 
 
     /* ========================================================
-       DIAGNOSTIC TERMINAL
+       DIAGNOSTICS
        ======================================================== */
 
     async function runDiagnostics() {
 
-        /*
-         * Jangan menjalankan terminal
-         * ketika engine sedang bekerja.
+        syncDirectEngineState();
 
-         */
 
         if (
             isEngineBusy()
@@ -3179,7 +3284,10 @@
                     true,
 
                 reason:
-                    "ENGINE_BUSY"
+                    "ENGINE_BUSY",
+
+                engine:
+                    getEngineState()
 
             };
 
@@ -3197,42 +3305,21 @@
 
 
         terminalInfo(
-            "Checking local database..."
+            "Checking IndexedDB..."
         );
 
 
-        /*
-         * DATABASE
-         */
-
-        try {
-
-            await openDatabase();
+        await openDatabase();
 
 
-            terminalOK(
-                "IndexedDB connected."
-            );
+        terminalOK(
+            "IndexedDB connected."
+        );
 
-        } catch (err) {
-
-            terminalError(
-                err.message
-            );
-
-
-            throw err;
-
-        }
-
-
-        /*
-         * STORE
-         */
 
         if (
             hasStore(
-                MARA_BUILD_CONFIG.metaStore
+                CONFIG.metaStore
             )
         ) {
 
@@ -3251,7 +3338,7 @@
 
         if (
             hasStore(
-                MARA_BUILD_CONFIG.buildStore
+                CONFIG.buildStore
             )
         ) {
 
@@ -3268,18 +3355,39 @@
         }
 
 
-        /*
-         * ACTIVE BUILD
-         */
+        if (
+            !hasStore(
+                CONFIG.metaStore
+            ) ||
+            !hasStore(
+                CONFIG.buildStore
+            )
+        ) {
+
+            return {
+
+                success:
+                    false,
+
+                error:
+                    "Object store tidak lengkap."
+
+            };
+
+        }
+
 
         terminalInfo(
             "Checking ACTIVE_BUILD..."
         );
 
 
+        let build;
+
+
         try {
 
-            const build =
+            build =
                 await getActiveBuild();
 
 
@@ -3294,12 +3402,6 @@
             );
 
 
-            /*
-             * Tidak langsung memaksa
-             * layar menjadi hitam.
-
-             */
-
             return {
 
                 success:
@@ -3309,16 +3411,12 @@
                     null,
 
                 error:
-                    err
+                    err.message
 
             };
 
         }
 
-
-        /*
-         * METADATA
-         */
 
         terminalInfo(
             "Checking metadata..."
@@ -3326,10 +3424,7 @@
 
 
         if (
-            STATE.activeMetadata !==
-            undefined &&
-            STATE.activeMetadata !==
-            null
+            STATE.activeMetadata
         ) {
 
             terminalOK(
@@ -3345,52 +3440,19 @@
         }
 
 
-        /*
-         * ENGINE STATUS
-         */
-
         terminalInfo(
             "Checking engine state..."
         );
 
 
-        if (
-            ENGINE_STATE.received
-        ) {
-
-            terminalOK(
-                `Engine state: ${ENGINE_STATE.state}`
-            );
-
-        } else {
-
-            terminalInfo(
-                "Engine tidak mengirim pekerjaan upgrade."
-            );
-
-        }
+        terminalOK(
+            `Engine: ${ENGINE.state}`
+        );
 
 
-        /*
-         * UPGRADE
-         *
-         * Build.js tidak melakukan pengecekan
-         * download/update sendiri.
-         *
-         * Informasi ini hanya status diagnostik.
-
-         */
-
-        if (
-            ENGINE_STATE.idle ||
-            !ENGINE_STATE.active
-        ) {
-
-            terminalInfo(
-                "Upgrade belum tersedia"
-            );
-
-        }
+        terminalInfo(
+            "BUILD.JS tidak menjalankan proses upgrade."
+        );
 
 
         terminalInfo(
@@ -3403,26 +3465,13 @@
             success:
                 true,
 
-            build:
-                STATE.activeBuild,
+            build,
 
             metadata:
                 STATE.activeMetadata,
 
             engine:
-                {
-                    state:
-                        ENGINE_STATE.state,
-
-                    active:
-                        ENGINE_STATE.active,
-
-                    ready:
-                        ENGINE_STATE.ready,
-
-                    idle:
-                        ENGINE_STATE.idle
-                }
+                getEngineState()
 
         };
 
@@ -3430,7 +3479,47 @@
 
 
     /* ========================================================
-       GET STATE
+       ENGINE STATE API
+       ======================================================== */
+
+    function getEngineState() {
+
+        return {
+
+            state:
+                ENGINE.state,
+
+            progress:
+                ENGINE.progress,
+
+            active:
+                ENGINE.active,
+
+            ready:
+                ENGINE.ready,
+
+            idle:
+                ENGINE.idle,
+
+            received:
+                ENGINE.received,
+
+            error:
+                ENGINE.error,
+
+            metadata:
+                ENGINE.metadata,
+
+            updatedAt:
+                ENGINE.updatedAt
+
+        };
+
+    }
+
+
+    /* ========================================================
+       BUILD STATE API
        ======================================================== */
 
     function getState() {
@@ -3475,27 +3564,7 @@
                 ),
 
             engine:
-                {
-
-                    state:
-                        ENGINE_STATE.state,
-
-                    progress:
-                        ENGINE_STATE.progress,
-
-                    active:
-                        ENGINE_STATE.active,
-
-                    ready:
-                        ENGINE_STATE.ready,
-
-                    idle:
-                        ENGINE_STATE.idle,
-
-                    received:
-                        ENGINE_STATE.received
-
-                }
+                getEngineState()
 
         };
 
@@ -3507,10 +3576,6 @@
        ======================================================== */
 
     async function start() {
-
-        /*
-         * Sudah siap.
-         */
 
         if (
             STATE.ready
@@ -3532,12 +3597,9 @@
         }
 
 
-        /*
-         * Sedang start.
-         */
-
         if (
-            STATE.starting
+            STATE.starting &&
+            STATE.startPromise
         ) {
 
             return STATE.startPromise;
@@ -3558,7 +3620,7 @@
                 try {
 
                     log(
-                        "Build Runtime dimulai."
+                        "BUILD RUNTIME START"
                     );
 
 
@@ -3572,31 +3634,55 @@
                     );
 
 
-                    /*
-                     * =================================================
-                     * ENGINE HANDOFF
-                     * =================================================
-                     *
-                     * Ini bagian paling penting.
-                     *
-                     * Jika engine sedang:
-                     *
-                     *   DOWNLOAD
-                     *   INSTALL
-                     *   VERIFY
-                     *
-                     * build.js TIDAK menampilkan terminal.
+                    /* =========================================
+                       ENGINE HANDOFF
+                       ========================================= */
 
+                    syncDirectEngineState();
+
+
+                    if (
+                        isEngineBusy()
+                    ) {
+
+                        hideTerminal();
+
+
+                        await waitForEngineHandoff();
+
+                    }
+
+                    else if (
+                        !ENGINE.ready
+                    ) {
+
+                        await waitForEngineHandoff();
+
+                    }
+
+
+                    /*
+                     * Engine error.
                      */
 
-                    await waitForEngineHandoff();
+                    if (
+                        ENGINE.error
+                    ) {
+
+                        throw new Error(
+                            ENGINE.error
+                        );
+
+                    }
 
 
                     /*
-                     * Kalau setelah handoff engine
-                     * ternyata mulai bekerja, tunggu lagi.
-
+                     * Jika engine kembali bekerja
+                     * setelah handshake, tunggu lagi.
                      */
+
+                    syncDirectEngineState();
+
 
                     if (
                         isEngineBusy()
@@ -3610,21 +3696,13 @@
                     }
 
 
-                    /*
-                     * =================================================
-                     * DATABASE
-                     * =================================================
-                     */
+                    /* =========================================
+                       DIAGNOSTIC
+                       ========================================= */
 
                     if (
                         !isEngineBusy()
                     ) {
-
-                        /*
-                         * Terminal baru boleh muncul
-                         * ketika engine tidak bekerja.
-
-                         */
 
                         clearTerminal();
 
@@ -3637,11 +3715,15 @@
 
 
                         terminalInfo(
-                            "Checking local database..."
+                            "Checking IndexedDB..."
                         );
 
                     }
 
+
+                    /* =========================================
+                       DATABASE
+                       ========================================= */
 
                     await openDatabase();
 
@@ -3657,55 +3739,39 @@
                     }
 
 
-                    /*
-                     * =================================================
-                     * CHECK STORES
-                     * =================================================
-                     */
+                    /* =========================================
+                       STORE VALIDATION
+                       ========================================= */
 
                     if (
                         !hasStore(
-                            MARA_BUILD_CONFIG.metaStore
+                            CONFIG.metaStore
                         )
                     ) {
 
-                        if (
-                            !isEngineBusy()
-                        ) {
-
-                            terminalError(
-                                "Object store metadata tidak ditemukan."
-                            );
-
-                        }
+                        throw new Error(
+                            "Object store metadata tidak ditemukan."
+                        );
 
                     }
 
 
                     if (
                         !hasStore(
-                            MARA_BUILD_CONFIG.buildStore
+                            CONFIG.buildStore
                         )
                     ) {
 
-                        if (
-                            !isEngineBusy()
-                        ) {
-
-                            terminalError(
-                                "Object store builds tidak ditemukan."
-                            );
-
-                        }
+                        throw new Error(
+                            "Object store builds tidak ditemukan."
+                        );
 
                     }
 
 
-                    /*
-                     * =================================================
-                     * ACTIVE BUILD
-                     * =================================================
-                     */
+                    /* =========================================
+                       ACTIVE BUILD
+                       ========================================= */
 
                     if (
                         !isEngineBusy()
@@ -3729,9 +3795,8 @@
                     } catch (err) {
 
                         /*
-                         * Jangan langsung membiarkan
-                         * aplikasi menjadi layar hitam.
-
+                         * Bisa terjadi ketika engine baru saja
+                         * selesai memasang build.
                          */
 
                         if (
@@ -3742,27 +3807,11 @@
                                 err.message
                             );
 
-
-                            terminalInfo(
-                                "Menunggu build aktif..."
-                            );
-
                         }
 
 
-                        /*
-                         * Beri kesempatan engine
-                         * menyelesaikan pekerjaan.
-
-                         */
-
                         await waitForEngineHandoff();
 
-
-                        /*
-                         * Coba sekali lagi.
-
-                         */
 
                         activeBuild =
                             await getActiveBuild();
@@ -3781,20 +3830,20 @@
                     }
 
 
-                    /*
-                     * =================================================
-                     * ACTIVE BUILD EVENT
-                     * =================================================
-                     */
+                    /* =========================================
+                       BUILD EVENT
+                       ========================================= */
 
                     dispatchEvent(
                         "MARA_ACTIVE_BUILD",
                         {
+
                             build:
                                 activeBuild,
 
                             metadata:
                                 STATE.activeMetadata
+
                         }
                     );
 
@@ -3802,20 +3851,20 @@
                     sendParentMessage(
                         "MARA_ACTIVE_BUILD",
                         {
+
                             build:
                                 activeBuild,
 
                             metadata:
                                 STATE.activeMetadata
+
                         }
                     );
 
 
-                    /*
-                     * =================================================
-                     * METADATA
-                     * =================================================
-                     */
+                    /* =========================================
+                       METADATA
+                       ========================================= */
 
                     if (
                         !isEngineBusy()
@@ -3845,55 +3894,12 @@
                     }
 
 
-                    /*
-                     * =================================================
-                     * UPGRADE STATUS
-                     * =================================================
-                     *
-                     * Build.js TIDAK melakukan upgrade.
-                     *
-                     * Hanya memberi status apabila
-                     * engine tidak mempunyai pekerjaan.
+                    /* =========================================
+                       FINAL ENGINE CHECK
+                       ========================================= */
 
-                     */
+                    syncDirectEngineState();
 
-                    if (
-                        !isEngineBusy()
-                    ) {
-
-                        if (
-                            ENGINE_STATE.ready
-                        ) {
-
-                            terminalOK(
-                                "Engine upgrade selesai."
-                            );
-
-                        }
-
-                        else {
-
-                            terminalInfo(
-                                "Upgrade belum tersedia"
-                            );
-
-                        }
-
-                    }
-
-
-                    /*
-                     * =================================================
-                     * MAIN UX
-                     * =================================================
-                     */
-
-                    /*
-                     * Pastikan engine tidak sedang
-                     * melakukan pekerjaan baru sebelum
-                     * membuka UX.
-
-                     */
 
                     if (
                         isEngineBusy()
@@ -3907,30 +3913,45 @@
                     }
 
 
-                    /*
-                     * Terminal diagnostik tidak diperlukan
-                     * setelah UX siap.
+                    if (
+                        ENGINE.error
+                    ) {
 
-                     */
+                        throw new Error(
+                            ENGINE.error
+                        );
+
+                    }
+
+
+                    /* =========================================
+                       MAIN UX
+                       ========================================= */
+
+                    if (
+                        !isEngineBusy()
+                    ) {
+
+                        terminalInfo(
+                            "Loading MAIN UX..."
+                        );
+
+                    }
+
 
                     const mainFile =
                         await loadMainUX();
 
 
-                    /*
-                     * =================================================
-                     * READY
-                     * =================================================
-                     */
+                    /* =========================================
+                       READY
+                       ========================================= */
+
+                    STATE.activeBuild =
+                        activeBuild;
 
                     STATE.ready =
                         true;
-
-                    STATE.error =
-                        null;
-
-                    STATE.readyAt =
-                        Date.now();
 
                     STATE.started =
                         true;
@@ -3938,12 +3959,12 @@
                     STATE.starting =
                         false;
 
+                    STATE.error =
+                        null;
 
-                    /*
-                     * Terminal disembunyikan ketika
-                     * UX utama sudah aktif.
+                    STATE.readyAt =
+                        Date.now();
 
-                     */
 
                     hideTerminal();
 
@@ -3978,7 +3999,7 @@
 
 
                     log(
-                        "MARA UX READY.",
+                        "MARA BUILD READY",
                         result
                     );
 
@@ -4001,10 +4022,8 @@
 
 
                     /*
-                     * Kalau engine sedang bekerja,
-                     * jangan menampilkan terminal error
-                     * agar tidak mengganggu loading upgrade.
-
+                     * Jangan ganggu proses engine
+                     * dengan terminal.
                      */
 
                     if (
@@ -4023,7 +4042,7 @@
 
 
                     error(
-                        "Build Runtime gagal:",
+                        "BUILD RUNTIME ERROR:",
                         err
                     );
 
@@ -4031,11 +4050,13 @@
                     dispatchEvent(
                         "MARA_BUILD_ERROR",
                         {
+
                             error:
                                 err,
 
                             message:
                                 err.message
+
                         }
                     );
 
@@ -4043,8 +4064,10 @@
                     sendParentMessage(
                         "MARA_BUILD_ERROR",
                         {
+
                             message:
                                 err.message
+
                         }
                     );
 
@@ -4068,7 +4091,7 @@
     function stop() {
 
         log(
-            "Menghentikan Build Runtime."
+            "BUILD RUNTIME STOP"
         );
 
 
@@ -4097,6 +4120,12 @@
         STATE.error =
             null;
 
+        STATE.startedAt =
+            null;
+
+        STATE.readyAt =
+            null;
+
         STATE.startPromise =
             null;
 
@@ -4119,20 +4148,14 @@
 
     window.MARABuild = {
 
-        /*
-         * Runtime
-         */
+        /* Runtime */
 
-        start:
-            start,
+        start,
 
-        stop:
-            stop,
+        stop,
 
 
-        /*
-         * Build
-         */
+        /* Build */
 
         getActiveBuild:
             () =>
@@ -4143,135 +4166,71 @@
                 STATE.activeMetadata,
 
 
-        /*
-         * File
-         */
+        /* File */
 
-        getURL:
-            getURL,
+        getURL,
 
-        loadBuildFile:
-            loadBuildFile,
+        loadBuildFile,
 
 
-        /*
-         * HTML
-         */
+        /* HTML */
 
-        loadHTMLIntoFrame:
-            loadHTMLIntoFrame,
+        loadHTMLIntoFrame,
 
 
-        /*
-         * UX
-         */
+        /* UX */
 
-        loadMainUX:
-            loadMainUX,
+        loadMainUX,
 
-        loadHomeScreen:
-            loadHomeScreen,
+        loadHomeScreen,
 
-        loadControlCenter:
-            loadControlCenter,
+        loadControlCenter,
 
 
-        /*
-         * Preload
-         */
+        /* Preload */
 
-        preload:
-            preload,
+        preload,
 
 
-        /*
-         * Build refresh
-         */
+        /* Refresh */
 
-        refreshActiveBuild:
-            refreshActiveBuild,
+        refreshActiveBuild,
 
 
-        /*
-         * Cache
-         */
+        /* Cache */
 
-        clearCache:
-            clearCache,
+        clearCache,
 
-        revokeURLs:
-            revokeURLs,
+        revokeURLs,
 
 
-        /*
-         * Database
-         */
+        /* Database */
 
-        closeDatabase:
-            closeDatabase,
+        openDatabase,
 
-
-        /*
-         * Diagnostics
-         */
-
-        runDiagnostics:
-            runDiagnostics,
+        closeDatabase,
 
 
-        /*
-         * Engine state
-         */
+        /* Diagnostics */
 
-        getEngineState:
-            () => {
-
-                return {
-
-                    state:
-                        ENGINE_STATE.state,
-
-                    progress:
-                        ENGINE_STATE.progress,
-
-                    active:
-                        ENGINE_STATE.active,
-
-                    ready:
-                        ENGINE_STATE.ready,
-
-                    idle:
-                        ENGINE_STATE.idle,
-
-                    received:
-                        ENGINE_STATE.received,
-
-                    error:
-                        ENGINE_STATE.error,
-
-                    metadata:
-                        ENGINE_STATE.metadata
-
-                };
-
-            },
+        runDiagnostics,
 
 
-        /*
-         * Runtime ready
-         */
+        /* Engine */
+
+        getEngineState,
+
+
+        /* Runtime state */
+
+        getState,
+
+
+        /* Ready */
 
         isReady:
             () =>
-                STATE.ready,
-
-
-        /*
-         * Runtime state
-         */
-
-        getState:
-            getState
+                STATE.ready
 
     };
 
@@ -4319,7 +4278,9 @@
             }
         );
 
-    } else {
+    }
+
+    else {
 
         autoStart();
 
@@ -4327,23 +4288,12 @@
 
 
     /* ========================================================
-       PAGE UNLOAD
+       PAGE LIFECYCLE
        ======================================================== */
 
     window.addEventListener(
         "pagehide",
         () => {
-
-            /*
-             * Tutup database ketika lifecycle
-             * halaman selesai.
-
-             *
-             * Blob URL tidak direvoke agresif
-             * di sini supaya perpindahan lifecycle
-             * tidak merusak runtime secara tiba-tiba.
-
-             */
 
             closeDatabase();
 
@@ -4356,11 +4306,29 @@
 
 
     /* ========================================================
-       READY LOG
+       ENGINE STATE INITIAL SYNC
+       ======================================================== */
+
+    /*
+     * Jangan langsung memaksa engine.
+     *
+     * Hanya membaca status yang sudah tersedia.
+     */
+
+    try {
+
+        syncDirectEngineState();
+
+    } catch (_) {}
+
+
+    /* ========================================================
+       REGISTERED
        ======================================================== */
 
     log(
-        "BUILD RUNTIME ENGINE terdaftar."
+        "BUILD RUNTIME ENGINE v2 terdaftar."
     );
+
 
 })();
