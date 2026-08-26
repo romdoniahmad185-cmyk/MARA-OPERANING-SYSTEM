@@ -1,30 +1,48 @@
- /*
-  * ============================================================
-  * MARA OS — BUILD RUNTIME ENGINE
-  * ============================================================
-  *
-  * Tugas:
-  *
-  * IndexedDB
-  *     ↓
-  * ACTIVE_BUILD
-  *     ↓
-  * Ambil file build
-  *     ↓
-  * Buat Blob URL
-  *     ↓
-  * Jalankan UX/UI
-  *
-  * Engine ini TIDAK melakukan:
-  *
-  * - download repository
-  * - update
-  * - delete build
-  * - install build
-  *
-  * Semua itu dilakukan oleh engine-single.js.
-  * ============================================================
-  */
+/*
+ * ============================================================
+ * MARA OS — BUILD RUNTIME ENGINE
+ * ============================================================
+ *
+ * Fungsi utama:
+ *
+ *     IndexedDB
+ *          ↓
+ *     ACTIVE_BUILD
+ *          ↓
+ *     BUILD FILES
+ *          ↓
+ *     Blob
+ *          ↓
+ *     Blob URL
+ *          ↓
+ *     MARA MAIN IFRAME
+ *
+ * ------------------------------------------------------------
+ *
+ * BUILD.JS TIDAK MELAKUKAN:
+ *
+ * ❌ download repository
+ * ❌ mengambil manifest
+ * ❌ update
+ * ❌ install build
+ * ❌ delete build
+ * ❌ verify update
+ *
+ * Semua proses tersebut menjadi tanggung jawab:
+ *
+ *     engine-single.js
+ *
+ * ------------------------------------------------------------
+ *
+ * BUILD.JS HANYA:
+ *
+ *     membaca build aktif
+ *     membaca file build
+ *     membuat runtime URL
+ *     menjalankan UX/UI
+ *
+ * ============================================================
+ */
 
 (() => {
 
@@ -38,10 +56,9 @@
     const MARA_BUILD_CONFIG = {
 
         /*
-         * Nama database.
+         * Database utama MARA OS.
          *
-         * HARUS sama dengan database yang digunakan
-         * engine-single.js.
+         * HARUS sesuai dengan engine-single.js.
          */
 
         dbName:
@@ -49,7 +66,9 @@
 
 
         /*
-         * Versi IndexedDB.
+         * Versi database.
+         *
+         * Jangan dinaikkan dari build.js.
          */
 
         dbVersion:
@@ -57,7 +76,7 @@
 
 
         /*
-         * Object store build.
+         * Store build.
          */
 
         buildStore:
@@ -65,7 +84,7 @@
 
 
         /*
-         * Object store metadata.
+         * Store metadata.
          */
 
         metaStore:
@@ -73,7 +92,7 @@
 
 
         /*
-         * Nama key ACTIVE BUILD.
+         * Key build aktif.
          */
 
         activeBuildKey:
@@ -81,11 +100,27 @@
 
 
         /*
-         * Entry utama UX.
+         * Entry utama sistem.
          */
 
         entryFile:
-            "lock-screen.html"
+            "lock-screen.html",
+
+
+        /*
+         * Timeout membuka database.
+         */
+
+        databaseTimeout:
+            10000,
+
+
+        /*
+         * Timeout membaca file.
+         */
+
+        fileTimeout:
+            10000
 
     };
 
@@ -94,12 +129,15 @@
        STATE
     ======================================================== */
 
-    const MARA_BUILD_STATE = {
+    const STATE = {
 
         db:
             null,
 
         activeBuild:
+            null,
+
+        activeMetadata:
             null,
 
         files:
@@ -111,14 +149,26 @@
         started:
             false,
 
+        starting:
+            false,
+
         ready:
-            false
+            false,
+
+        error:
+            null,
+
+        startedAt:
+            null,
+
+        readyAt:
+            null
 
     };
 
 
     /* ========================================================
-       LOG
+       LOGGER
     ======================================================== */
 
     function log(...args) {
@@ -152,6 +202,200 @@
 
 
     /* ========================================================
+       UTILITY
+    ======================================================== */
+
+    function normalizePath(path) {
+
+        if (
+            path === undefined ||
+            path === null
+        ) {
+
+            return "";
+
+        }
+
+
+        return String(path)
+
+            .replace(
+                /\\/g,
+                "/"
+            )
+
+            .replace(
+                /^\/+/,
+                ""
+            )
+
+            .replace(
+                /\/+/g,
+                "/"
+            );
+
+    }
+
+
+    function normalizeBuild(build) {
+
+        if (
+            build === undefined ||
+            build === null
+        ) {
+
+            return null;
+
+        }
+
+
+        if (
+            typeof build === "object"
+        ) {
+
+            if (
+                build.build !== undefined
+            ) {
+
+                return String(
+                    build.build
+                );
+
+            }
+
+
+            if (
+                build.version !== undefined
+            ) {
+
+                return String(
+                    build.version
+                );
+
+            }
+
+
+            if (
+                build.id !== undefined
+            ) {
+
+                return String(
+                    build.id
+                );
+
+            }
+
+        }
+
+
+        return String(
+            build
+        );
+
+    }
+
+
+    function isBlob(value) {
+
+        return (
+            typeof Blob !== "undefined" &&
+            value instanceof Blob
+        );
+
+    }
+
+
+    function isArrayBuffer(value) {
+
+        return (
+            typeof ArrayBuffer !== "undefined" &&
+            value instanceof ArrayBuffer
+        );
+
+    }
+
+
+    function isTypedArray(value) {
+
+        return (
+            typeof ArrayBuffer !== "undefined" &&
+            ArrayBuffer.isView(value)
+        );
+
+    }
+
+
+    function guessMimeType(path) {
+
+        const extension =
+            normalizePath(path)
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+
+        const types = {
+
+            html:
+                "text/html",
+
+            htm:
+                "text/html",
+
+            css:
+                "text/css",
+
+            js:
+                "text/javascript",
+
+            mjs:
+                "text/javascript",
+
+            json:
+                "application/json",
+
+            svg:
+                "image/svg+xml",
+
+            png:
+                "image/png",
+
+            jpg:
+                "image/jpeg",
+
+            jpeg:
+                "image/jpeg",
+
+            webp:
+                "image/webp",
+
+            gif:
+                "image/gif",
+
+            txt:
+                "text/plain",
+
+            xml:
+                "application/xml",
+
+            ico:
+                "image/x-icon",
+
+            wasm:
+                "application/wasm"
+
+        };
+
+
+        return (
+            types[extension] ||
+            "application/octet-stream"
+        );
+
+    }
+
+
+    /* ========================================================
        OPEN DATABASE
     ======================================================== */
 
@@ -160,15 +404,124 @@
         return new Promise(
             (resolve, reject) => {
 
-                const request =
-                    indexedDB.open(
-                        MARA_BUILD_CONFIG.dbName,
-                        MARA_BUILD_CONFIG.dbVersion
+                if (
+                    !window.indexedDB
+                ) {
+
+                    reject(
+                        new Error(
+                            "IndexedDB tidak tersedia pada browser."
+                        )
                     );
+
+                    return;
+
+                }
+
+
+                let finished =
+                    false;
+
+
+                const timeout =
+                    setTimeout(
+                        () => {
+
+                            if (
+                                finished
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            finished =
+                                true;
+
+
+                            reject(
+                                new Error(
+                                    "Timeout membuka IndexedDB."
+                                )
+                            );
+
+                        },
+                        MARA_BUILD_CONFIG.databaseTimeout
+                    );
+
+
+                let request;
+
+
+                try {
+
+                    request =
+                        indexedDB.open(
+                            MARA_BUILD_CONFIG.dbName,
+                            MARA_BUILD_CONFIG.dbVersion
+                        );
+
+                } catch (err) {
+
+                    clearTimeout(
+                        timeout
+                    );
+
+
+                    reject(
+                        err
+                    );
+
+
+                    return;
+
+                }
+
+
+                /*
+                 * PENTING:
+                 *
+                 * build.js TIDAK membuat struktur
+                 * database baru.
+                 *
+                 * engine-single.js adalah pemilik
+                 * struktur database.
+                 */
+
+                request.onupgradeneeded =
+                    event => {
+
+                        warn(
+                            "IndexedDB meminta upgrade.",
+                            event.oldVersion,
+                            "→",
+                            event.newVersion
+                        );
+
+                    };
 
 
                 request.onerror =
                     () => {
+
+                        if (
+                            finished
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        finished =
+                            true;
+
+
+                        clearTimeout(
+                            timeout
+                        );
+
 
                         reject(
                             request.error ||
@@ -183,64 +536,79 @@
                 request.onsuccess =
                     () => {
 
-                        MARA_BUILD_STATE.db =
+                        if (
+                            finished
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        finished =
+                            true;
+
+
+                        clearTimeout(
+                            timeout
+                        );
+
+
+                        const db =
                             request.result;
 
 
+                        STATE.db =
+                            db;
+
+
+                        /*
+                         * Jika database ditutup dari luar.
+                         */
+
+                        db.onversionchange =
+                            () => {
+
+                                try {
+
+                                    db.close();
+
+                                } catch (_) {}
+
+                            };
+
+
                         resolve(
-                            request.result
+                            db
                         );
 
                     };
 
-
-                /*
-                 * Jangan membuat struktur database
-                 * berbeda dari engine-single.js jika
-                 * database sudah dibuat oleh engine tersebut.
-                 *
-                 * Bagian ini hanya fallback.
-                 */
-
-                request.onupgradeneeded =
-                    event => {
-
-                        const db =
-                            event.target.result;
-
-
-                        if (
-                            !db.objectStoreNames.contains(
-                                MARA_BUILD_CONFIG.buildStore
-                            )
-                        ) {
-
-                            db.createObjectStore(
-                                MARA_BUILD_CONFIG.buildStore,
-                                {
-                                    keyPath:
-                                        "key"
-                                }
-                            );
-
-                        }
-
-
-                        if (
-                            !db.objectStoreNames.contains(
-                                MARA_BUILD_CONFIG.metaStore
-                            )
-                        ) {
-
-                            db.createObjectStore(
-                                MARA_BUILD_CONFIG.metaStore
-                            );
-
-                        }
-
-                    };
-
             }
+        );
+
+    }
+
+
+    /* ========================================================
+       CHECK STORE
+    ======================================================== */
+
+    function hasStore(
+        storeName
+    ) {
+
+        if (
+            !STATE.db
+        ) {
+
+            return false;
+
+        }
+
+
+        return STATE.db.objectStoreNames.contains(
+            storeName
         );
 
     }
@@ -257,11 +625,58 @@
         return new Promise(
             (resolve, reject) => {
 
-                const transaction =
-                    MARA_BUILD_STATE.db.transaction(
-                        MARA_BUILD_CONFIG.metaStore,
-                        "readonly"
+                if (
+                    !STATE.db
+                ) {
+
+                    reject(
+                        new Error(
+                            "Database belum dibuka."
+                        )
                     );
+
+                    return;
+
+                }
+
+
+                if (
+                    !hasStore(
+                        MARA_BUILD_CONFIG.metaStore
+                    )
+                ) {
+
+                    reject(
+                        new Error(
+                            "Object store metadata tidak ditemukan."
+                        )
+                    );
+
+                    return;
+
+                }
+
+
+                let transaction;
+
+
+                try {
+
+                    transaction =
+                        STATE.db.transaction(
+                            MARA_BUILD_CONFIG.metaStore,
+                            "readonly"
+                        );
+
+                } catch (err) {
+
+                    reject(
+                        err
+                    );
+
+                    return;
+
+                }
 
 
                 const store =
@@ -271,7 +686,9 @@
 
 
                 const request =
-                    store.get(key);
+                    store.get(
+                        key
+                    );
 
 
                 request.onsuccess =
@@ -288,7 +705,10 @@
                     () => {
 
                         reject(
-                            request.error
+                            request.error ||
+                            new Error(
+                                "Gagal membaca metadata."
+                            )
                         );
 
                     };
@@ -305,43 +725,20 @@
 
     async function getActiveBuild() {
 
-        /*
-         * Format yang diharapkan:
-
-         * {
-         *     key: "ACTIVE_BUILD",
-         *     build: 102,
-         *     version: "1.0.0"
-         * }
-         */
-
         const metadata =
             await readMetadata(
                 MARA_BUILD_CONFIG.activeBuildKey
             );
 
 
+        STATE.activeMetadata =
+            metadata;
+
+
         if (
             metadata === undefined ||
             metadata === null
         ) {
-
-            /*
-             * Beberapa implementasi engine mungkin
-             * menyimpan langsung:
-             *
-             * ACTIVE_BUILD = 102
-             */
-
-            if (
-                typeof metadata ===
-                "number"
-            ) {
-
-                return metadata;
-
-            }
-
 
             throw new Error(
                 "ACTIVE_BUILD belum tersedia."
@@ -350,46 +747,471 @@
         }
 
 
+        let build =
+            null;
+
+
+        /*
+         * Number
+         */
+
         if (
             typeof metadata ===
             "number"
         ) {
 
-            return metadata;
+            build =
+                metadata;
 
         }
 
 
-        if (
+        /*
+         * String
+         */
+
+        else if (
             typeof metadata ===
             "string"
         ) {
 
-            return metadata;
+            build =
+                metadata;
+
+        }
+
+
+        /*
+         * Object
+         */
+
+        else if (
+            typeof metadata ===
+            "object"
+        ) {
+
+            if (
+                metadata.build !==
+                undefined
+            ) {
+
+                build =
+                    metadata.build;
+
+            }
+
+            else if (
+                metadata.id !==
+                undefined
+            ) {
+
+                build =
+                    metadata.id;
+
+            }
+
+            else if (
+                metadata.version !==
+                undefined
+            ) {
+
+                build =
+                    metadata.version;
+
+            }
+
+            else if (
+                metadata.activeBuild !==
+                undefined
+            ) {
+
+                build =
+                    metadata.activeBuild;
+
+            }
 
         }
 
 
         if (
-            metadata.build !== undefined
+            build === null ||
+            build === undefined
         ) {
 
-            return metadata.build;
+            throw new Error(
+                "Format ACTIVE_BUILD tidak dikenali."
+            );
+
+        }
+
+
+        STATE.activeBuild =
+            normalizeBuild(
+                build
+            );
+
+
+        return STATE.activeBuild;
+
+    }
+
+
+    /* ========================================================
+       BUILD STORE
+    ======================================================== */
+
+    function getBuildStore() {
+
+        if (
+            !STATE.db
+        ) {
+
+            throw new Error(
+                "Database belum dibuka."
+            );
 
         }
 
 
         if (
-            metadata.version !== undefined
+            !hasStore(
+                MARA_BUILD_CONFIG.buildStore
+            )
         ) {
 
-            return metadata.version;
+            throw new Error(
+                "Object store builds tidak ditemukan."
+            );
 
         }
 
 
-        throw new Error(
-            "Format ACTIVE_BUILD tidak dikenali."
+        return STATE.db.transaction(
+            MARA_BUILD_CONFIG.buildStore,
+            "readonly"
+        ).objectStore(
+            MARA_BUILD_CONFIG.buildStore
+        );
+
+    }
+
+
+    /* ========================================================
+       TRY STORE KEY
+    ======================================================== */
+
+    function getByKey(
+        key
+    ) {
+
+        return new Promise(
+            (resolve, reject) => {
+
+                let store;
+
+
+                try {
+
+                    store =
+                        getBuildStore();
+
+                } catch (err) {
+
+                    reject(
+                        err
+                    );
+
+                    return;
+
+                }
+
+
+                const request =
+                    store.get(
+                        key
+                    );
+
+
+                request.onsuccess =
+                    () => {
+
+                        resolve(
+                            request.result
+                        );
+
+                    };
+
+
+                request.onerror =
+                    () => {
+
+                        resolve(
+                            undefined
+                        );
+
+                    };
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       POSSIBLE KEYS
+    ======================================================== */
+
+    function generatePossibleKeys(
+        build,
+        path
+    ) {
+
+        const b =
+            normalizeBuild(
+                build
+            );
+
+
+        const p =
+            normalizePath(
+                path
+            );
+
+
+        return [
+
+            `${b}/${p}`,
+
+            `build-${b}/${p}`,
+
+            `build_${b}/${p}`,
+
+            `${b}:${p}`,
+
+            `${b}_${p}`,
+
+            `${b}|${p}`,
+
+            p
+
+        ];
+
+    }
+
+
+    /* ========================================================
+       MATCH RECORD
+    ======================================================== */
+
+    function recordMatches(
+        record,
+        build,
+        path
+    ) {
+
+        if (
+            !record ||
+            typeof record !==
+            "object"
+        ) {
+
+            return false;
+
+        }
+
+
+        const targetBuild =
+            normalizeBuild(
+                build
+            );
+
+
+        const targetPath =
+            normalizePath(
+                path
+            );
+
+
+        /*
+         * Path candidates.
+         */
+
+        const recordPath =
+            normalizePath(
+                record.path ||
+                record.file ||
+                record.name ||
+                ""
+            );
+
+
+        /*
+         * Build candidates.
+         */
+
+        const recordBuild =
+            normalizeBuild(
+                record.build !==
+                undefined
+                    ? record.build
+                    : record.buildId !==
+                      undefined
+                        ? record.buildId
+                        : record.version
+            );
+
+
+        /*
+         * Jika record punya build,
+         * build harus cocok.
+         */
+
+        if (
+            recordBuild !== null &&
+            recordBuild !==
+                targetBuild
+        ) {
+
+            return false;
+
+        }
+
+
+        /*
+         * Jika record punya path,
+         * path harus cocok.
+         */
+
+        if (
+            recordPath ===
+            targetPath
+        ) {
+
+            return true;
+
+        }
+
+
+        /*
+         * Coba key.
+
+         */
+
+        const recordKey =
+            normalizePath(
+                record.key ||
+                ""
+            );
+
+
+        const possibleKeys =
+            generatePossibleKeys(
+                build,
+                path
+            );
+
+
+        return possibleKeys.includes(
+            recordKey
+        );
+
+    }
+
+
+    /* ========================================================
+       FIND FILE BY CURSOR
+    ======================================================== */
+
+    function findFileByCursor(
+        build,
+        path
+    ) {
+
+        return new Promise(
+            (resolve, reject) => {
+
+                let store;
+
+
+                try {
+
+                    store =
+                        getBuildStore();
+
+                } catch (err) {
+
+                    reject(
+                        err
+                    );
+
+                    return;
+
+                }
+
+
+                const request =
+                    store.openCursor();
+
+
+                request.onsuccess =
+                    event => {
+
+                        const cursor =
+                            event.target.result;
+
+
+                        if (
+                            !cursor
+                        ) {
+
+                            resolve(
+                                undefined
+                            );
+
+                            return;
+
+                        }
+
+
+                        const record =
+                            cursor.value;
+
+
+                        if (
+                            recordMatches(
+                                record,
+                                build,
+                                path
+                            )
+                        ) {
+
+                            resolve(
+                                record
+                            );
+
+                            return;
+
+                        }
+
+
+                        cursor.continue();
+
+                    };
+
+
+                request.onerror =
+                    () => {
+
+                        reject(
+                            request.error ||
+                            new Error(
+                                "Gagal membaca build store."
+                            )
+                        );
+
+                    };
+
+            }
         );
 
     }
@@ -399,192 +1221,118 @@
        FIND FILE
     ======================================================== */
 
-    function findFile(
+    async function findFile(
         build,
         path
     ) {
 
-        return new Promise(
-            (resolve, reject) => {
+        const normalizedBuild =
+            normalizeBuild(
+                build
+            );
 
-                const transaction =
-                    MARA_BUILD_STATE.db.transaction(
-                        MARA_BUILD_CONFIG.buildStore,
-                        "readonly"
-                    );
 
+        const normalizedPath =
+            normalizePath(
+                path
+            );
 
-                const store =
-                    transaction.objectStore(
-                        MARA_BUILD_CONFIG.buildStore
-                    );
 
+        if (
+            !normalizedBuild
+        ) {
 
-                /*
-                 * Beberapa struktur database mungkin
-                 * menggunakan key:
+            throw new Error(
+                "Build tidak valid."
+            );
 
-                 * "102/lock-screen.html"
+        }
 
-                 * atau:
 
-                 * "build-102/lock-screen.html"
-                 */
+        if (
+            !normalizedPath
+        ) {
 
-                const possibleKeys = [
+            throw new Error(
+                "Path file kosong."
+            );
 
-                    `${build}/${path}`,
+        }
 
-                    `build-${build}/${path}`,
 
-                    `${build}:${path}`,
+        /*
+         * Coba key langsung.
+         */
 
-                    `${build}_${path}`
+        const keys =
+            generatePossibleKeys(
+                normalizedBuild,
+                normalizedPath
+            );
 
-                ];
 
+        for (
+            const key of keys
+        ) {
 
-                let index =
-                    0;
+            const result =
+                await getByKey(
+                    key
+                );
 
 
-                function tryNext() {
+            if (
+                result !==
+                undefined
+            ) {
 
-                    if (
-                        index >=
-                        possibleKeys.length
-                    ) {
-
-                        /*
-                         * Fallback:
-                         *
-                         * Cari seluruh record.
-                         */
-
-                        const cursorRequest =
-                            store.openCursor();
-
-
-                        cursorRequest.onsuccess =
-                            event => {
-
-                                const cursor =
-                                    event.target.result;
-
-
-                                if (!cursor) {
-
-                                    reject(
-                                        new Error(
-                                            `File tidak ditemukan: ${path}`
-                                        )
-                                    );
-
-                                    return;
-
-                                }
-
-
-                                const value =
-                                    cursor.value;
-
-
-                                if (
-                                    value &&
-                                    String(
-                                        value.build
-                                    ) ===
-                                    String(build) &&
-                                    value.path ===
-                                    path
-                                ) {
-
-                                    resolve(
-                                        value
-                                    );
-
-                                    return;
-
-                                }
-
-
-                                cursor.continue();
-
-                            };
-
-
-                        cursorRequest.onerror =
-                            () => {
-
-                                reject(
-                                    cursorRequest.error
-                                );
-
-                            };
-
-
-                        return;
-
-                    }
-
-
-                    const key =
-                        possibleKeys[index++];
-
-
-                    const request =
-                        store.get(key);
-
-
-                    request.onsuccess =
-                        () => {
-
-                            if (
-                                request.result !==
-                                undefined
-                            ) {
-
-                                resolve(
-                                    request.result
-                                );
-
-                                return;
-
-                            }
-
-
-                            tryNext();
-
-                        };
-
-
-                    request.onerror =
-                        () => {
-
-                            tryNext();
-
-                        };
-
-                }
-
-
-                tryNext();
+                return result;
 
             }
+
+        }
+
+
+        /*
+         * Fallback cursor.
+         */
+
+        const cursorResult =
+            await findFileByCursor(
+                normalizedBuild,
+                normalizedPath
+            );
+
+
+        if (
+            cursorResult !==
+            undefined
+        ) {
+
+            return cursorResult;
+
+        }
+
+
+        throw new Error(
+            `File tidak ditemukan: ${normalizedPath}`
         );
 
     }
 
 
     /* ========================================================
-       NORMALIZE FILE DATA
+       NORMALIZE FILE
     ======================================================== */
 
     function normalizeFile(
-        record
+        record,
+        requestedPath
     ) {
 
-        if (!record) {
+        if (
+            !record
+        ) {
 
             throw new Error(
                 "Record file kosong."
@@ -593,20 +1341,59 @@
         }
 
 
-        /*
-         * Bentuk umum:
+        const path =
+            normalizePath(
+                record.path ||
+                record.file ||
+                record.name ||
+                requestedPath
+            );
 
-         * {
-         *   key,
-         *   build,
-         *   path,
-         *   blob
-         * }
+
+        const mime =
+            record.type ||
+            record.mime ||
+            record.contentType ||
+            guessMimeType(
+                path
+            );
+
+
+        /*
+         * Record langsung berupa Blob.
          */
 
+        if (
+            isBlob(
+                record
+            )
+        ) {
+
+            return {
+
+                blob:
+                    record,
+
+                path:
+                    path,
+
+                type:
+                    record.type ||
+                    mime
+
+            };
+
+        }
+
+
+        /*
+         * record.blob
+         */
 
         if (
-            record.blob instanceof Blob
+            isBlob(
+                record.blob
+            )
         ) {
 
             return {
@@ -615,15 +1402,25 @@
                     record.blob,
 
                 path:
-                    record.path
+                    path,
+
+                type:
+                    record.blob.type ||
+                    mime
 
             };
 
         }
 
 
+        /*
+         * record.data = Blob
+         */
+
         if (
-            record.data instanceof Blob
+            isBlob(
+                record.data
+            )
         ) {
 
             return {
@@ -632,7 +1429,11 @@
                     record.data,
 
                 path:
-                    record.path
+                    path,
+
+                type:
+                    record.data.type ||
+                    mime
 
             };
 
@@ -644,8 +1445,9 @@
          */
 
         if (
-            record.data instanceof
-            ArrayBuffer
+            isArrayBuffer(
+                record.data
+            )
         ) {
 
             return {
@@ -657,13 +1459,15 @@
                         ],
                         {
                             type:
-                                record.type ||
-                                "application/octet-stream"
+                                mime
                         }
                     ),
 
                 path:
-                    record.path
+                    path,
+
+                type:
+                    mime
 
             };
 
@@ -671,12 +1475,13 @@
 
 
         /*
-         * String HTML/CSS/JS.
+         * Uint8Array / TypedArray
          */
 
         if (
-            typeof record.data ===
-            "string"
+            isTypedArray(
+                record.data
+            )
         ) {
 
             return {
@@ -688,13 +1493,15 @@
                         ],
                         {
                             type:
-                                record.type ||
-                                "text/plain"
+                                mime
                         }
                     ),
 
                 path:
-                    record.path
+                    path,
+
+                type:
+                    mime
 
             };
 
@@ -702,7 +1509,34 @@
 
 
         /*
-         * record.content
+         * record.content Blob
+         */
+
+        if (
+            isBlob(
+                record.content
+            )
+        ) {
+
+            return {
+
+                blob:
+                    record.content,
+
+                path:
+                    path,
+
+                type:
+                    record.content.type ||
+                    mime
+
+            };
+
+        }
+
+
+        /*
+         * record.content string
          */
 
         if (
@@ -719,13 +1553,81 @@
                         ],
                         {
                             type:
-                                record.type ||
-                                "text/plain"
+                                mime
                         }
                     ),
 
                 path:
-                    record.path
+                    path,
+
+                type:
+                    mime
+
+            };
+
+        }
+
+
+        /*
+         * record.data string
+         */
+
+        if (
+            typeof record.data ===
+            "string"
+        ) {
+
+            return {
+
+                blob:
+                    new Blob(
+                        [
+                            record.data
+                        ],
+                        {
+                            type:
+                                mime
+                        }
+                    ),
+
+                path:
+                    path,
+
+                type:
+                    mime
+
+            };
+
+        }
+
+
+        /*
+         * record.text
+         */
+
+        if (
+            typeof record.text ===
+            "string"
+        ) {
+
+            return {
+
+                blob:
+                    new Blob(
+                        [
+                            record.text
+                        ],
+                        {
+                            type:
+                                mime
+                        }
+                    ),
+
+                path:
+                    path,
+
+                type:
+                    mime
 
             };
 
@@ -733,7 +1635,7 @@
 
 
         throw new Error(
-            "Format data file tidak didukung."
+            `Format data file tidak didukung: ${path}`
         );
 
     }
@@ -748,21 +1650,31 @@
         file
     ) {
 
+        const normalizedPath =
+            normalizePath(
+                path
+            );
+
+
         /*
-         * Hapus URL lama jika ada.
+         * Hapus URL lama.
          */
 
         if (
-            MARA_BUILD_STATE.blobURLs.has(
-                path
+            STATE.blobURLs.has(
+                normalizedPath
             )
         ) {
 
-            URL.revokeObjectURL(
-                MARA_BUILD_STATE.blobURLs.get(
-                    path
-                )
-            );
+            try {
+
+                URL.revokeObjectURL(
+                    STATE.blobURLs.get(
+                        normalizedPath
+                    )
+                );
+
+            } catch (_) {}
 
         }
 
@@ -773,8 +1685,8 @@
             );
 
 
-        MARA_BUILD_STATE.blobURLs.set(
-            path,
+        STATE.blobURLs.set(
+            normalizedPath,
             url
         );
 
@@ -793,37 +1705,68 @@
     ) {
 
         const normalizedPath =
-            String(path)
-                .replace(/^\/+/, "");
+            normalizePath(
+                path
+            );
+
+
+        if (
+            !normalizedPath
+        ) {
+
+            throw new Error(
+                "Path file tidak boleh kosong."
+            );
+
+        }
 
 
         /*
-         * Cache runtime.
+         * Runtime cache.
          */
 
         if (
-            MARA_BUILD_STATE.files.has(
+            STATE.files.has(
                 normalizedPath
             )
         ) {
 
-            return MARA_BUILD_STATE.files.get(
+            return STATE.files.get(
                 normalizedPath
             );
 
         }
 
 
+        if (
+            STATE.activeBuild ===
+            null
+        ) {
+
+            await getActiveBuild();
+
+        }
+
+
+        log(
+            "Membaca file:",
+            normalizedPath,
+            "build:",
+            STATE.activeBuild
+        );
+
+
         const record =
             await findFile(
-                MARA_BUILD_STATE.activeBuild,
+                STATE.activeBuild,
                 normalizedPath
             );
 
 
         const file =
             normalizeFile(
-                record
+                record,
+                normalizedPath
             );
 
 
@@ -839,6 +1782,9 @@
             path:
                 normalizedPath,
 
+            build:
+                STATE.activeBuild,
+
             url:
                 url,
 
@@ -846,12 +1792,15 @@
                 file.blob,
 
             type:
-                file.blob.type
+                file.type,
+
+            size:
+                file.blob.size
 
         };
 
 
-        MARA_BUILD_STATE.files.set(
+        STATE.files.set(
             normalizedPath,
             result
         );
@@ -863,100 +1812,7 @@
 
 
     /* ========================================================
-       LOAD HTML INTO IFRAME
-    ======================================================== */
-
-    async function loadHTMLIntoFrame(
-        frame,
-        path
-    ) {
-
-        if (!frame) {
-
-            throw new Error(
-                "Iframe tidak ditemukan."
-            );
-
-        }
-
-
-        const file =
-            await loadBuildFile(
-                path
-            );
-
-
-        /*
-         * Memuat HTML dari Blob URL.
-         */
-
-        frame.src =
-            file.url;
-
-
-        return file;
-
-    }
-
-
-    /* ========================================================
-       LOAD MAIN UX
-    ======================================================== */
-
-    async function loadMainUX() {
-
-        /*
-         * Cari iframe utama.
-         *
-         * Sesuaikan id/class jika diperlukan.
-         */
-
-        let frame =
-            document.getElementById(
-                "mara-main-frame"
-            );
-
-
-        if (!frame) {
-
-            frame =
-                document.querySelector(
-                    ".mara-iframe"
-                );
-
-        }
-
-
-        if (!frame) {
-
-            throw new Error(
-                "Iframe MARA utama tidak ditemukan."
-            );
-
-        }
-
-
-        log(
-            "Memuat lock-screen dari build:",
-            MARA_BUILD_STATE.activeBuild
-        );
-
-
-        await loadHTMLIntoFrame(
-            frame,
-            MARA_BUILD_CONFIG.entryFile
-        );
-
-
-        log(
-            "Lock screen build aktif berhasil dimuat."
-        );
-
-    }
-
-
-    /* ========================================================
-       GET FILE URL
+       GET URL
     ======================================================== */
 
     async function getURL(
@@ -975,6 +1831,245 @@
 
 
     /* ========================================================
+       LOAD HTML INTO IFRAME
+    ======================================================== */
+
+    async function loadHTMLIntoFrame(
+        frame,
+        path
+    ) {
+
+        if (
+            !frame
+        ) {
+
+            throw new Error(
+                "Iframe tidak ditemukan."
+            );
+
+        }
+
+
+        const file =
+            await loadBuildFile(
+                path
+            );
+
+
+        frame.src =
+            file.url;
+
+
+        return new Promise(
+            (
+                resolve,
+                reject
+            ) => {
+
+                let finished =
+                    false;
+
+
+                const timeout =
+                    setTimeout(
+                        () => {
+
+                            if (
+                                finished
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            finished =
+                                true;
+
+
+                            reject(
+                                new Error(
+                                    `Timeout memuat iframe: ${path}`
+                                )
+                            );
+
+                        },
+                        MARA_BUILD_CONFIG.fileTimeout
+                    );
+
+
+                function cleanup() {
+
+                    clearTimeout(
+                        timeout
+                    );
+
+                    frame.removeEventListener(
+                        "load",
+                        onLoad
+                    );
+
+                    frame.removeEventListener(
+                        "error",
+                        onError
+                    );
+
+                }
+
+
+                function onLoad() {
+
+                    if (
+                        finished
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    finished =
+                        true;
+
+
+                    cleanup();
+
+
+                    resolve(
+                        file
+                    );
+
+                }
+
+
+                function onError() {
+
+                    if (
+                        finished
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    finished =
+                        true;
+
+
+                    cleanup();
+
+
+                    reject(
+                        new Error(
+                            `Gagal memuat iframe: ${path}`
+                        )
+                    );
+
+                }
+
+
+                frame.addEventListener(
+                    "load",
+                    onLoad,
+                    {
+                        once: true
+                    }
+                );
+
+
+                frame.addEventListener(
+                    "error",
+                    onError,
+                    {
+                        once: true
+                    }
+                );
+
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       FIND MAIN FRAME
+    ======================================================== */
+
+    function getMainFrame() {
+
+        let frame =
+            document.getElementById(
+                "mara-main-frame"
+            );
+
+
+        if (
+            frame
+        ) {
+
+            return frame;
+
+        }
+
+
+        frame =
+            document.querySelector(
+                ".mara-iframe"
+            );
+
+
+        return frame ||
+            null;
+
+    }
+
+
+    /* ========================================================
+       LOAD MAIN UX
+    ======================================================== */
+
+    async function loadMainUX() {
+
+        const frame =
+            getMainFrame();
+
+
+        if (
+            !frame
+        ) {
+
+            throw new Error(
+                "Iframe utama MARA OS tidak ditemukan."
+            );
+
+        }
+
+
+        log(
+            "Memuat:",
+            MARA_BUILD_CONFIG.entryFile
+        );
+
+
+        const file =
+            await loadHTMLIntoFrame(
+                frame,
+                MARA_BUILD_CONFIG.entryFile
+            );
+
+
+        log(
+            "Main UX berhasil dimuat."
+        );
+
+
+        return file;
+
+    }
+
+
+    /* ========================================================
        LOAD HOME SCREEN
     ======================================================== */
 
@@ -982,8 +2077,13 @@
         frame
     ) {
 
+        const targetFrame =
+            frame ||
+            getMainFrame();
+
+
         return loadHTMLIntoFrame(
-            frame,
+            targetFrame,
             "home-screen.html"
         );
 
@@ -998,8 +2098,26 @@
         frame
     ) {
 
+        const targetFrame =
+            frame ||
+            document.getElementById(
+                "controlCenterFrame"
+            );
+
+
+        if (
+            !targetFrame
+        ) {
+
+            throw new Error(
+                "Control Center iframe tidak ditemukan."
+            );
+
+        }
+
+
         return loadHTMLIntoFrame(
-            frame,
+            targetFrame,
             "control-center.html"
         );
 
@@ -1007,14 +2125,68 @@
 
 
     /* ========================================================
-       CLEAN BLOB URL
+       PRELOAD FILES
+    ======================================================== */
+
+    async function preload(
+        paths
+    ) {
+
+        if (
+            !Array.isArray(
+                paths
+            )
+        ) {
+
+            throw new Error(
+                "preload() membutuhkan array path."
+            );
+
+        }
+
+
+        const results =
+            [];
+
+
+        for (
+            const path of paths
+        ) {
+
+            results.push(
+                await loadBuildFile(
+                    path
+                )
+            );
+
+        }
+
+
+        return results;
+
+    }
+
+
+    /* ========================================================
+       CLEAR RUNTIME CACHE
+    ======================================================== */
+
+    function clearCache() {
+
+        STATE.files.clear();
+
+    }
+
+
+    /* ========================================================
+       REVOKE BLOB URL
     ======================================================== */
 
     function revokeURLs() {
 
         for (
             const url of
-            MARA_BUILD_STATE.blobURLs.values()
+            STATE.blobURLs.values()
         ) {
 
             try {
@@ -1028,9 +2200,208 @@
         }
 
 
-        MARA_BUILD_STATE.blobURLs.clear();
+        STATE.blobURLs.clear();
 
-        MARA_BUILD_STATE.files.clear();
+        STATE.files.clear();
+
+    }
+
+
+    /* ========================================================
+       CLOSE DATABASE
+    ======================================================== */
+
+    function closeDatabase() {
+
+        if (
+            STATE.db
+        ) {
+
+            try {
+
+                STATE.db.close();
+
+            } catch (_) {}
+
+        }
+
+
+        STATE.db =
+            null;
+
+    }
+
+
+    /* ========================================================
+       REFRESH ACTIVE BUILD
+    ======================================================== */
+
+    async function refreshActiveBuild() {
+
+        if (
+            !STATE.db
+        ) {
+
+            await openDatabase();
+
+        }
+
+
+        const oldBuild =
+            STATE.activeBuild;
+
+
+        const newBuild =
+            await getActiveBuild();
+
+
+        if (
+            oldBuild !==
+            newBuild
+        ) {
+
+            log(
+                "ACTIVE_BUILD berubah:",
+                oldBuild,
+                "→",
+                newBuild
+            );
+
+
+            clearCache();
+
+        }
+
+
+        return newBuild;
+
+    }
+
+
+    /* ========================================================
+       GET STATE
+    ======================================================== */
+
+    function getState() {
+
+        return {
+
+            db:
+                !!STATE.db,
+
+            activeBuild:
+                STATE.activeBuild,
+
+            activeMetadata:
+                STATE.activeMetadata,
+
+            started:
+                STATE.started,
+
+            starting:
+                STATE.starting,
+
+            ready:
+                STATE.ready,
+
+            error:
+                STATE.error,
+
+            startedAt:
+                STATE.startedAt,
+
+            readyAt:
+                STATE.readyAt,
+
+            cachedFiles:
+                Array.from(
+                    STATE.files.keys()
+                ),
+
+            blobURLs:
+                Array.from(
+                    STATE.blobURLs.keys()
+                )
+
+        };
+
+    }
+
+
+    /* ========================================================
+       DISPATCH EVENT
+    ======================================================== */
+
+    function dispatchEvent(
+        type,
+        detail = {}
+    ) {
+
+        try {
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    type,
+                    {
+                        detail:
+                            detail
+                    }
+                )
+            );
+
+        } catch (err) {
+
+            warn(
+                "Gagal dispatch event:",
+                type,
+                err
+            );
+
+        }
+
+    }
+
+
+    /* ========================================================
+       SEND PARENT MESSAGE
+    ======================================================== */
+
+    function sendParentMessage(
+        type,
+        data = {}
+    ) {
+
+        if (
+            !window.parent ||
+            window.parent ===
+                window
+        ) {
+
+            return;
+
+        }
+
+
+        try {
+
+            window.parent.postMessage(
+                {
+                    type:
+                        type,
+
+                    ...data
+                },
+                "*"
+            );
+
+        } catch (err) {
+
+            warn(
+                "Gagal postMessage:",
+                err
+            );
+
+        }
 
     }
 
@@ -1041,111 +2412,13 @@
 
     async function start() {
 
+        /*
+         * Sudah siap.
+         */
+
         if (
-            MARA_BUILD_STATE.started
+            STATE.ready
         ) {
-
-            return;
-
-        }
-
-
-        MARA_BUILD_STATE.started =
-            true;
-
-
-        try {
-
-            log(
-                "Build Runtime dimulai."
-            );
-
-
-            /*
-             * IndexedDB.
-             */
-
-            await openDatabase();
-
-
-            /*
-             * ACTIVE_BUILD.
-             */
-
-            const activeBuild =
-                await getActiveBuild();
-
-
-            MARA_BUILD_STATE.activeBuild =
-                activeBuild;
-
-
-            log(
-                "ACTIVE_BUILD:",
-                activeBuild
-            );
-
-
-            /*
-             * Load UX utama.
-             */
-
-            await loadMainUX();
-
-
-            MARA_BUILD_STATE.ready =
-                true;
-
-
-            log(
-                "MARA UX siap."
-            );
-
-
-            /*
-             * Beri tahu sistem lain.
-             */
-
-            window.dispatchEvent(
-                new CustomEvent(
-                    "MARA_BUILD_READY",
-                    {
-                        detail: {
-
-                            build:
-                                activeBuild
-
-                        }
-                    }
-                )
-            );
-
-
-            /*
-             * postMessage ke parent.
-             */
-
-            if (
-                window.parent &&
-                window.parent !==
-                    window
-            ) {
-
-                window.parent.postMessage(
-                    {
-
-                        type:
-                            "MARA_BUILD_READY",
-
-                        build:
-                            activeBuild
-
-                    },
-                    "*"
-                );
-
-            }
-
 
             return {
 
@@ -1153,62 +2426,273 @@
                     true,
 
                 build:
-                    activeBuild
+                    STATE.activeBuild,
+
+                alreadyReady:
+                    true
 
             };
 
-        } catch (err) {
-
-            error(
-                "Build Runtime gagal:",
-                err
-            );
+        }
 
 
-            MARA_BUILD_STATE.started =
-                false;
+        /*
+         * Sedang start.
+         */
 
+        if (
+            STATE.starting
+        ) {
 
-            window.dispatchEvent(
-                new CustomEvent(
-                    "MARA_BUILD_ERROR",
-                    {
-                        detail: {
-
-                            error:
-                                err
-
-                        }
-                    }
-                )
-            );
-
-
-            if (
-                window.parent &&
-                window.parent !==
-                    window
-            ) {
-
-                window.parent.postMessage(
-                    {
-
-                        type:
-                            "MARA_BUILD_ERROR",
-
-                        message:
-                            err.message
-
-                    },
-                    "*"
-                );
-
-            }
-
-
-            throw err;
+            return STATE.startPromise;
 
         }
+
+
+        STATE.starting =
+            true;
+
+        STATE.startedAt =
+            Date.now();
+
+
+        STATE.startPromise =
+            (async () => {
+
+                try {
+
+                    log(
+                        "Build Runtime dimulai."
+                    );
+
+
+                    dispatchEvent(
+                        "MARA_BUILD_STARTING"
+                    );
+
+
+                    sendParentMessage(
+                        "MARA_BUILD_STARTING"
+                    );
+
+
+                    /*
+                     * ================================
+                     * DATABASE
+                     * ================================
+                     */
+
+                    await openDatabase();
+
+
+                    /*
+                     * ================================
+                     * ACTIVE BUILD
+                     * ================================
+                     */
+
+                    const activeBuild =
+                        await getActiveBuild();
+
+
+                    log(
+                        "ACTIVE_BUILD:",
+                        activeBuild
+                    );
+
+
+                    dispatchEvent(
+                        "MARA_ACTIVE_BUILD",
+                        {
+                            build:
+                                activeBuild,
+
+                            metadata:
+                                STATE.activeMetadata
+                        }
+                    );
+
+
+                    sendParentMessage(
+                        "MARA_ACTIVE_BUILD",
+                        {
+                            build:
+                                activeBuild
+                        }
+                    );
+
+
+                    /*
+                     * ================================
+                     * MAIN UX
+                     * ================================
+                     */
+
+                    await loadMainUX();
+
+
+                    /*
+                     * ================================
+                     * READY
+                     * ================================
+                     */
+
+                    STATE.ready =
+                        true;
+
+                    STATE.error =
+                        null;
+
+                    STATE.readyAt =
+                        Date.now();
+
+                    STATE.started =
+                        true;
+
+                    STATE.starting =
+                        false;
+
+
+                    const result = {
+
+                        success:
+                            true,
+
+                        build:
+                            activeBuild,
+
+                        readyAt:
+                            STATE.readyAt
+
+                    };
+
+
+                    dispatchEvent(
+                        "MARA_BUILD_READY",
+                        result
+                    );
+
+
+                    sendParentMessage(
+                        "MARA_BUILD_READY",
+                        {
+                            build:
+                                activeBuild,
+
+                            readyAt:
+                                STATE.readyAt
+                        }
+                    );
+
+
+                    log(
+                        "MARA UX READY.",
+                        result
+                    );
+
+
+                    return result;
+
+                } catch (err) {
+
+                    STATE.error =
+                        err;
+
+                    STATE.ready =
+                        false;
+
+                    STATE.started =
+                        false;
+
+                    STATE.starting =
+                        false;
+
+
+                    error(
+                        "Build Runtime gagal:",
+                        err
+                    );
+
+
+                    dispatchEvent(
+                        "MARA_BUILD_ERROR",
+                        {
+                            error:
+                                err,
+
+                            message:
+                                err.message
+                        }
+                    );
+
+
+                    sendParentMessage(
+                        "MARA_BUILD_ERROR",
+                        {
+                            message:
+                                err.message
+                        }
+                    );
+
+
+                    throw err;
+
+                }
+
+            })();
+
+
+        return STATE.startPromise;
+
+    }
+
+
+    /* ========================================================
+       STOP
+    ======================================================== */
+
+    function stop() {
+
+        log(
+            "Menghentikan Build Runtime."
+        );
+
+
+        revokeURLs();
+
+        closeDatabase();
+
+
+        STATE.activeBuild =
+            null;
+
+        STATE.activeMetadata =
+            null;
+
+        STATE.started =
+            false;
+
+        STATE.starting =
+            false;
+
+        STATE.ready =
+            false;
+
+        STATE.error =
+            null;
+
+        STATE.startPromise =
+            null;
+
+
+        dispatchEvent(
+            "MARA_BUILD_STOPPED"
+        );
+
+
+        sendParentMessage(
+            "MARA_BUILD_STOPPED"
+        );
 
     }
 
@@ -1219,34 +2703,211 @@
 
     window.MARABuild = {
 
-        start,
+        /*
+         * Start runtime.
+         */
+
+        start:
+
+
+            start,
+
+
+        /*
+         * Stop runtime.
+         */
+
+        stop:
+
+
+            stop,
+
+
+        /*
+         * Active build.
+         */
 
         getActiveBuild:
             () =>
-                MARA_BUILD_STATE.activeBuild,
+                STATE.activeBuild,
 
-        getURL,
 
-        loadBuildFile,
+        /*
+         * Metadata.
+         */
 
-        loadHTMLIntoFrame,
+        getActiveMetadata:
+            () =>
+                STATE.activeMetadata,
 
-        loadHomeScreen,
 
-        loadControlCenter,
+        /*
+         * File URL.
+         */
 
-        revokeURLs,
+        getURL:
+
+
+            getURL,
+
+
+        /*
+         * File loader.
+         */
+
+        loadBuildFile:
+
+
+            loadBuildFile,
+
+
+        /*
+         * HTML loader.
+         */
+
+        loadHTMLIntoFrame:
+
+
+            loadHTMLIntoFrame,
+
+
+        /*
+         * Main UX.
+         */
+
+        loadMainUX:
+
+
+            loadMainUX,
+
+
+        /*
+         * Home screen.
+         */
+
+        loadHomeScreen:
+
+
+            loadHomeScreen,
+
+
+        /*
+         * Control center.
+         */
+
+        loadControlCenter:
+
+
+            loadControlCenter,
+
+
+        /*
+         * Preload.
+
+         */
+
+        preload:
+
+
+            preload,
+
+
+        /*
+         * Refresh active build.
+         */
+
+        refreshActiveBuild:
+
+
+            refreshActiveBuild,
+
+
+        /*
+         * Clear cache.
+         */
+
+        clearCache:
+
+
+            clearCache,
+
+
+        /*
+         * Revoke Blob URLs.
+         */
+
+        revokeURLs:
+
+
+            revokeURLs,
+
+
+        /*
+         * Close database.
+         */
+
+        closeDatabase:
+
+
+            closeDatabase,
+
+
+        /*
+         * Runtime ready.
+
+         */
 
         isReady:
             () =>
-                MARA_BUILD_STATE.ready
+                STATE.ready,
+
+
+        /*
+         * Runtime state.
+
+         */
+
+        getState:
+
+
+            getState
 
     };
 
 
     /* ========================================================
+       GLOBAL ALIAS
+    ======================================================== */
+
+    /*
+     * Alias tambahan supaya mudah dipanggil
+     * dari engine lain.
+     */
+
+    window.MARA_BUILD_RUNTIME =
+        window.MARABuild;
+
+
+    /* ========================================================
        AUTO START
     ======================================================== */
+
+    function autoStart() {
+
+        start()
+            .catch(
+                err => {
+
+                    error(
+                        "Auto startup gagal:",
+                        err
+                    );
+
+                }
+            );
+
+    }
+
 
     if (
         document.readyState ===
@@ -1255,39 +2916,51 @@
 
         document.addEventListener(
             "DOMContentLoaded",
-            () => {
-
-                start().catch(
-                    err => {
-
-                        error(
-                            "Startup error:",
-                            err
-                        );
-
-                    }
-                );
-
-            },
+            autoStart,
             {
-                once: true
+                once:
+                    true
             }
         );
 
     } else {
 
-        start().catch(
-            err => {
-
-                error(
-                    "Startup error:",
-                    err
-                );
-
-            }
-        );
+        autoStart();
 
     }
 
+
+    /* ========================================================
+       PAGE UNLOAD
+    ======================================================== */
+
+    window.addEventListener(
+        "pagehide",
+        () => {
+
+            /*
+             * Jangan revoke terlalu agresif ketika
+             * halaman hanya berpindah lifecycle.
+             *
+             * Tetapi database boleh ditutup.
+             */
+
+            closeDatabase();
+
+        },
+        {
+            once:
+                true
+        }
+    );
+
+
+    /* ========================================================
+       READY LOG
+    ======================================================== */
+
+    log(
+        "BUILD RUNTIME ENGINE terdaftar."
+    );
 
 })();
