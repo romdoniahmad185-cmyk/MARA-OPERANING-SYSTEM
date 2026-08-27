@@ -1,55 +1,25 @@
 /* =========================================================
    MARA OS
    ENGINE SINGLE
-   FINAL — UNIFIED UPDATE / BUILD / STORAGE ENGINE
+   SIMPLE UPDATE + INDEXEDDB ENGINE
 
-   RELATION:
+   TUGAS ENGINE:
 
-       index.html
-            │
-            ├── iframe → ux/intro.html
-            │
-            ├── engine-single.js
-            │
-            └── ux/build.js
-                     │
-                     ▼
-              MARA ENGINE SINGLE
-                     │
-          ┌──────────┼──────────┐
-          ▼          ▼          ▼
-       UPDATE      STORAGE     EVENTS
-          │          │          │
-          ▼          ▼          ▼
-      Manifest    IndexedDB   postMessage
-          │
-          ▼
-       Download
-          │
-          ▼
-      Temporary
-          │
-          ▼
-       SHA-256
-          │
-          ▼
-       Install
-          │
-          ▼
-        READY
-          │
-          ▼
-       ACTIVATE
-          │
-          ▼
-     ACTIVE BUILD
-          │
-          ▼
-       build.js
-          │
-          ▼
-        MARA UX
+       1. Ambil update-manifest.json
+       2. Baca build lokal dari IndexedDB
+       3. Bandingkan remote dengan lokal
+       4. Jika belum ada / lebih baru:
+              download file dari manifest
+              simpan ke IndexedDB
+       5. Tandai build sebagai ACTIVE
+       6. Kirim status melalui postMessage
 
+   ENGINE TIDAK:
+       - menjalankan UX
+       - membuat iframe
+       - meng-install aplikasi
+       - menjalankan build.js
+       - menghapus build lama sebelum build baru selesai
 
    DATABASE:
 
@@ -57,12 +27,8 @@
 
    STORES:
 
-       builds
+       meta
        files
-       active
-       temporary
-       settings
-
 ========================================================= */
 
 (() => {
@@ -71,13 +37,10 @@
 
 
     /* =====================================================
-       ENGINE DUPLICATE PROTECTION
+       DUPLICATE PROTECTION
     ===================================================== */
 
-    if (
-        window.MARAEngineSingle &&
-        window.MARAEngineSingle.__MARA_ENGINE_SINGLE__
-    ) {
+    if (window.MARAEngineSingle) {
 
         console.warn(
             "[MARA ENGINE] Engine sudah dimuat."
@@ -89,7 +52,7 @@
 
 
     /* =====================================================
-       CONFIGURATION
+       CONFIG
     ===================================================== */
 
     const CONFIG = {
@@ -98,85 +61,47 @@
             "MARA_ENGINE_SINGLE",
 
         version:
-            "3.0.0",
+            "4.0.0",
 
         databaseName:
             "MARA_OS_STORAGE",
 
         databaseVersion:
-            5,
+            6,
+
+        manifestURL:
+            "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/update-manifest.json",
 
         stores: {
 
-            builds:
-                "builds",
+            meta:
+                "meta",
 
             files:
-                "files",
-
-            active:
-                "active",
-
-            temporary:
-                "temporary",
-
-            settings:
-                "settings"
+                "files"
 
         },
 
         activeKey:
-            "active",
-
-        repository:
-            "https://romdoniahmad185-cmyk.github.io/mara-os-updates/stable/update-manifest.json",
+            "active-build",
 
         requestTimeout:
             30000,
 
-        retryCount:
-            2,
-
-        retryDelay:
-            1000,
+        cacheBust:
+            true,
 
         maxFileSize:
             50 * 1024 * 1024,
 
-        maxManifestFiles:
-            5000,
-
-        verifyContent:
-            true,
-
-        keepOldBuild:
-            false,
-
-        autoUpdate:
-            true,
-
-        autoUpdateDelay:
-            1500,
-
-        cacheBust:
-            true,
-
-        entryFile:
-            "lock-screen.html",
-
-        messageTarget:
-            "*",
-
-        allowedProtocols:
-            [
-                "https:"
-            ]
+        maxFiles:
+            5000
 
     };
 
 
     /* =====================================================
-       STATUS DEFINITIONS
+       STATUS
     ===================================================== */
 
     const STATUS = Object.freeze({
@@ -184,17 +109,11 @@
         IDLE:
             "IDLE",
 
-        INITIALIZING:
-            "INITIALIZING",
-
-        READY:
-            "READY",
+        STARTING:
+            "STARTING",
 
         CHECKING:
             "CHECKING",
-
-        FETCHING_MANIFEST:
-            "FETCHING_MANIFEST",
 
         UP_TO_DATE:
             "UP_TO_DATE",
@@ -202,23 +121,14 @@
         DOWNLOADING:
             "DOWNLOADING",
 
-        VERIFYING:
-            "VERIFYING",
+        SAVING:
+            "SAVING",
 
-        INSTALLING:
-            "INSTALLING",
-
-        ACTIVATING:
-            "ACTIVATING",
-
-        UPDATED:
-            "UPDATED",
+        READY:
+            "READY",
 
         OFFLINE:
             "OFFLINE",
-
-        RECOVERING:
-            "RECOVERING",
 
         ERROR:
             "ERROR"
@@ -235,13 +145,13 @@
         status:
             STATUS.IDLE,
 
-        phase:
-            STATUS.IDLE,
+        working:
+            false,
 
-        activeBuild:
+        build:
             null,
 
-        activeVersion:
+        version:
             null,
 
         remoteBuild:
@@ -250,14 +160,11 @@
         remoteVersion:
             null,
 
-        installingBuild:
-            null,
+        progress:
+            0,
 
         currentFile:
             null,
-
-        progress:
-            0,
 
         completedFiles:
             0,
@@ -265,19 +172,13 @@
         totalFiles:
             0,
 
+        error:
+            null,
+
         startedAt:
             null,
 
         completedAt:
-            null,
-
-        error:
-            null,
-
-        errorCode:
-            null,
-
-        lastManifest:
             null
 
     };
@@ -289,39 +190,24 @@
 
     const Utils = {
 
-        number(
-            value,
-            fallback = null
-        ) {
+        clone(value) {
 
-            const number =
-                Number(value);
+            try {
 
-            return Number.isFinite(number)
-                ? number
-                : fallback;
+                return structuredClone(value);
 
-        },
+            } catch {
 
+                return JSON.parse(
+                    JSON.stringify(value)
+                );
 
-        integer(
-            value,
-            fallback = null
-        ) {
-
-            const number =
-                Number(value);
-
-            return Number.isInteger(number)
-                ? number
-                : fallback;
+            }
 
         },
 
 
-        sleep(
-            ms
-        ) {
+        sleep(ms) {
 
             return new Promise(
                 resolve =>
@@ -334,25 +220,72 @@
         },
 
 
-        clone(
-            value
-        ) {
+        number(value) {
 
-            try {
+            const n =
+                Number(value);
 
-                return structuredClone(
-                    value
-                );
+            return Number.isFinite(n)
+                ? n
+                : null;
 
-            } catch {
+        },
 
-                return JSON.parse(
-                    JSON.stringify(
-                        value
-                    )
+
+        normalizePath(path) {
+
+            if (
+                typeof path !== "string"
+            ) {
+
+                throw new Error(
+                    "Path file tidak valid."
                 );
 
             }
+
+
+            let result =
+                path
+                    .replace(/\\/g, "/")
+                    .replace(/^\/+/, "");
+
+
+            const parts =
+                result
+                    .split("/")
+                    .filter(
+                        part =>
+                            part &&
+                            part !== "."
+                    );
+
+
+            if (
+                parts.includes("..")
+            ) {
+
+                throw new Error(
+                    `Path tidak aman: ${path}`
+                );
+
+            }
+
+
+            result =
+                parts.join("/");
+
+
+            if (!result) {
+
+                throw new Error(
+                    "Path file kosong."
+                );
+
+            }
+
+
+            return result;
 
         }
 
@@ -365,9 +298,6 @@
 
     const ENGINE = {
 
-        __MARA_ENGINE_SINGLE__:
-            true,
-
         name:
             CONFIG.name,
 
@@ -377,7 +307,7 @@
         config:
             CONFIG,
 
-        status:
+        state:
             STATE,
 
         db:
@@ -386,139 +316,44 @@
         initialized:
             false,
 
-        initializing:
-            null,
-
         updating:
             false,
 
-        events:
-            Object.create(null),
-
-        objectURLs:
-            new Map(),
-
 
         /* =================================================
-           EVENT SYSTEM
+           STATUS
         ================================================= */
 
-        on(
-            event,
-            callback
-        ) {
+        setStatus(status, extra = {}) {
 
-            if (
-                typeof callback !==
-                "function"
-            ) {
+            STATE.status =
+                status;
 
-                throw new TypeError(
-                    "Event callback harus berupa function."
-                );
-
-            }
-
-            if (
-                !this.events[event]
-            ) {
-
-                this.events[event] = [];
-
-            }
-
-            this.events[event].push(
-                callback
+            Object.assign(
+                STATE,
+                extra
             );
-
-            return () => {
-
-                this.off(
-                    event,
-                    callback
-                );
-
-            };
-
-        },
-
-
-        off(
-            event,
-            callback
-        ) {
-
-            if (
-                !this.events[event]
-            ) {
-
-                return;
-
-            }
-
-            this.events[event] =
-                this.events[event].filter(
-                    listener =>
-                        listener !== callback
-                );
-
-        },
-
-
-        emit(
-            event,
-            data = {}
-        ) {
-
-            const listeners =
-                this.events[event] ||
-                [];
-
-            const payload = {
-
-                event,
-
-                ...data
-
-            };
-
-
-            listeners
-                .slice()
-                .forEach(
-                    listener => {
-
-                        try {
-
-                            listener(
-                                payload
-                            );
-
-                        } catch (
-                            error
-                        ) {
-
-                            console.error(
-                                "[MARA ENGINE] Event listener error:",
-                                error
-                            );
-
-                        }
-
-                    }
-                );
 
 
             this.broadcast(
-                event,
-                payload
+                "status",
+                this.getState()
+            );
+
+        },
+
+
+        getState() {
+
+            return Utils.clone(
+                STATE
             );
 
         },
 
 
         /* =================================================
-           MESSAGE BROADCAST
+           MESSAGE
         ================================================= */
 
         broadcast(
@@ -528,7 +363,8 @@
 
             try {
 
-                window.postMessage(
+                window.parent.postMessage(
+
                     {
 
                         source:
@@ -545,7 +381,9 @@
                             Date.now()
 
                     },
-                    CONFIG.messageTarget
+
+                    "*"
+
                 );
 
             } catch (
@@ -553,7 +391,7 @@
             ) {
 
                 console.warn(
-                    "[MARA ENGINE] Broadcast gagal:",
+                    "[MARA ENGINE] postMessage gagal:",
                     error
                 );
 
@@ -563,167 +401,7 @@
 
 
         /* =================================================
-           STATE
-        ================================================= */
-
-        setStatus(
-            status,
-            extra = {}
-        ) {
-
-            STATE.status =
-                status;
-
-            STATE.phase =
-                status;
-
-            Object.assign(
-                STATE,
-                extra
-            );
-
-
-            this.emit(
-                "state",
-                {
-                    state:
-                        this.getState()
-                }
-            );
-
-        },
-
-
-        getState() {
-
-            return Utils.clone(
-                STATE
-            );
-
-        },
-
-
-        /* =================================================
-           DATABASE INITIALIZATION
-        ================================================= */
-
-        async init() {
-
-            if (
-                this.initialized &&
-                this.db
-            ) {
-
-                return this.db;
-
-            }
-
-
-            if (
-                this.initializing
-            ) {
-
-                return this.initializing;
-
-            }
-
-
-            this.initializing =
-                this._initialize();
-
-
-            try {
-
-                return await this.initializing;
-
-            } finally {
-
-                this.initializing =
-                    null;
-
-            }
-
-        },
-
-
-        async _initialize() {
-
-            this.setStatus(
-                STATUS.INITIALIZING
-            );
-
-
-            this.db =
-                await this.openDatabase();
-
-
-            this.initialized =
-                true;
-
-
-            const active =
-                await this.readActiveRecord();
-
-
-            if (
-                active
-            ) {
-
-                STATE.activeBuild =
-                    Utils.integer(
-                        active.build
-                    );
-
-                STATE.activeVersion =
-                    active.version ||
-                    null;
-
-            } else {
-
-                STATE.activeBuild =
-                    null;
-
-                STATE.activeVersion =
-                    null;
-
-            }
-
-
-            this.setStatus(
-                STATUS.READY,
-                {
-
-                    activeBuild:
-                        STATE.activeBuild,
-
-                    activeVersion:
-                        STATE.activeVersion
-
-                }
-            );
-
-
-            this.emit(
-                "ready",
-                {
-
-                    activeBuild:
-                        STATE.activeBuild,
-
-                    activeVersion:
-                        STATE.activeVersion
-
-                }
-            );
-
-
-            return this.db;
-
-        },
-
-
-        /* =================================================
-           OPEN DATABASE
+           DATABASE
         ================================================= */
 
         openDatabase() {
@@ -747,82 +425,31 @@
                             const db =
                                 event.target.result;
 
-                            const transaction =
-                                event.target.transaction;
 
-
-                            /* =================================
-                               BUILDS
-                            ================================= */
-
-                            let builds;
+                            /* =============================
+                               META
+                            ============================= */
 
                             if (
                                 !db.objectStoreNames.contains(
-                                    CONFIG.stores.builds
+                                    CONFIG.stores.meta
                                 )
                             ) {
 
-                                builds =
-                                    db.createObjectStore(
-                                        CONFIG.stores.builds,
-                                        {
-                                            keyPath:
-                                                "build"
-                                        }
-                                    );
-
-                            } else {
-
-                                builds =
-                                    transaction.objectStore(
-                                        CONFIG.stores.builds
-                                    );
-
-                            }
-
-
-                            if (
-                                !builds.indexNames.contains(
-                                    "version"
-                                )
-                            ) {
-
-                                builds.createIndex(
-                                    "version",
-                                    "version",
+                                db.createObjectStore(
+                                    CONFIG.stores.meta,
                                     {
-                                        unique:
-                                            false
+                                        keyPath:
+                                            "id"
                                     }
                                 );
 
                             }
 
 
-                            if (
-                                !builds.indexNames.contains(
-                                    "status"
-                                )
-                            ) {
-
-                                builds.createIndex(
-                                    "status",
-                                    "status",
-                                    {
-                                        unique:
-                                            false
-                                    }
-                                );
-
-                            }
-
-
-                            /* =================================
+                            /* =============================
                                FILES
-                            ================================= */
-
-                            let files;
+                            ============================= */
 
                             if (
                                 !db.objectStoreNames.contains(
@@ -830,7 +457,7 @@
                                 )
                             ) {
 
-                                files =
+                                const files =
                                     db.createObjectStore(
                                         CONFIG.stores.files,
                                         {
@@ -839,21 +466,6 @@
                                         }
                                     );
 
-                            } else {
-
-                                files =
-                                    transaction.objectStore(
-                                        CONFIG.stores.files
-                                    );
-
-                            }
-
-
-                            if (
-                                !files.indexNames.contains(
-                                    "build"
-                                )
-                            ) {
 
                                 files.createIndex(
                                     "build",
@@ -864,14 +476,6 @@
                                     }
                                 );
 
-                            }
-
-
-                            if (
-                                !files.indexNames.contains(
-                                    "path"
-                                )
-                            ) {
 
                                 files.createIndex(
                                     "path",
@@ -879,97 +483,6 @@
                                     {
                                         unique:
                                             false
-                                    }
-                                );
-
-                            }
-
-
-                            /* =================================
-                               ACTIVE
-                            ================================= */
-
-                            if (
-                                !db.objectStoreNames.contains(
-                                    CONFIG.stores.active
-                                )
-                            ) {
-
-                                db.createObjectStore(
-                                    CONFIG.stores.active,
-                                    {
-                                        keyPath:
-                                            "id"
-                                    }
-                                );
-
-                            }
-
-
-                            /* =================================
-                               TEMPORARY
-                            ================================= */
-
-                            let temporary;
-
-                            if (
-                                !db.objectStoreNames.contains(
-                                    CONFIG.stores.temporary
-                                )
-                            ) {
-
-                                temporary =
-                                    db.createObjectStore(
-                                        CONFIG.stores.temporary,
-                                        {
-                                            keyPath:
-                                                "id"
-                                        }
-                                    );
-
-                            } else {
-
-                                temporary =
-                                    transaction.objectStore(
-                                        CONFIG.stores.temporary
-                                    );
-
-                            }
-
-
-                            if (
-                                !temporary.indexNames.contains(
-                                    "build"
-                                )
-                            ) {
-
-                                temporary.createIndex(
-                                    "build",
-                                    "build",
-                                    {
-                                        unique:
-                                            false
-                                    }
-                                );
-
-                            }
-
-
-                            /* =================================
-                               SETTINGS
-                            ================================= */
-
-                            if (
-                                !db.objectStoreNames.contains(
-                                    CONFIG.stores.settings
-                                )
-                            ) {
-
-                                db.createObjectStore(
-                                    CONFIG.stores.settings,
-                                    {
-                                        keyPath:
-                                            "id"
                                     }
                                 );
 
@@ -981,49 +494,12 @@
                     request.onsuccess =
                         event => {
 
-                            const db =
+                            this.db =
                                 event.target.result;
 
 
-                            db.onversionchange =
-                                () => {
-
-                                    db.close();
-
-                                    this.db =
-                                        null;
-
-                                    this.initialized =
-                                        false;
-
-                                };
-
-
-                            db.onclose =
-                                () => {
-
-                                    this.db =
-                                        null;
-
-                                    this.initialized =
-                                        false;
-
-                                };
-
-
-                            db.onerror =
-                                event => {
-
-                                    console.warn(
-                                        "[MARA ENGINE] IndexedDB error:",
-                                        event.target.error
-                                    );
-
-                                };
-
-
                             resolve(
-                                db
+                                this.db
                             );
 
                         };
@@ -1041,63 +517,34 @@
 
                         };
 
-
-                    request.onblocked =
-                        () => {
-
-                            reject(
-                                new Error(
-                                    "IndexedDB sedang diblokir oleh koneksi database lama."
-                                )
-                            );
-
-                        };
-
                 }
             );
 
         },
 
 
-        /* =================================================
-           DATABASE STORE
-        ================================================= */
-
-        store(
-            name,
-            mode = "readonly"
-        ) {
+        async init() {
 
             if (
-                !this.db
+                this.initialized &&
+                this.db
             ) {
 
-                throw new Error(
-                    "Database belum diinisialisasi."
-                );
+                return;
 
             }
 
 
-            return this.db
-                .transaction(
-                    name,
-                    mode
-                )
-                .objectStore(
-                    name
-                );
+            await this.openDatabase();
+
+
+            this.initialized =
+                true;
 
         },
 
 
-        /* =================================================
-           IDB REQUEST
-        ================================================= */
-
-        request(
-            request
-        ) {
+        idbRequest(request) {
 
             return new Promise(
                 (
@@ -1106,18 +553,14 @@
                 ) => {
 
                     request.onsuccess =
-                        () => {
-
+                        () =>
                             resolve(
                                 request.result
                             );
 
-                        };
-
 
                     request.onerror =
-                        () => {
-
+                        () =>
                             reject(
                                 request.error ||
                                 new Error(
@@ -1125,8 +568,6 @@
                                 )
                             );
 
-                        };
-
                 }
             );
 
@@ -1134,251 +575,83 @@
 
 
         /* =================================================
-           ACTIVE BUILD
+           LOCAL META
         ================================================= */
 
-        async readActiveRecord() {
+        async getActive() {
 
-            await this.initDatabaseOnly();
-
-
-            return this.request(
-                this.store(
-                    CONFIG.stores.active
-                ).get(
-                    CONFIG.activeKey
-                )
-            );
-
-        },
+            await this.init();
 
 
-        async initDatabaseOnly() {
+            return this.idbRequest(
 
-            if (
                 this.db
-            ) {
+                    .transaction(
+                        CONFIG.stores.meta,
+                        "readonly"
+                    )
+                    .objectStore(
+                        CONFIG.stores.meta
+                    )
+                    .get(
+                        CONFIG.activeKey
+                    )
 
-                return this.db;
-
-            }
-
-
-            this.db =
-                await this.openDatabase();
-
-
-            return this.db;
-
-        },
-
-
-        async getActiveBuild() {
-
-            const record =
-                await this.readActiveRecord();
-
-
-            if (
-                !record
-            ) {
-
-                return null;
-
-            }
-
-
-            return Utils.integer(
-                record.build
             );
 
         },
 
 
-        async setActiveBuild(
+        async saveActive(
             build,
-            version = null
+            version
         ) {
 
             await this.init();
 
 
-            const numericBuild =
-                Utils.integer(
-                    build
-                );
+            const record = {
+
+                id:
+                    CONFIG.activeKey,
+
+                build:
+                    Number(build),
+
+                version:
+                    String(version),
+
+                updatedAt:
+                    Date.now()
+
+            };
 
 
-            if (
-                numericBuild === null ||
-                numericBuild < 1
-            ) {
+            await this.idbRequest(
 
-                throw new Error(
-                    "ACTIVE BUILD tidak valid."
-                );
+                this.db
+                    .transaction(
+                        CONFIG.stores.meta,
+                        "readwrite"
+                    )
+                    .objectStore(
+                        CONFIG.stores.meta
+                    )
+                    .put(
+                        record
+                    )
 
-            }
-
-
-            if (
-                !(await this.hasBuild(
-                    numericBuild
-                ))
-            ) {
-
-                throw new Error(
-                    `Build ${numericBuild} belum READY.`
-                );
-
-            }
-
-
-            return this.activateBuild(
-                numericBuild,
-                version
-            );
-
-        },
-
-
-        /* =================================================
-           FETCH
-        ================================================= */
-
-        async fetchURL(
-            url,
-            options = {}
-        ) {
-
-            this.validateURL(
-                url
             );
 
 
-            let lastError =
-                null;
+            STATE.build =
+                record.build;
+
+            STATE.version =
+                record.version;
 
 
-            for (
-                let attempt = 0;
-                attempt <=
-                CONFIG.retryCount;
-                attempt++
-            ) {
-
-                const controller =
-                    new AbortController();
-
-
-                const timer =
-                    setTimeout(
-                        () => {
-
-                            controller.abort();
-
-                        },
-                        CONFIG.requestTimeout
-                    );
-
-
-                try {
-
-                    const response =
-                        await fetch(
-                            url,
-                            {
-
-                                ...options,
-
-                                cache:
-                                    "no-store",
-
-                                signal:
-                                    controller.signal
-
-                            }
-                        );
-
-
-                    clearTimeout(
-                        timer
-                    );
-
-
-                    if (
-                        !response.ok
-                    ) {
-
-                        throw new Error(
-                            `HTTP ${response.status}: ${url}`
-                        );
-
-                    }
-
-
-                    return response;
-
-                } catch (
-                    error
-                ) {
-
-                    clearTimeout(
-                        timer
-                    );
-
-
-                    lastError =
-                        error;
-
-
-                    if (
-                        attempt <
-                        CONFIG.retryCount
-                    ) {
-
-                        await Utils.sleep(
-                            CONFIG.retryDelay
-                        );
-
-                    }
-
-                }
-
-            }
-
-
-            throw (
-                lastError ||
-                new Error(
-                    `Gagal mengambil URL: ${url}`
-                )
-            );
-
-        },
-
-
-        async fetchJSON(
-            url
-        ) {
-
-            const response =
-                await this.fetchURL(
-                    url
-                );
-
-
-            try {
-
-                return await response.json();
-
-            } catch {
-
-                throw new Error(
-                    "Response JSON tidak valid."
-                );
-
-            }
+            return record;
 
         },
 
@@ -1390,73 +663,110 @@
         async fetchManifest() {
 
             this.setStatus(
-                STATUS.FETCHING_MANIFEST
-            );
-
-
-            this.emit(
-                "manifest:start"
+                STATUS.CHECKING
             );
 
 
             let url =
-                CONFIG.repository;
+                CONFIG.manifestURL;
 
 
             if (
                 CONFIG.cacheBust
             ) {
 
-                const separator =
-                    url.includes("?")
-                        ? "&"
-                        : "?";
-
-
-                url =
-                    `${url}${separator}_=${Date.now()}`;
+                url +=
+                    `?_=${Date.now()}`;
 
             }
 
 
-            const manifest =
-                await this.fetchJSON(
-                    url
+            const controller =
+                new AbortController();
+
+
+            const timeout =
+                setTimeout(
+                    () =>
+                        controller.abort(),
+                    CONFIG.requestTimeout
                 );
 
 
-            this.validateManifest(
-                manifest
-            );
+            try {
+
+                const response =
+                    await fetch(
+                        url,
+                        {
+
+                            method:
+                                "GET",
+
+                            cache:
+                                "no-store",
+
+                            signal:
+                                controller.signal
+
+                        }
+                    );
 
 
-            STATE.remoteBuild =
-                Number(
-                    manifest.build
-                );
+                if (
+                    !response.ok
+                ) {
 
-            STATE.remoteVersion =
-                String(
-                    manifest.version
-                );
-
-            STATE.lastManifest =
-                Utils.clone(
-                    manifest
-                );
-
-
-            this.emit(
-                "manifest:ready",
-                {
-
-                    manifest
+                    throw new Error(
+                        `Manifest HTTP ${response.status}`
+                    );
 
                 }
-            );
 
 
-            return manifest;
+                const manifest =
+                    await response.json();
+
+
+                this.validateManifest(
+                    manifest
+                );
+
+
+                STATE.remoteBuild =
+                    Number(
+                        manifest.build
+                    );
+
+                STATE.remoteVersion =
+                    String(
+                        manifest.version
+                    );
+
+
+                this.broadcast(
+                    "manifest",
+                    {
+
+                        build:
+                            STATE.remoteBuild,
+
+                        version:
+                            STATE.remoteVersion
+
+                    }
+                );
+
+
+                return manifest;
+
+            } finally {
+
+                clearTimeout(
+                    timeout
+                );
+
+            }
 
         },
 
@@ -1471,12 +781,29 @@
 
             if (
                 !manifest ||
-                typeof manifest !==
-                "object"
+                typeof manifest !== "object"
             ) {
 
                 throw new Error(
                     "Manifest tidak valid."
+                );
+
+            }
+
+
+            const build =
+                Utils.number(
+                    manifest.build
+                );
+
+
+            if (
+                build === null ||
+                build < 1
+            ) {
+
+                throw new Error(
+                    "Manifest build tidak valid."
                 );
 
             }
@@ -1489,25 +816,7 @@
             ) {
 
                 throw new Error(
-                    "Manifest.version tidak valid."
-                );
-
-            }
-
-
-            const build =
-                Utils.integer(
-                    manifest.build
-                );
-
-
-            if (
-                build === null ||
-                build < 1
-            ) {
-
-                throw new Error(
-                    "Manifest.build tidak valid."
+                    "Manifest version tidak valid."
                 );
 
             }
@@ -1520,7 +829,7 @@
             ) {
 
                 throw new Error(
-                    "Manifest.files harus berupa array."
+                    "Manifest files harus array."
                 );
 
             }
@@ -1531,7 +840,7 @@
             ) {
 
                 throw new Error(
-                    "Manifest.files tidak boleh kosong."
+                    "Manifest files kosong."
                 );
 
             }
@@ -1539,11 +848,11 @@
 
             if (
                 manifest.files.length >
-                CONFIG.maxManifestFiles
+                CONFIG.maxFiles
             ) {
 
                 throw new Error(
-                    "Jumlah file manifest terlalu banyak."
+                    "Jumlah file terlalu banyak."
                 );
 
             }
@@ -1558,27 +867,24 @@
 
                     if (
                         !file ||
-                        typeof file !==
-                        "object"
+                        typeof file !== "object"
                     ) {
 
                         throw new Error(
-                            "Entry manifest tidak valid."
+                            "Entry file manifest tidak valid."
                         );
 
                     }
 
 
                     const path =
-                        this.normalizePath(
+                        Utils.normalizePath(
                             file.path
                         );
 
 
                     if (
-                        paths.has(
-                            path
-                        )
+                        paths.has(path)
                     ) {
 
                         throw new Error(
@@ -1588,9 +894,7 @@
                     }
 
 
-                    paths.add(
-                        path
-                    );
+                    paths.add(path);
 
 
                     if (
@@ -1600,20 +904,14 @@
                     ) {
 
                         throw new Error(
-                            `URL file tidak tersedia: ${path}`
+                            `URL tidak tersedia: ${path}`
                         );
 
                     }
 
 
-                    this.validateURL(
-                        file.url
-                    );
-
-
                     if (
-                        file.size !==
-                        undefined
+                        file.size !== undefined
                     ) {
 
                         const size =
@@ -1623,9 +921,7 @@
 
 
                         if (
-                            !Number.isFinite(
-                                size
-                            ) ||
+                            !Number.isFinite(size) ||
                             size < 0 ||
                             size >
                             CONFIG.maxFileSize
@@ -1638,339 +934,6 @@
                         }
 
                     }
-
-
-                    if (
-                        file.sha256 !==
-                        undefined
-                    ) {
-
-                        if (
-                            !/^[a-fA-F0-9]{64}$/.test(
-                                String(
-                                    file.sha256
-                                )
-                            )
-                        ) {
-
-                            throw new Error(
-                                `SHA-256 tidak valid: ${path}`
-                            );
-
-                        }
-
-                    }
-
-                }
-            );
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           URL VALIDATION
-        ================================================= */
-
-        validateURL(
-            value
-        ) {
-
-            let url;
-
-
-            try {
-
-                url =
-                    new URL(
-                        value,
-                        location.href
-                    );
-
-            } catch {
-
-                throw new Error(
-                    `URL tidak valid: ${value}`
-                );
-
-            }
-
-
-            if (
-                !CONFIG.allowedProtocols.includes(
-                    url.protocol
-                )
-            ) {
-
-                throw new Error(
-                    `Protocol URL tidak diizinkan: ${url.protocol}`
-                );
-
-            }
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           PATH NORMALIZATION
-        ================================================= */
-
-        normalizePath(
-            path
-        ) {
-
-            if (
-                typeof path !==
-                "string"
-            ) {
-
-                throw new Error(
-                    "Path harus berupa string."
-                );
-
-            }
-
-
-            let value =
-                path
-                    .replace(
-                        /\\/g,
-                        "/"
-                    )
-                    .replace(
-                        /^\/+/,
-                        ""
-                    );
-
-
-            const parts =
-                value
-                    .split("/")
-                    .filter(
-                        part =>
-                            part &&
-                            part !== "."
-                    );
-
-
-            if (
-                parts.includes(
-                    ".."
-                )
-            ) {
-
-                throw new Error(
-                    `Path tidak aman: ${path}`
-                );
-
-            }
-
-
-            value =
-                parts.join("/");
-
-
-            if (
-                !value
-            ) {
-
-                throw new Error(
-                    `Path kosong: ${path}`
-                );
-
-            }
-
-
-            return value;
-
-        },
-
-
-        /* =================================================
-           BUILD COMPARISON
-        ================================================= */
-
-        isNewerBuild(
-            remoteBuild,
-            localBuild
-        ) {
-
-            return Number(
-                remoteBuild
-            ) >
-            Number(
-                localBuild || 0
-            );
-
-        },
-
-
-        /* =================================================
-           TEMPORARY FILE
-        ================================================= */
-
-        async saveTemporaryFile(
-            build,
-            path,
-            blob,
-            type = null
-        ) {
-
-            await this.init();
-
-
-            const numericBuild =
-                Utils.integer(
-                    build
-                );
-
-
-            if (
-                numericBuild === null
-            ) {
-
-                throw new Error(
-                    "Temporary build tidak valid."
-                );
-
-            }
-
-
-            const normalizedPath =
-                this.normalizePath(
-                    path
-                );
-
-
-            if (
-                !(blob instanceof Blob)
-            ) {
-
-                throw new Error(
-                    "Temporary content harus Blob."
-                );
-
-            }
-
-
-            if (
-                blob.size >
-                CONFIG.maxFileSize
-            ) {
-
-                throw new Error(
-                    `File terlalu besar: ${normalizedPath}`
-                );
-
-            }
-
-
-            const data = {
-
-                id:
-                    `${numericBuild}:${normalizedPath}`,
-
-                build:
-                    numericBuild,
-
-                path:
-                    normalizedPath,
-
-                type:
-                    type ||
-                    blob.type ||
-                    "application/octet-stream",
-
-                content:
-                    blob,
-
-                size:
-                    blob.size,
-
-                savedAt:
-                    Date.now()
-
-            };
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.temporary,
-                    "readwrite"
-                ).put(
-                    data
-                )
-            );
-
-
-            return data;
-
-        },
-
-
-        async getTemporaryFiles(
-            build
-        ) {
-
-            await this.init();
-
-
-            return this.request(
-                this.store(
-                    CONFIG.stores.temporary
-                )
-                    .index(
-                        "build"
-                    )
-                    .getAll(
-                        Number(build)
-                    )
-            );
-
-        },
-
-
-        async deleteTemporaryBuild(
-            build
-        ) {
-
-            await this.init();
-
-
-            const files =
-                await this.getTemporaryFiles(
-                    build
-                );
-
-
-            for (
-                const file
-                of files
-            ) {
-
-                await this.request(
-                    this.store(
-                        CONFIG.stores.temporary,
-                        "readwrite"
-                    ).delete(
-                        file.id
-                    )
-                );
-
-            }
-
-
-            this.emit(
-                "temporary:deleted",
-                {
-
-                    build:
-                        Number(build)
 
                 }
             );
@@ -1986,14 +949,11 @@
         ================================================= */
 
         async downloadFile(
-            build,
-            file,
-            index,
-            total
+            file
         ) {
 
             const path =
-                this.normalizePath(
+                Utils.normalizePath(
                     file.path
                 );
 
@@ -2002,27 +962,25 @@
                 path;
 
 
-            this.emit(
-                "file:download:start",
-                {
-
-                    build,
-
-                    path,
-
-                    index:
-                        index + 1,
-
-                    total
-
-                }
-            );
-
-
             const response =
-                await this.fetchURL(
-                    file.url
+                await fetch(
+                    file.url,
+                    {
+                        cache:
+                            "no-store"
+                    }
                 );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    `Gagal mengambil ${path}: HTTP ${response.status}`
+                );
+
+            }
 
 
             const blob =
@@ -2042,1030 +1000,127 @@
 
 
             if (
-                file.size !==
-                undefined &&
+                file.size !== undefined &&
                 Number(file.size) !==
                 Number(blob.size)
             ) {
 
                 throw new Error(
-                    `Ukuran file tidak cocok: ${path}`
+                    `Ukuran ${path} tidak sesuai manifest.`
                 );
 
             }
 
 
-            await this.saveTemporaryFile(
-                build,
+            return {
+
                 path,
-                blob,
-                file.type
-            );
 
+                type:
+                    file.type ||
+                    blob.type ||
+                    "application/octet-stream",
 
-            STATE.completedFiles =
-                index + 1;
+                content:
+                    blob,
 
-            STATE.totalFiles =
-                total;
+                size:
+                    blob.size
 
-            STATE.progress =
-                Math.round(
-                    (
-                        (index + 1) /
-                        total
-                    ) * 100
-                );
-
-
-            this.emit(
-                "download:progress",
-                {
-
-                    build,
-
-                    path,
-
-                    index:
-                        index + 1,
-
-                    total,
-
-                    progress:
-                        STATE.progress
-
-                }
-            );
-
-
-            this.emit(
-                "file:download:complete",
-                {
-
-                    build,
-
-                    path
-
-                }
-            );
-
-
-            return blob;
+            };
 
         },
 
 
         /* =================================================
-           DOWNLOAD BUILD
+           SAVE FILE
         ================================================= */
 
-        async downloadBuild(
-            manifest
-        ) {
-
-            const build =
-                Number(
-                    manifest.build
-                );
-
-
-            const files =
-                manifest.files;
-
-
-            this.setStatus(
-                STATUS.DOWNLOADING,
-                {
-
-                    installingBuild:
-                        build,
-
-                    progress:
-                        0,
-
-                    completedFiles:
-                        0,
-
-                    totalFiles:
-                        files.length,
-
-                    currentFile:
-                        null
-
-                }
-            );
-
-
-            await this.deleteTemporaryBuild(
-                build
-            );
-
-
-            this.emit(
-                "download:start",
-                {
-
-                    build,
-
-                    total:
-                        files.length
-
-                }
-            );
-
-
-            for (
-                let index = 0;
-                index < files.length;
-                index++
-            ) {
-
-                await this.downloadFile(
-                    build,
-                    files[index],
-                    index,
-                    files.length
-                );
-
-            }
-
-
-            this.emit(
-                "download:complete",
-                {
-
-                    build,
-
-                    total:
-                        files.length
-
-                }
-            );
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           VERIFY BUILD
-        ================================================= */
-
-        async verifyBuild(
-            manifest
-        ) {
-
-            const build =
-                Number(
-                    manifest.build
-                );
-
-
-            this.setStatus(
-                STATUS.VERIFYING,
-                {
-
-                    installingBuild:
-                        build,
-
-                    progress:
-                        0,
-
-                    completedFiles:
-                        0,
-
-                    totalFiles:
-                        manifest.files.length
-
-                }
-            );
-
-
-            const temporaryFiles =
-                await this.getTemporaryFiles(
-                    build
-                );
-
-
-            if (
-                temporaryFiles.length !==
-                manifest.files.length
-            ) {
-
-                throw new Error(
-                    `Jumlah file tidak cocok. Expected ${manifest.files.length}, received ${temporaryFiles.length}`
-                );
-
-            }
-
-
-            const temporaryMap =
-                new Map(
-                    temporaryFiles.map(
-                        file =>
-                            [
-                                file.path,
-                                file
-                            ]
-                    )
-                );
-
-
-            for (
-                let index = 0;
-                index <
-                manifest.files.length;
-                index++
-            ) {
-
-                const expected =
-                    manifest.files[index];
-
-
-                const path =
-                    this.normalizePath(
-                        expected.path
-                    );
-
-
-                const actual =
-                    temporaryMap.get(
-                        path
-                    );
-
-
-                if (
-                    !actual
-                ) {
-
-                    throw new Error(
-                        `File hilang: ${path}`
-                    );
-
-                }
-
-
-                if (
-                    expected.size !==
-                    undefined &&
-                    Number(
-                        expected.size
-                    ) !==
-                    Number(
-                        actual.size
-                    )
-                ) {
-
-                    throw new Error(
-                        `Ukuran tidak cocok: ${path}`
-                    );
-
-                }
-
-
-                if (
-                    expected.sha256 &&
-                    CONFIG.verifyContent
-                ) {
-
-                    const hash =
-                        await this.sha256(
-                            actual.content
-                        );
-
-
-                    if (
-                        hash.toLowerCase() !==
-                        String(
-                            expected.sha256
-                        ).toLowerCase()
-                    ) {
-
-                        throw new Error(
-                            `SHA-256 tidak cocok: ${path}`
-                        );
-
-                    }
-
-                }
-
-
-                STATE.progress =
-                    Math.round(
-                        (
-                            (index + 1) /
-                            manifest.files.length
-                        ) * 100
-                    );
-
-
-                STATE.completedFiles =
-                    index + 1;
-
-
-                STATE.totalFiles =
-                    manifest.files.length;
-
-
-                this.emit(
-                    "verify:progress",
-                    {
-
-                        build,
-
-                        path,
-
-                        index:
-                            index + 1,
-
-                        total:
-                            manifest.files.length,
-
-                        progress:
-                            STATE.progress
-
-                    }
-                );
-
-            }
-
-
-            this.emit(
-                "verify:success",
-                {
-
-                    build
-
-                }
-            );
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           SHA-256
-        ================================================= */
-
-        async sha256(
-            blob
-        ) {
-
-            if (
-                !window.crypto ||
-                !window.crypto.subtle
-            ) {
-
-                throw new Error(
-                    "Web Crypto API tidak tersedia."
-                );
-
-            }
-
-
-            const buffer =
-                await blob.arrayBuffer();
-
-
-            const hashBuffer =
-                await window.crypto.subtle.digest(
-                    "SHA-256",
-                    buffer
-                );
-
-
-            const bytes =
-                new Uint8Array(
-                    hashBuffer
-                );
-
-
-            return Array
-                .from(
-                    bytes
-                )
-                .map(
-                    byte =>
-                        byte
-                            .toString(16)
-                            .padStart(
-                                2,
-                                "0"
-                            )
-                )
-                .join("");
-
-        },
-
-
-        /* =================================================
-           INSTALL BUILD
-        ================================================= */
-
-        async installBuild(
-            manifest
-        ) {
-
-            const build =
-                Number(
-                    manifest.build
-                );
-
-
-            this.setStatus(
-                STATUS.INSTALLING,
-                {
-
-                    installingBuild:
-                        build,
-
-                    progress:
-                        0,
-
-                    completedFiles:
-                        0,
-
-                    totalFiles:
-                        manifest.files.length
-
-                }
-            );
-
-
-            const temporaryFiles =
-                await this.getTemporaryFiles(
-                    build
-                );
-
-
-            if (
-                temporaryFiles.length !==
-                manifest.files.length
-            ) {
-
-                throw new Error(
-                    "Temporary build tidak lengkap."
-                );
-
-            }
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.builds,
-                    "readwrite"
-                ).put({
-
-                    build,
-
-                    version:
-                        String(
-                            manifest.version
-                        ),
-
-                    status:
-                        "INSTALLING",
-
-                    fileCount:
-                        temporaryFiles.length,
-
-                    installedAt:
-                        null,
-
-                    updatedAt:
-                        Date.now()
-
-                })
-            );
-
-
-            const oldFiles =
-                await this.getBuildFiles(
-                    build
-                );
-
-
-            for (
-                const oldFile
-                of oldFiles
-            ) {
-
-                await this.request(
-                    this.store(
-                        CONFIG.stores.files,
-                        "readwrite"
-                    ).delete(
-                        oldFile.id
-                    )
-                );
-
-            }
-
-
-            for (
-                let index = 0;
-                index <
-                temporaryFiles.length;
-                index++
-            ) {
-
-                const file =
-                    temporaryFiles[index];
-
-
-                const path =
-                    this.normalizePath(
-                        file.path
-                    );
-
-
-                await this.request(
-                    this.store(
-                        CONFIG.stores.files,
-                        "readwrite"
-                    ).put({
-
-                        id:
-                            `${build}:${path}`,
-
-                        build,
-
-                        path,
-
-                        type:
-                            file.type,
-
-                        content:
-                            file.content,
-
-                        size:
-                            file.size,
-
-                        installedAt:
-                            Date.now()
-
-                    })
-                );
-
-
-                STATE.progress =
-                    Math.round(
-                        (
-                            (index + 1) /
-                            temporaryFiles.length
-                        ) * 100
-                    );
-
-
-                STATE.completedFiles =
-                    index + 1;
-
-
-                STATE.totalFiles =
-                    temporaryFiles.length;
-
-
-                this.emit(
-                    "install:progress",
-                    {
-
-                        build,
-
-                        path,
-
-                        index:
-                            index + 1,
-
-                        total:
-                            temporaryFiles.length,
-
-                        progress:
-                            STATE.progress
-
-                    }
-                );
-
-            }
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.builds,
-                    "readwrite"
-                ).put({
-
-                    build,
-
-                    version:
-                        String(
-                            manifest.version
-                        ),
-
-                    status:
-                        "READY",
-
-                    fileCount:
-                        temporaryFiles.length,
-
-                    installedAt:
-                        Date.now(),
-
-                    updatedAt:
-                        Date.now()
-
-                })
-            );
-
-
-            await this.deleteTemporaryBuild(
-                build
-            );
-
-
-            this.emit(
-                "install:complete",
-                {
-
-                    build,
-
-                    version:
-                        manifest.version
-
-                }
-            );
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           VERIFY INSTALLED BUILD
-        ================================================= */
-
-        async verifyInstalledBuild(
-            build
-        ) {
-
-            const numericBuild =
-                Number(build);
-
-
-            const metadata =
-                await this.getBuild(
-                    numericBuild
-                );
-
-
-            if (
-                !metadata
-            ) {
-
-                throw new Error(
-                    `Metadata build ${numericBuild} tidak ditemukan.`
-                );
-
-            }
-
-
-            if (
-                metadata.status !==
-                "READY"
-            ) {
-
-                throw new Error(
-                    `Build ${numericBuild} belum READY.`
-                );
-
-            }
-
-
-            const files =
-                await this.getBuildFiles(
-                    numericBuild
-                );
-
-
-            if (
-                !files.length
-            ) {
-
-                throw new Error(
-                    `Build ${numericBuild} tidak memiliki file.`
-                );
-
-            }
-
-
-            if (
-                Number(
-                    metadata.fileCount
-                ) !==
-                files.length
-            ) {
-
-                throw new Error(
-                    `Jumlah file build ${numericBuild} tidak cocok.`
-                );
-
-            }
-
-
-            return true;
-
-        },
-
-
-        /* =================================================
-           ACTIVATE BUILD
-        ================================================= */
-
-        async activateBuild(
+        async saveFile(
             build,
-            version = null
+            file
         ) {
 
-            const numericBuild =
-                Utils.integer(
-                    build
-                );
-
-
-            if (
-                numericBuild === null ||
-                numericBuild < 1
-            ) {
-
-                throw new Error(
-                    "Build untuk activation tidak valid."
-                );
-
-            }
-
-
-            await this.verifyInstalledBuild(
-                numericBuild
-            );
-
-
-            const previous =
-                await this.readActiveRecord();
-
-
-            this.setStatus(
-                STATUS.ACTIVATING,
-                {
-
-                    installingBuild:
-                        numericBuild
-
-                }
-            );
+            await this.init();
 
 
             const record = {
 
                 id:
-                    CONFIG.activeKey,
+                    `${build}:${file.path}`,
 
                 build:
-                    numericBuild,
+                    Number(build),
 
-                version:
-                    version === null
-                        ? null
-                        : String(
-                            version
-                        ),
+                path:
+                    file.path,
 
-                activatedAt:
+                type:
+                    file.type,
+
+                size:
+                    file.size,
+
+                content:
+                    file.content,
+
+                savedAt:
                     Date.now()
 
             };
 
 
-            try {
+            await this.idbRequest(
 
-                await this.request(
-                    this.store(
-                        CONFIG.stores.active,
+                this.db
+                    .transaction(
+                        CONFIG.stores.files,
                         "readwrite"
-                    ).put(
+                    )
+                    .objectStore(
+                        CONFIG.stores.files
+                    )
+                    .put(
                         record
-                    );
+                    )
+
+            );
 
 
-                STATE.activeBuild =
-                    numericBuild;
-
-                STATE.activeVersion =
-                    record.version;
-
-
-                this.emit(
-                    "build:active",
-                    record
-                );
-
-
-                this.emit(
-                    "activate:complete",
-                    {
-
-                        build:
-                            numericBuild,
-
-                        version:
-                            record.version,
-
-                        previousBuild:
-                            previous
-                                ? Number(
-                                    previous.build
-                                )
-                                : null
-
-                    }
-                );
-
-
-                return record;
-
-            } catch (
-                error
-            ) {
-
-                if (
-                    previous
-                ) {
-
-                    try {
-
-                        await this.request(
-                            this.store(
-                                CONFIG.stores.active,
-                                "readwrite"
-                            ).put(
-                                previous
-                            )
-                        );
-
-                        STATE.activeBuild =
-                            Number(
-                                previous.build
-                            );
-
-                        STATE.activeVersion =
-                            previous.version ||
-                            null;
-
-                    } catch (
-                        rollbackError
-                    ) {
-
-                        console.error(
-                            "[MARA ENGINE] ACTIVE rollback gagal:",
-                            rollbackError
-                        );
-
-                    }
-
-                }
-
-
-                throw error;
-
-            }
+            return record;
 
         },
 
 
         /* =================================================
-           BUILD METADATA
+           DELETE BUILD FILES
         ================================================= */
 
-        async getBuild(
+        async deleteBuildFiles(
             build
         ) {
 
             await this.init();
-
-
-            return this.request(
-                this.store(
-                    CONFIG.stores.builds
-                ).get(
-                    Number(build)
-                )
-            );
-
-        },
-
-
-        async hasBuild(
-            build
-        ) {
-
-            const record =
-                await this.getBuild(
-                    build
-                );
-
-
-            return Boolean(
-                record &&
-                record.status ===
-                "READY"
-            );
-
-        },
-
-
-        async getBuildFiles(
-            build
-        ) {
-
-            await this.init();
-
-
-            return this.request(
-                this.store(
-                    CONFIG.stores.files
-                )
-                    .index(
-                        "build"
-                    )
-                    .getAll(
-                        Number(build)
-                    )
-            );
-
-        },
-
-
-        async getBuilds() {
-
-            await this.init();
-
-
-            return this.request(
-                this.store(
-                    CONFIG.stores.builds
-                ).getAll()
-            );
-
-        },
-
-
-        /* =================================================
-           DELETE BUILD
-        ================================================= */
-
-        async deleteBuild(
-            build
-        ) {
-
-            const numericBuild =
-                Utils.integer(
-                    build
-                );
-
-
-            if (
-                numericBuild === null
-            ) {
-
-                return false;
-
-            }
-
-
-            const active =
-                await this.getActiveBuild();
-
-
-            if (
-                active !== null &&
-                Number(active) ===
-                numericBuild
-            ) {
-
-                console.warn(
-                    "[MARA ENGINE] Build aktif tidak boleh dihapus."
-                );
-
-                return false;
-
-            }
 
 
             const files =
-                await this.getBuildFiles(
-                    numericBuild
+                await this.idbRequest(
+
+                    this.db
+                        .transaction(
+                            CONFIG.stores.files,
+                            "readonly"
+                        )
+                        .objectStore(
+                            CONFIG.stores.files
+                        )
+                        .index(
+                            "build"
+                        )
+                        .getAll(
+                            Number(build)
+                        )
+
                 );
 
 
@@ -3074,335 +1129,47 @@
                 of files
             ) {
 
-                await this.request(
-                    this.store(
-                        CONFIG.stores.files,
-                        "readwrite"
-                    ).delete(
-                        file.id
-                    )
+                await this.idbRequest(
+
+                    this.db
+                        .transaction(
+                            CONFIG.stores.files,
+                            "readwrite"
+                        )
+                        .objectStore(
+                            CONFIG.stores.files
+                        )
+                        .delete(
+                            file.id
+                        )
+
                 );
 
             }
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.builds,
-                    "readwrite"
-                ).delete(
-                    numericBuild
-                )
-            );
-
-
-            this.revokeBuildURLs(
-                numericBuild
-            );
-
-
-            this.emit(
-                "build:deleted",
-                {
-
-                    build:
-                        numericBuild
-
-                }
-            );
-
-
-            return true;
 
         },
 
 
         /* =================================================
-           FILE URL
+           CHECK LOCAL
         ================================================= */
 
-        async createFileURL(
-            build,
-            path
-        ) {
-
-            const numericBuild =
-                Utils.integer(
-                    build
-                );
-
-
-            if (
-                numericBuild === null
-            ) {
-
-                throw new Error(
-                    "Build tidak valid."
-                );
-
-            }
-
-
-            const normalizedPath =
-                this.normalizePath(
-                    path
-                );
-
-
-            const key =
-                `${numericBuild}:${normalizedPath}`;
-
-
-            if (
-                this.objectURLs.has(
-                    key
-                )
-            ) {
-
-                return this.objectURLs.get(
-                    key
-                );
-
-            }
-
-
-            const file =
-                await this.request(
-                    this.store(
-                        CONFIG.stores.files
-                    ).get(
-                        key
-                    )
-                );
-
-
-            if (
-                !file
-            ) {
-
-                throw new Error(
-                    `File tidak ditemukan: ${normalizedPath}`
-                );
-
-            }
-
-
-            const blob =
-                file.content instanceof Blob
-                    ? file.content
-                    : new Blob(
-                        [
-                            file.content
-                        ],
-                        {
-
-                            type:
-                                file.type ||
-                                "application/octet-stream"
-
-                        }
-                    );
-
-
-            const url =
-                URL.createObjectURL(
-                    blob
-                );
-
-
-            this.objectURLs.set(
-                key,
-                url
-            );
-
-
-            return url;
-
-        },
-
-
-        /* =================================================
-           ACTIVE FILE
-        ================================================= */
-
-        async loadActiveFile(
-            path
-        ) {
-
-            const build =
-                await this.getActiveBuild();
-
-
-            if (
-                build === null
-            ) {
-
-                throw new Error(
-                    "Tidak ada ACTIVE BUILD."
-                );
-
-            }
-
-
-            return this.createFileURL(
-                build,
-                path
-            );
-
-        },
-
-
-        /* =================================================
-           IFRAME LOADER
-        ================================================= */
-
-        async loadIntoIframe(
-            iframe,
-            path
-        ) {
-
-            if (
-                !iframe ||
-                typeof iframe !==
-                "object"
-            ) {
-
-                throw new Error(
-                    "Iframe tidak ditemukan."
-                );
-
-            }
-
-
-            const url =
-                await this.loadActiveFile(
-                    path
-                );
-
-
-            iframe.src =
-                url;
-
-
-            this.emit(
-                "iframe:load",
-                {
-
-                    path,
-
-                    url,
-
-                    build:
-                        STATE.activeBuild
-
-                }
-            );
-
-
-            return url;
-
-        },
-
-
-        async loadLockScreen(
-            iframe
-        ) {
-
-            return this.loadIntoIframe(
-                iframe,
-                "lock-screen.html"
-            );
-
-        },
-
-
-        async loadHomeScreen(
-            iframe
-        ) {
-
-            return this.loadIntoIframe(
-                iframe,
-                "home-screen.html"
-            );
-
-        },
-
-
-        async loadMainFrame(
-            iframe
-        ) {
-
-            return this.loadLockScreen(
-                iframe
-            );
-
-        },
-
-
-        /* =================================================
-           OBJECT URL CLEANUP
-        ================================================= */
-
-        revokeBuildURLs(
+        async hasLocalBuild(
             build
         ) {
 
-            const prefix =
-                `${Number(build)}:`;
+            await this.init();
 
 
-            for (
-                const [
-                    key,
-                    url
-                ]
-                of this.objectURLs
-            ) {
-
-                if (
-                    key.startsWith(
-                        prefix
-                    )
-                ) {
-
-                    try {
-
-                        URL.revokeObjectURL(
-                            url
-                        );
-
-                    } catch {}
-
-                    this.objectURLs.delete(
-                        key
-                    );
-
-                }
-
-            }
-
-        },
+            const active =
+                await this.getActive();
 
 
-        revokeAllURLs() {
-
-            for (
-                const url
-                of this.objectURLs.values()
-            ) {
-
-                try {
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-                } catch {}
-
-            }
-
-
-            this.objectURLs.clear();
+            return Boolean(
+                active &&
+                Number(active.build) ===
+                Number(build)
+            );
 
         },
 
@@ -3419,11 +1186,11 @@
 
                 return {
 
-                    updated:
-                        false,
+                    working:
+                        true,
 
-                    busy:
-                        true
+                    updated:
+                        false
 
                 };
 
@@ -3433,6 +1200,8 @@
             this.updating =
                 true;
 
+            STATE.working =
+                true;
 
             STATE.startedAt =
                 Date.now();
@@ -3443,8 +1212,8 @@
             STATE.error =
                 null;
 
-            STATE.errorCode =
-                null;
+            STATE.progress =
+                0;
 
 
             try {
@@ -3460,19 +1229,25 @@
                     !navigator.onLine
                 ) {
 
+                    const local =
+                        await this.getActive();
+
+
+                    if (local) {
+
+                        STATE.build =
+                            Number(
+                                local.build
+                            );
+
+                        STATE.version =
+                            local.version;
+
+                    }
+
+
                     this.setStatus(
                         STATUS.OFFLINE
-                    );
-
-
-                    this.emit(
-                        "update:none",
-                        {
-
-                            offline:
-                                true
-
-                        }
                     );
 
 
@@ -3482,7 +1257,13 @@
                             false,
 
                         offline:
-                            true
+                            true,
+
+                        build:
+                            STATE.build,
+
+                        version:
+                            STATE.version
 
                     };
 
@@ -3490,13 +1271,8 @@
 
 
                 /* =========================================
-                   CHECK MANIFEST
+                   MANIFEST
                 ========================================= */
-
-                this.setStatus(
-                    STATUS.CHECKING
-                );
-
 
                 const manifest =
                     await this.fetchManifest();
@@ -3508,48 +1284,61 @@
                     );
 
 
+                const local =
+                    await this.getActive();
+
+
                 const localBuild =
-                    await this.getActiveBuild();
+                    local
+                        ? Number(local.build)
+                        : 0;
+
+
+                STATE.build =
+                    localBuild || null;
+
+                STATE.version =
+                    local
+                        ? local.version
+                        : null;
 
 
                 /* =========================================
-                   NO UPDATE
+                   ALREADY UP TO DATE
                 ========================================= */
 
                 if (
-                    localBuild !== null &&
-                    !this.isNewerBuild(
-                        remoteBuild,
-                        localBuild
-                    )
+                    localBuild >= remoteBuild
                 ) {
+
+                    STATE.progress =
+                        100;
+
+
+                    STATE.completedFiles =
+                        manifest.files.length;
+
+                    STATE.totalFiles =
+                        manifest.files.length;
+
+
+                    STATE.completedAt =
+                        Date.now();
+
 
                     this.setStatus(
                         STATUS.UP_TO_DATE,
-                        {
-
-                            activeBuild:
-                                localBuild,
-
-                            activeVersion:
-                                STATE.activeVersion,
-
-                            progress:
-                                100
-
-                        }
-                    );
-
-
-                    this.emit(
-                        "update:none",
                         {
 
                             build:
                                 localBuild,
 
                             version:
-                                STATE.activeVersion
+                                local?.version ||
+                                manifest.version,
+
+                            progress:
+                                100
 
                         }
                     );
@@ -3564,7 +1353,8 @@
                             localBuild,
 
                         version:
-                            STATE.activeVersion
+                            local?.version ||
+                            manifest.version
 
                     };
 
@@ -3575,39 +1365,42 @@
                    UPDATE START
                 ========================================= */
 
-                STATE.installingBuild =
-                    remoteBuild;
-
-
-                STATE.progress =
-                    0;
+                STATE.totalFiles =
+                    manifest.files.length;
 
                 STATE.completedFiles =
                     0;
 
-                STATE.totalFiles =
-                    manifest.files.length;
+                STATE.progress =
+                    0;
 
 
-                this.emit(
-                    "update:start",
+                this.broadcast(
+                    "update-start",
                     {
 
                         oldBuild:
-                            localBuild,
+                            localBuild || null,
 
                         newBuild:
                             remoteBuild,
 
                         version:
-                            manifest.version
+                            manifest.version,
+
+                        totalFiles:
+                            manifest.files.length
 
                     }
                 );
 
 
-                this.emit(
-                    "intro:update-start",
+                /* =========================================
+                   DOWNLOAD
+                ========================================= */
+
+                this.setStatus(
+                    STATUS.DOWNLOADING,
                     {
 
                         build:
@@ -3620,88 +1413,159 @@
                 );
 
 
-                /* =========================================
-                   DOWNLOAD
-                ========================================= */
-
-                await this.downloadBuild(
-                    manifest
-                );
+                const downloadedFiles =
+                    [];
 
 
-                /* =========================================
-                   VERIFY
-                ========================================= */
-
-                await this.verifyBuild(
-                    manifest
-                );
-
-
-                /* =========================================
-                   INSTALL
-                ========================================= */
-
-                await this.installBuild(
-                    manifest
-                );
-
-
-                /* =========================================
-                   VERIFY INSTALLED
-                ========================================= */
-
-                await this.verifyInstalledBuild(
-                    remoteBuild
-                );
-
-
-                /* =========================================
-                   ACTIVATE
-                ========================================= */
-
-                await this.activateBuild(
-                    remoteBuild,
-                    manifest.version
-                );
-
-
-                /* =========================================
-                   VERIFY ACTIVE
-                ========================================= */
-
-                const activeAfterInstall =
-                    await this.getActiveBuild();
-
-
-                if (
-                    Number(
-                        activeAfterInstall
-                    ) !==
-                    Number(
-                        remoteBuild
-                    )
+                for (
+                    let i = 0;
+                    i < manifest.files.length;
+                    i++
                 ) {
 
-                    throw new Error(
-                        "ACTIVE BUILD gagal diverifikasi."
+                    const manifestFile =
+                        manifest.files[i];
+
+
+                    const file =
+                        await this.downloadFile(
+                            manifestFile
+                        );
+
+
+                    downloadedFiles.push(
+                        file
+                    );
+
+
+                    STATE.completedFiles =
+                        i + 1;
+
+                    STATE.totalFiles =
+                        manifest.files.length;
+
+                    STATE.progress =
+                        Math.round(
+                            (
+                                (i + 1) /
+                                manifest.files.length
+                            ) * 100
+                        );
+
+
+                    this.broadcast(
+                        "download-progress",
+                        {
+
+                            build:
+                                remoteBuild,
+
+                            path:
+                                file.path,
+
+                            progress:
+                                STATE.progress,
+
+                            completed:
+                                i + 1,
+
+                            total:
+                                manifest.files.length
+
+                        }
                     );
 
                 }
 
 
                 /* =========================================
-                   CLEAN OLD BUILD
+                   SAVE
+                ========================================= */
+
+                this.setStatus(
+                    STATUS.SAVING,
+                    {
+
+                        build:
+                            remoteBuild,
+
+                        progress:
+                            0
+
+                    }
+                );
+
+
+                for (
+                    let i = 0;
+                    i < downloadedFiles.length;
+                    i++
+                ) {
+
+                    const file =
+                        downloadedFiles[i];
+
+
+                    await this.saveFile(
+                        remoteBuild,
+                        file
+                    );
+
+
+                    STATE.progress =
+                        Math.round(
+                            (
+                                (i + 1) /
+                                downloadedFiles.length
+                            ) * 100
+                        );
+
+
+                    this.broadcast(
+                        "save-progress",
+                        {
+
+                            build:
+                                remoteBuild,
+
+                            path:
+                                file.path,
+
+                            progress:
+                                STATE.progress,
+
+                            completed:
+                                i + 1,
+
+                            total:
+                                downloadedFiles.length
+
+                        }
+                    );
+
+                }
+
+
+                /* =========================================
+                   ACTIVE BUILD
+                ========================================= */
+
+                await this.saveActive(
+                    remoteBuild,
+                    manifest.version
+                );
+
+
+                /* =========================================
+                   OLD BUILD CLEANUP
                 ========================================= */
 
                 if (
-                    localBuild !== null &&
-                    Number(localBuild) !==
-                    Number(remoteBuild) &&
-                    !CONFIG.keepOldBuild
+                    localBuild &&
+                    localBuild !== remoteBuild
                 ) {
 
-                    await this.deleteBuild(
+                    await this.deleteBuildFiles(
                         localBuild
                     );
 
@@ -3709,30 +1573,41 @@
 
 
                 /* =========================================
-                   COMPLETE
+                   READY
                 ========================================= */
+
+                STATE.build =
+                    remoteBuild;
+
+                STATE.version =
+                    String(
+                        manifest.version
+                    );
 
                 STATE.progress =
                     100;
 
-                STATE.completedAt =
-                    Date.now();
+                STATE.completedFiles =
+                    manifest.files.length;
 
-                STATE.installingBuild =
-                    null;
+                STATE.totalFiles =
+                    manifest.files.length;
 
                 STATE.currentFile =
                     null;
 
+                STATE.completedAt =
+                    Date.now();
+
 
                 this.setStatus(
-                    STATUS.UPDATED,
+                    STATUS.READY,
                     {
 
-                        activeBuild:
+                        build:
                             remoteBuild,
 
-                        activeVersion:
+                        version:
                             manifest.version,
 
                         progress:
@@ -3747,26 +1622,20 @@
                     updated:
                         true,
 
-                    oldBuild:
-                        localBuild,
-
-                    newBuild:
+                    build:
                         remoteBuild,
 
                     version:
-                        manifest.version
+                        manifest.version,
+
+                    files:
+                        manifest.files.length
 
                 };
 
 
-                this.emit(
-                    "update:complete",
-                    result
-                );
-
-
-                this.emit(
-                    "intro:update-finished",
+                this.broadcast(
+                    "update-complete",
                     result
                 );
 
@@ -3778,22 +1647,15 @@
             ) {
 
                 console.error(
-                    "[MARA ENGINE] UPDATE FAILED:",
+                    "[MARA ENGINE] ERROR:",
                     error
                 );
 
 
                 STATE.error =
-                    error.message ||
+                    error?.message ||
                     "Update gagal.";
 
-
-                STATE.errorCode =
-                    "UPDATE_FAILED";
-
-
-                STATE.installingBuild =
-                    null;
 
                 STATE.currentFile =
                     null;
@@ -3804,40 +1666,24 @@
                     {
 
                         error:
-                            STATE.error,
-
-                        errorCode:
-                            STATE.errorCode
+                            STATE.error
 
                     }
                 );
 
 
-                try {
+                this.broadcast(
+                    "update-error",
+                    {
 
-                    if (
-                        STATE.remoteBuild
-                    ) {
-
-                        await this.deleteTemporaryBuild(
-                            STATE.remoteBuild
-                        );
+                        error:
+                            STATE.error
 
                     }
-
-                } catch (
-                    cleanupError
-                ) {
-
-                    console.warn(
-                        "[MARA ENGINE] Cleanup temporary gagal:",
-                        cleanupError
-                    );
-
-                }
+                );
 
 
-                const result = {
+                return {
 
                     updated:
                         false,
@@ -3846,29 +1692,14 @@
                         true,
 
                     message:
-                        STATE.error,
-
-                    code:
-                        STATE.errorCode
+                        STATE.error
 
                 };
 
-
-                this.emit(
-                    "update:error",
-                    result
-                );
-
-
-                this.emit(
-                    "intro:update-error",
-                    result
-                );
-
-
-                return result;
-
             } finally {
+
+                STATE.working =
+                    false;
 
                 this.updating =
                     false;
@@ -3879,112 +1710,126 @@
 
 
         /* =================================================
-           RECOVERY
+           FILE ACCESS
+           Dipakai build.js
         ================================================= */
 
-        async recover() {
+        async getFile(
+            path,
+            build = null
+        ) {
 
             await this.init();
 
 
-            this.setStatus(
-                STATUS.RECOVERING
-            );
-
-
-            const temporaryFiles =
-                await this.request(
-                    this.store(
-                        CONFIG.stores.temporary
-                    ).getAll()
+            const normalizedPath =
+                Utils.normalizePath(
+                    path
                 );
 
 
-            const temporaryBuilds =
-                new Set(
-                    temporaryFiles.map(
-                        file =>
-                            Number(
-                                file.build
-                            )
-                    )
-                );
-
-
-            for (
-                const build
-                of temporaryBuilds
+            if (
+                build === null
             ) {
 
-                const ready =
-                    await this.hasBuild(
-                        build
-                    );
+                const active =
+                    await this.getActive();
 
 
-                if (
-                    !ready
-                ) {
+                if (!active) {
 
-                    await this.deleteTemporaryBuild(
-                        build
+                    throw new Error(
+                        "Belum ada ACTIVE BUILD."
                     );
 
                 }
 
+
+                build =
+                    Number(
+                        active.build
+                    );
+
             }
 
 
-            const buildRecords =
-                await this.request(
-                    this.store(
-                        CONFIG.stores.builds
-                    ).getAll()
+            const id =
+                `${Number(build)}:${normalizedPath}`;
+
+
+            const file =
+                await this.idbRequest(
+
+                    this.db
+                        .transaction(
+                            CONFIG.stores.files,
+                            "readonly"
+                        )
+                        .objectStore(
+                            CONFIG.stores.files
+                        )
+                        .get(
+                            id
+                        )
+
                 );
 
 
-            const active =
-                await this.getActiveBuild();
+            if (!file) {
 
-
-            for (
-                const record
-                of buildRecords
-            ) {
-
-                if (
-                    record.status ===
-                    "INSTALLING" &&
-                    Number(record.build) !==
-                    Number(active)
-                ) {
-
-                    await this.deleteBuild(
-                        record.build
-                    );
-
-                }
+                throw new Error(
+                    `File tidak ditemukan di IndexedDB: ${normalizedPath}`
+                );
 
             }
 
 
-            this.setStatus(
-                STATUS.READY
-            );
-
-
-            this.emit(
-                "recovery:complete"
-            );
-
-
-            return true;
+            return file;
 
         },
 
 
         /* =================================================
-           STATUS
+           CREATE LOCAL BLOB URL
+           Dipakai build.js
+        ================================================= */
+
+        async createURL(
+            path,
+            build = null
+        ) {
+
+            const file =
+                await this.getFile(
+                    path,
+                    build
+                );
+
+
+            const blob =
+                file.content instanceof Blob
+                    ? file.content
+                    : new Blob(
+                        [
+                            file.content
+                        ],
+                        {
+                            type:
+                                file.type ||
+                                "application/octet-stream"
+                        }
+                    );
+
+
+            return URL.createObjectURL(
+                blob
+            );
+
+        },
+
+
+        /* =================================================
+           GET STATUS
         ================================================= */
 
         async getStatus() {
@@ -3993,15 +1838,7 @@
 
 
             const active =
-                await this.getActiveBuild();
-
-
-            const files =
-                active !== null
-                    ? await this.getBuildFiles(
-                        active
-                    )
-                    : [];
+                await this.getActive();
 
 
             return {
@@ -4015,14 +1852,18 @@
                 status:
                     STATE.status,
 
-                phase:
-                    STATE.phase,
+                working:
+                    STATE.working,
 
-                activeBuild:
-                    active,
+                build:
+                    active
+                        ? Number(active.build)
+                        : null,
 
-                activeVersion:
-                    STATE.activeVersion,
+                version:
+                    active
+                        ? active.version
+                        : null,
 
                 remoteBuild:
                     STATE.remoteBuild,
@@ -4030,11 +1871,11 @@
                 remoteVersion:
                     STATE.remoteVersion,
 
-                installingBuild:
-                    STATE.installingBuild,
-
                 progress:
                     STATE.progress,
+
+                currentFile:
+                    STATE.currentFile,
 
                 completedFiles:
                     STATE.completedFiles,
@@ -4042,126 +1883,13 @@
                 totalFiles:
                     STATE.totalFiles,
 
-                currentFile:
-                    STATE.currentFile,
-
-                fileCount:
-                    files.length,
-
                 online:
                     navigator.onLine,
 
-                updating:
-                    this.updating,
-
-                database:
-                    CONFIG.databaseName,
-
-                databaseVersion:
-                    CONFIG.databaseVersion,
-
-                entryFile:
-                    CONFIG.entryFile,
-
                 error:
-                    STATE.error,
-
-                errorCode:
-                    STATE.errorCode,
-
-                startedAt:
-                    STATE.startedAt,
-
-                completedAt:
-                    STATE.completedAt
+                    STATE.error
 
             };
-
-        },
-
-
-        /* =================================================
-           SETTINGS
-        ================================================= */
-
-        async getSetting(
-            id,
-            fallback = null
-        ) {
-
-            await this.init();
-
-
-            const result =
-                await this.request(
-                    this.store(
-                        CONFIG.stores.settings
-                    ).get(
-                        String(id)
-                    )
-                );
-
-
-            return result
-                ? result.value
-                : fallback;
-
-        },
-
-
-        async setSetting(
-            id,
-            value
-        ) {
-
-            await this.init();
-
-
-            const record = {
-
-                id:
-                    String(id),
-
-                value,
-
-                updatedAt:
-                    Date.now()
-
-            };
-
-
-            await this.request(
-                this.store(
-                    CONFIG.stores.settings,
-                    "readwrite"
-                ).put(
-                    record
-                )
-            );
-
-
-            this.emit(
-                "setting:changed",
-                record
-            );
-
-
-            return value;
-
-        },
-
-
-        /* =================================================
-           PUBLIC SLEEP
-        ================================================= */
-
-        sleep(
-            ms
-        ) {
-
-            return Utils.sleep(
-                ms
-            );
 
         }
 
@@ -4169,16 +1897,12 @@
 
 
     /* =====================================================
-       GLOBAL ENGINE
+       PUBLIC API
     ===================================================== */
 
     window.MARAEngineSingle =
         ENGINE;
 
-
-    /* =====================================================
-       GLOBAL UPDATE API
-    ===================================================== */
 
     window.MARAUpdate = {
 
@@ -4186,17 +1910,13 @@
             () =>
                 ENGINE.init(),
 
-        check:
-            () =>
-                ENGINE.fetchManifest(),
-
         update:
             () =>
                 ENGINE.update(),
 
-        recover:
+        check:
             () =>
-                ENGINE.recover(),
+                ENGINE.fetchManifest(),
 
         status:
             () =>
@@ -4206,262 +1926,19 @@
             () =>
                 ENGINE.getState(),
 
-        activeBuild:
+        active:
             () =>
-                ENGINE.getActiveBuild(),
+                ENGINE.getActive(),
 
-        load:
+        getFile:
             path =>
-                ENGINE.loadActiveFile(
-                    path
-                ),
+                ENGINE.getFile(path),
 
-        loadIntoIframe:
-            (
-                iframe,
-                path
-            ) =>
-                ENGINE.loadIntoIframe(
-                    iframe,
-                    path
-                ),
-
-        loadLockScreen:
-            iframe =>
-                ENGINE.loadLockScreen(
-                    iframe
-                ),
-
-        loadHomeScreen:
-            iframe =>
-                ENGINE.loadHomeScreen(
-                    iframe
-                ),
-
-        getBuild:
-            build =>
-                ENGINE.getBuild(
-                    build
-                ),
-
-        getBuilds:
-            () =>
-                ENGINE.getBuilds(),
-
-        getBuildFiles:
-            build =>
-                ENGINE.getBuildFiles(
-                    build
-                ),
-
-        deleteBuild:
-            build =>
-                ENGINE.deleteBuild(
-                    build
-                ),
-
-        getSetting:
-            (
-                id,
-                fallback
-            ) =>
-                ENGINE.getSetting(
-                    id,
-                    fallback
-                ),
-
-        setSetting:
-            (
-                id,
-                value
-            ) =>
-                ENGINE.setSetting(
-                    id,
-                    value
-                )
+        createURL:
+            path =>
+                ENGINE.createURL(path)
 
     };
-
-
-    /* =====================================================
-       DEFAULT ENGINE EVENTS
-    ===================================================== */
-
-    ENGINE.on(
-        "download:progress",
-        data => {
-
-            console.log(
-                `[MARA ENGINE] DOWNLOAD ${data.progress}% — ${data.path}`
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "verify:progress",
-        data => {
-
-            console.log(
-                `[MARA ENGINE] VERIFY ${data.progress}% — ${data.path}`
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "install:progress",
-        data => {
-
-            console.log(
-                `[MARA ENGINE] INSTALL ${data.progress}% — ${data.path}`
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "verify:success",
-        data => {
-
-            console.log(
-                "[MARA ENGINE] VERIFY OK:",
-                data.build
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "install:complete",
-        data => {
-
-            console.log(
-                "[MARA ENGINE] INSTALL COMPLETE:",
-                data.build
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "build:active",
-        data => {
-
-            console.log(
-                "[MARA ENGINE] ACTIVE BUILD:",
-                data.build
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "update:complete",
-        data => {
-
-            console.log(
-                "[MARA ENGINE] UPDATE COMPLETE:",
-                data
-            );
-
-        }
-    );
-
-
-    ENGINE.on(
-        "update:error",
-        data => {
-
-            console.error(
-                "[MARA ENGINE] UPDATE ERROR:",
-                data.message
-            );
-
-        }
-    );
-
-
-    /* =====================================================
-       NETWORK EVENTS
-    ===================================================== */
-
-    window.addEventListener(
-        "online",
-        () => {
-
-            console.log(
-                "[MARA ENGINE] NETWORK ONLINE"
-            );
-
-
-            ENGINE.emit(
-                "network:online"
-            );
-
-
-            if (
-                CONFIG.autoUpdate &&
-                !ENGINE.updating
-            ) {
-
-                setTimeout(
-                    () => {
-
-                        if (
-                            !ENGINE.updating
-                        ) {
-
-                            ENGINE.update()
-                                .catch(
-                                    error => {
-
-                                        console.error(
-                                            "[MARA ENGINE] Online recovery error:",
-                                            error
-                                        );
-
-                                    }
-                                );
-
-                        }
-
-                    },
-                    CONFIG.autoUpdateDelay
-                );
-
-            }
-
-        }
-    );
-
-
-    window.addEventListener(
-        "offline",
-        () => {
-
-            console.log(
-                "[MARA ENGINE] NETWORK OFFLINE"
-            );
-
-
-            ENGINE.setStatus(
-                STATUS.OFFLINE
-            );
-
-
-            ENGINE.emit(
-                "network:offline"
-            );
-
-        }
-    );
 
 
     /* =====================================================
@@ -4478,8 +1955,7 @@
 
             if (
                 !data ||
-                typeof data !==
-                "object"
+                typeof data !== "object"
             ) {
 
                 return;
@@ -4488,7 +1964,7 @@
 
 
             /* =============================================
-               STATUS
+               STATUS REQUEST
             ============================================= */
 
             if (
@@ -4502,39 +1978,21 @@
                         status => {
 
                             event.source?.postMessage(
+
                                 {
+
+                                    source:
+                                        CONFIG.name,
 
                                     type:
                                         "MARA_ENGINE_STATUS",
 
-                                    source:
-                                        CONFIG.name,
-
                                     status
 
                                 },
+
                                 "*"
-                            );
 
-                        }
-                    )
-                    .catch(
-                        error => {
-
-                            event.source?.postMessage(
-                                {
-
-                                    type:
-                                        "MARA_ENGINE_ERROR",
-
-                                    source:
-                                        CONFIG.name,
-
-                                    error:
-                                        error.message
-
-                                },
-                                "*"
                             );
 
                         }
@@ -4544,7 +2002,7 @@
 
 
             /* =============================================
-               UPDATE
+               UPDATE REQUEST
             ============================================= */
 
             if (
@@ -4558,18 +2016,21 @@
                         result => {
 
                             event.source?.postMessage(
+
                                 {
+
+                                    source:
+                                        CONFIG.name,
 
                                     type:
                                         "MARA_ENGINE_UPDATE_RESULT",
 
-                                    source:
-                                        CONFIG.name,
-
                                     result
 
                                 },
+
                                 "*"
+
                             );
 
                         }
@@ -4579,64 +2040,30 @@
 
 
             /* =============================================
-               ACTIVE BUILD
+               FILE REQUEST
             ============================================= */
 
             if (
                 data.type ===
-                "MARA_ENGINE_ACTIVE_BUILD_REQUEST"
+                "MARA_ENGINE_FILE_REQUEST"
             ) {
 
                 ENGINE
-                    .getActiveBuild()
-                    .then(
-                        build => {
-
-                            event.source?.postMessage(
-                                {
-
-                                    type:
-                                        "MARA_ENGINE_ACTIVE_BUILD",
-
-                                    source:
-                                        CONFIG.name,
-
-                                    build
-
-                                },
-                                "*"
-                            );
-
-                        }
-                    );
-
-            }
-
-
-            /* =============================================
-               LOAD ACTIVE FILE
-            ============================================= */
-
-            if (
-                data.type ===
-                "MARA_ENGINE_LOAD_REQUEST"
-            ) {
-
-                ENGINE
-                    .loadActiveFile(
+                    .createURL(
                         data.path
                     )
                     .then(
                         url => {
 
                             event.source?.postMessage(
-                                {
 
-                                    type:
-                                        "MARA_ENGINE_LOAD_RESULT",
+                                {
 
                                     source:
                                         CONFIG.name,
+
+                                    type:
+                                        "MARA_ENGINE_FILE_RESULT",
 
                                     path:
                                         data.path,
@@ -4644,7 +2071,9 @@
                                     url
 
                                 },
+
                                 "*"
+
                             );
 
                         }
@@ -4653,13 +2082,14 @@
                         error => {
 
                             event.source?.postMessage(
-                                {
 
-                                    type:
-                                        "MARA_ENGINE_LOAD_ERROR",
+                                {
 
                                     source:
                                         CONFIG.name,
+
+                                    type:
+                                        "MARA_ENGINE_FILE_ERROR",
 
                                     path:
                                         data.path,
@@ -4668,7 +2098,9 @@
                                         error.message
 
                                 },
+
                                 "*"
+
                             );
 
                         }
@@ -4681,11 +2113,10 @@
 
 
     /* =====================================================
-       DOM READY
-    ===================================================== */
+       START ENGINE
+       ===================================================== */
 
-    document.addEventListener(
-        "DOMContentLoaded",
+    const start =
         async () => {
 
             try {
@@ -4693,109 +2124,60 @@
                 await ENGINE.init();
 
 
-                await ENGINE.recover();
+                /*
+                 * Engine langsung mengecek update.
+                 *
+                 * Jika tidak ada update:
+                 *    selesai cepat.
+                 *
+                 * Jika ada update:
+                 *    STATE.working = true
+                 *    intro dapat mengikuti progress.
+                 */
 
-
-                const status =
-                    await ENGINE.getStatus();
-
-
-                console.log(
-                    "[MARA ENGINE] STATUS:",
-                    status
-                );
-
-
-                if (
-                    CONFIG.autoUpdate &&
-                    navigator.onLine
-                ) {
-
-                    setTimeout(
-                        () => {
-
-                            if (
-                                !ENGINE.updating
-                            ) {
-
-                                ENGINE
-                                    .update()
-                                    .catch(
-                                        error => {
-
-                                            console.error(
-                                                "[MARA ENGINE] AUTO UPDATE ERROR:",
-                                                error
-                                            );
-
-                                        }
-                                    );
-
-                            }
-
-                        },
-                        CONFIG.autoUpdateDelay
-                    );
-
-                }
+                await ENGINE.update();
 
             } catch (
                 error
             ) {
 
                 console.error(
-                    "[MARA ENGINE] INITIALIZATION ERROR:",
+                    "[MARA ENGINE] START ERROR:",
                     error
-                );
-
-
-                STATE.error =
-                    error.message;
-
-
-                STATE.errorCode =
-                    "INITIALIZATION_FAILED";
-
-
-                ENGINE.setStatus(
-                    STATUS.ERROR,
-                    {
-
-                        error:
-                            error.message,
-
-                        errorCode:
-                            STATE.errorCode
-
-                    }
                 );
 
             }
 
-        },
-        {
-            once:
-                true
-        }
-    );
+        };
 
 
     /* =====================================================
-       BEFORE UNLOAD
+       START
     ===================================================== */
 
-    window.addEventListener(
-        "beforeunload",
-        () => {
+    if (
+        document.readyState ===
+        "loading"
+    ) {
 
-            ENGINE.revokeAllURLs();
+        document.addEventListener(
+            "DOMContentLoaded",
+            start,
+            {
+                once:
+                    true
+            }
+        );
 
-        }
-    );
+    } else {
+
+        start();
+
+    }
 
 
     /* =====================================================
-       READY LOG
+       LOG
     ===================================================== */
 
     console.log(
@@ -4803,11 +2185,11 @@
     );
 
     console.log(
-        " MARA OS ENGINE SINGLE"
+        " MARA OS ENGINE SINGLE 4.0.0"
     );
 
     console.log(
-        " FINAL UNIFIED UPDATE / BUILD / STORAGE ENGINE"
+        " SIMPLE UPDATE + INDEXEDDB ENGINE"
     );
 
     console.log(
@@ -4816,17 +2198,8 @@
     );
 
     console.log(
-        " Database Version:",
-        CONFIG.databaseVersion
-    );
-
-    console.log(
-        " Engine Version:",
-        CONFIG.version
-    );
-
-    console.log(
-        " ENGINE-SINGLE.JS LOADED SUCCESSFULLY"
+        " Manifest:",
+        CONFIG.manifestURL
     );
 
     console.log(
